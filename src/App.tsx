@@ -99,13 +99,21 @@ function AppRoutes() {
   );
 }
 
+function AppContent() {
+  const { isAuthenticated, loading } = useAuth();
+  
+  return (
+    <DataProvider isAuthenticated={isAuthenticated}>
+      <AppRoutes />
+    </DataProvider>
+  );
+}
+
 export default function App() {
   return (
     <HashRouter>
       <AuthProvider>
-        <DataProvider>
-          <AppRoutes />
-        </DataProvider>
+        <AppContent />
       </AuthProvider>
     </HashRouter>
   );

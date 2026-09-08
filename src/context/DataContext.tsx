@@ -43,7 +43,7 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-export function DataProvider({ children }: { children: React.ReactNode }) {
+export function DataProvider({ children, isAuthenticated: authIsAuthenticated }: { children: React.ReactNode; isAuthenticated: boolean }) {
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [equipmentTypes, setEquipmentTypes] = useState<EquipmentType[]>([]);
@@ -52,7 +52,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [subdivisions, setSubdivisions] = useState<Subdivision[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!localStorage.getItem('itam_token'));
 
   const refreshEquipment = useCallback(async () => {
     try {
@@ -108,18 +107,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, [refreshEquipment, refreshCategories, refreshEquipmentTypes, refreshUsers, refreshRooms, refreshSubdivisions]);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (authIsAuthenticated) {
       refreshAll();
     } else {
       setLoading(false);
-    }
-  }, [refreshAll, isAuthenticated]);
-
-  // Метод для уведомления об изменении авторизации (вызывается из AuthContext)
-  const notifyAuthChange = useCallback((authenticated: boolean) => {
-    setIsAuthenticated(authenticated);
-    if (!authenticated) {
-      // При выходе очищаем данные
+      // Очищаем данные при выходе
       setEquipment([]);
       setCategories([]);
       setEquipmentTypes([]);
@@ -127,23 +119,21 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       setRooms([]);
       setSubdivisions([]);
     }
+  }, [refreshAll, authIsAuthenticated]);
+
+  // Метод для уведомления об изменении авторизации (оставлен для совместимости)
+  const notifyAuthChange = useCallback((authenticated: boolean) => {
+    // Теперь авторизация управляется через props от AuthContext
   }, []);
 
-  // Подписка на события авторизации
+  // Подписка на события авторизации (оставлена для совместимости)
   useEffect(() => {
-    const handleAuthChange = (event: CustomEvent) => {
-      notifyAuthChange(event.detail.authenticated);
-    };
-    
-    window.addEventListener('auth-change', handleAuthChange as EventListener);
-    return () => {
-      window.removeEventListener('auth-change', handleAuthChange as EventListener);
-    };
-  }, [notifyAuthChange]);
+    // Авторизация теперь управляется через props от AuthContext
+  }, []);
 
   // Polling: автоматическое обновление данных каждые 10 секунд
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!authIsAuthenticated) return;
 
     const interval = setInterval(() => {
       // Тихое обновление без показа loading
@@ -160,11 +150,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }, 10000); // 10 секунд
 
     return () => clearInterval(interval);
-  }, [isAuthenticated, refreshEquipment, refreshCategories, refreshEquipmentTypes, refreshUsers, refreshRooms, refreshSubdivisions]);
+  }, [authIsAuthenticated, refreshEquipment, refreshCategories, refreshEquipmentTypes, refreshUsers, refreshRooms, refreshSubdivisions]);
 
   // Синхронизация между вкладками через localStorage events
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!authIsAuthenticated) return;
 
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'itam_data_update') {
@@ -175,7 +165,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, [isAuthenticated, refreshAll]);
+  }, [authIsAuthenticated, refreshAll]);
 
   // Функция для уведомления других вкладок об изменении данных
   const notifyDataChange = useCallback(() => {

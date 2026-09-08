@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { authMiddleware, adminMiddleware } = require('../middleware/auth');
 const { writeLimiter } = require('../middleware/rateLimit');
 const backupService = require('../services/backup');
 
 // Список всех бэкапов
-router.get('/', requireAuth, requireAdmin, (req, res) => {
+router.get('/', authMiddleware, adminMiddleware, (req, res) => {
   try {
     const backups = backupService.listBackups();
     res.json(backups);
@@ -15,7 +15,7 @@ router.get('/', requireAuth, requireAdmin, (req, res) => {
 });
 
 // Создать бэкап вручную
-router.post('/', requireAuth, requireAdmin, writeLimiter, async (req, res) => {
+router.post('/', authMiddleware, adminMiddleware, writeLimiter, async (req, res) => {
   try {
     const result = await backupService.manualBackup();
     res.status(201).json(result);
@@ -25,7 +25,7 @@ router.post('/', requireAuth, requireAdmin, writeLimiter, async (req, res) => {
 });
 
 // Восстановить из бэкапа
-router.post('/restore', requireAuth, requireAdmin, writeLimiter, async (req, res) => {
+router.post('/restore', authMiddleware, adminMiddleware, writeLimiter, async (req, res) => {
   try {
     const { filename } = req.body;
     if (!filename) {
@@ -40,7 +40,7 @@ router.post('/restore', requireAuth, requireAdmin, writeLimiter, async (req, res
 });
 
 // Удалить бэкап
-router.delete('/:filename', requireAuth, requireAdmin, (req, res) => {
+router.delete('/:filename', authMiddleware, adminMiddleware, (req, res) => {
   try {
     const result = backupService.deleteBackup(req.params.filename);
     res.json(result);

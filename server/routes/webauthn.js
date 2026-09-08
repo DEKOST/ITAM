@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { requireAuth } = require('../middleware/auth');
+const { authMiddleware } = require('../middleware/auth');
 const webauthn = require('../services/webauthn');
 const { db } = require('../db');
 const jwt = require('jsonwebtoken');
@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'itam-secret-key-change-in-production';
 
 // Начало регистрации устройства
-router.post('/register/begin', requireAuth, async (req, res) => {
+router.post('/register/begin', authMiddleware, async (req, res) => {
   try {
     const options = await webauthn.generateRegistration(req.user.id);
     res.json(options);
@@ -18,7 +18,7 @@ router.post('/register/begin', requireAuth, async (req, res) => {
 });
 
 // Завершение регистрации устройства
-router.post('/register/complete', requireAuth, async (req, res) => {
+router.post('/register/complete', authMiddleware, async (req, res) => {
   try {
     const { deviceName } = req.body;
     const result = await webauthn.verifyRegistration(req.user.id, { ...req.body, deviceName });
@@ -100,7 +100,7 @@ router.post('/auth/complete', async (req, res) => {
 });
 
 // Список устройств пользователя
-router.get('/devices', requireAuth, (req, res) => {
+router.get('/devices', authMiddleware, (req, res) => {
   try {
     const devices = webauthn.getUserDevices(req.user.id);
     res.json(devices);
@@ -110,7 +110,7 @@ router.get('/devices', requireAuth, (req, res) => {
 });
 
 // Удаление устройства
-router.delete('/devices/:id', requireAuth, (req, res) => {
+router.delete('/devices/:id', authMiddleware, (req, res) => {
   try {
     const deleted = webauthn.deleteDevice(req.user.id, req.params.id);
     if (deleted) {

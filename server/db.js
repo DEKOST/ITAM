@@ -63,6 +63,34 @@ function initDatabase() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- Журнал входов
+    CREATE TABLE IF NOT EXISTS login_logs (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      login_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+      ip_address TEXT,
+      user_agent TEXT,
+      success INTEGER DEFAULT 1,
+      FOREIGN KEY (user_id) REFERENCES auth_users(id) ON DELETE CASCADE
+    );
+
+    -- WebAuthn credentials
+    CREATE TABLE IF NOT EXISTS webauthn_credentials (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      credential_id TEXT NOT NULL,
+      public_key TEXT NOT NULL,
+      counter INTEGER DEFAULT 0,
+      device_type TEXT DEFAULT 'unknown',
+      device_name TEXT DEFAULT '',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      last_used DATETIME,
+      FOREIGN KEY (user_id) REFERENCES auth_users(id) ON DELETE CASCADE
+    );
+
+    -- WebAuthn challenge (временное хранение)
+    ALTER TABLE auth_users ADD COLUMN webauthn_challenge TEXT;
+
     -- Категории оборудования
     CREATE TABLE IF NOT EXISTS categories (
       id TEXT PRIMARY KEY,

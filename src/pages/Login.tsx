@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import * as api from '../api';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, setAuth } = useAuth();
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [biometricLoading, setBiometricLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,6 +81,31 @@ export default function Login() {
               {loading ? 'Вход...' : 'Войти'}
             </button>
           </form>
+
+          {/* Биометрический вход */}
+          <div className="mt-4">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div>
+              <div className="relative flex justify-center"><span className="bg-white px-3 text-sm text-gray-500">или</span></div>
+            </div>
+            <button
+              onClick={handleBiometricLogin}
+              disabled={biometricLoading || !username}
+              className="mt-4 w-full px-4 py-3 bg-green-50 text-green-700 border border-green-200 rounded-lg text-sm font-medium hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            >
+              {biometricLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-700"></div>
+                  Ожидание биометрии...
+                </>
+              ) : (
+                <>🔑 Войти по биометрии</>
+              )}
+            </button>
+            {!username && (
+              <p className="text-xs text-gray-400 text-center mt-2">Сначала введите логин</p>
+            )}
+          </div>
 
           <div className="mt-6 pt-6 border-t border-gray-100">
             <p className="text-xs text-gray-500 text-center">

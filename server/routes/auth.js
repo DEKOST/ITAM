@@ -4,16 +4,14 @@ const bcrypt = require('bcryptjs');
 const { db } = require('../db');
 const { v4: uuidv4 } = require('uuid');
 const { authMiddleware, adminMiddleware, generateToken, JWT_EXPIRES_IN } = require('../middleware/auth');
+const { authLimiter } = require('../middleware/rateLimit');
+const { loginSchema, createUserSchema, updateUserSchema, validate } = require('../middleware/validation');
 
 // Логин
-router.post('/login', (req, res) => {
+router.post('/login', authLimiter, validate(loginSchema), (req, res) => {
   const { username, password } = req.body;
   const ip = req.ip || req.connection.remoteAddress;
   const userAgent = req.headers['user-agent'] || '';
-
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Введите логин и пароль' });
-  }
 
   const user = db.prepare('SELECT * FROM auth_users WHERE username = ?').get(username);
 
@@ -128,7 +126,7 @@ router.get('/users', authMiddleware, adminMiddleware, (req, res) => {
 });
 
 // Создать пользователя
-router.post('/users', authMiddleware, adminMiddleware, (req, res) => {
+router.post('/users', authMiddleware, adminMiddleware, validate(createUserSchema), (req, res) => {
   const { username, password, fullName, email, role } = req.body;
 
   if (!username || !password) {
@@ -157,7 +155,7 @@ router.post('/users', authMiddleware, adminMiddleware, (req, res) => {
 });
 
 // Обновить пользователя
-router.put('/users/:id', authMiddleware, adminMiddleware, (req, res) => {
+router.put('/users/:id', authMiddleware, adminMiddleware, validate(updateUserSchema), (req, res) => {
   const { fullName, email, role, isActive, password } = req.body;
   const existing = db.prepare('SELECT * FROM auth_users WHERE id = ?').get(req.params.id);
   

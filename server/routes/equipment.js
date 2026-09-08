@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../db');
 const { v4: uuidv4 } = require('uuid');
+const { writeLimiter } = require('../middleware/rateLimit');
+const { equipmentSchema, changeStatusSchema, moveSchema, validate } = require('../middleware/validation');
 
 // Получить всё оборудование с связями
 router.get('/', (req, res) => {
@@ -110,8 +112,12 @@ router.get('/qr/:code', (req, res) => {
 });
 
 // Создать оборудование
-router.post('/', (req, res) => {
+router.post('/', writeLimiter, validate(equipmentSchema), (req, res) => {
   const { name, serial_number, inventory_number, type_id, status, user_id, room_id, purchase_date, warranty_end, last_maintenance_date, next_maintenance_date, notes } = req.body;
+
+  // Проверка существования типа
+  const typeExists = db.prepare('SELECT id FROM equipment_types WHERE id = ?').get(type_id);
+  if (!typeExists) return res.status(400).json({ error: 'Тип оборудования не найден' });
 
   const id = uuidv4();
   const qr_code = id; // QR код = ID оборудования
@@ -126,7 +132,7 @@ router.post('/', (req, res) => {
 });
 
 // Обновить оборудование
-router.put('/:id', (req, res) => {
+router.put('/:id', writeLimiter, validate(equipmentSchema), (req, res) => {
   const existing = db.prepare('SELECT * FROM equipment WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ error: 'Оборудование не найдено' });
 
@@ -169,7 +175,7 @@ router.put('/:id', (req, res) => {
 });
 
 // Изменить статус
-router.patch('/:id/status', (req, res) => {
+router.patch('/:id/status', writeLimiter, validate(changeStatusSchema), (req, res) => {
   const { status, comment } = req.body;
   const existing = db.prepare('SELECT * FROM equipment WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ error: 'Оборудование не найдено' });
@@ -182,7 +188,7 @@ router.patch('/:id/status', (req, res) => {
 });
 
 // Переместить оборудование
-router.patch('/:id/move', (req, res) => {
+router.patch('/:id/move', writeLimiter, validate(moveSchema), (req, res) => {
   const { user_id, room_id, comment } = req.body;
   const existing = db.prepare('SELECT * FROM equipment WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ error: 'Оборудование не найдено' });
@@ -195,7 +201,7 @@ router.patch('/:id/move', (req, res) => {
 });
 
 // Удалить оборудование
-router.delete('/:id', (req, res) => {
+router.delete('/:id', writeLimiter, (req, res) => {
   const existing = db.prepare('SELECT * FROM equipment WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ error: 'Оборудование не найдено' });
 

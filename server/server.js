@@ -5,7 +5,9 @@ const cors = require('cors');
 const path = require('path');
 const { db, initDatabase, seedDemoData } = require('./db');
 const { authMiddleware } = require('./middleware/auth');
+const { apiLimiter } = require('./middleware/rateLimit');
 const { getActiveCertificate } = require('./routes/certificates');
+const backupService = require('./services/backup');
 
 const app = express();
 const HTTP_PORT = process.env.PORT || 3001;
@@ -13,14 +15,19 @@ const HTTPS_PORT = process.env.HTTPS_PORT || 3443;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(apiLimiter); // Глобальный rate limiter
 
 // Инициализация БД
 initDatabase();
 seedDemoData();
 
+// Запуск автоматических бэкапов
+backupService.startScheduledBackups();
+
 // Публичные роуты (без авторизации)
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/webauthn', require('./routes/webauthn'));
 
 // Защищённые роуты (требуют авторизации)
 app.use('/api/equipment', authMiddleware, require('./routes/equipment'));
@@ -28,7 +35,8 @@ app.use('/api/categories', authMiddleware, require('./routes/categories'));
 app.use('/api/types', authMiddleware, require('./routes/types'));
 app.use('/api/users', authMiddleware, require('./routes/users'));
 app.use('/api/rooms', authMiddleware, require('./routes/rooms'));
-app.use('/api/certificates', require('./routes/certificates'));
+app.use('/api/certificates', authMiddleware, require('./routes/certificates'));
+app.use('/api/backups', authMiddleware, require('./routes/backups'));
 
 // Статистика
 app.get('/api/stats', authMiddleware, (req, res) => {

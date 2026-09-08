@@ -15,6 +15,8 @@ import QRGenerator from './pages/QRGenerator';
 import QRScan from './pages/QRScan';
 import Certificates from './pages/Certificates';
 import AuthUsers from './pages/AuthUsers';
+import Backups from './pages/Backups';
+import BiometricAuth from './pages/BiometricAuth';
 
 function ProtectedRoute({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
   const { isAuthenticated, isAdmin, loading } = useAuth();
@@ -86,6 +88,8 @@ function AppRoutes() {
       <Route path="/qr-scan" element={<ProtectedRoute><QRScan /></ProtectedRoute>} />
       <Route path="/certificates" element={<ProtectedRoute adminOnly><Certificates /></ProtectedRoute>} />
       <Route path="/auth-users" element={<ProtectedRoute adminOnly><AuthUsers /></ProtectedRoute>} />
+      <Route path="/backups" element={<ProtectedRoute adminOnly><Backups /></ProtectedRoute>} />
+      <Route path="/biometric" element={<ProtectedRoute><BiometricAuth /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

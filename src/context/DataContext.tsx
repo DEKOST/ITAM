@@ -16,6 +16,7 @@ interface DataContextType {
   refreshUsers: () => Promise<void>;
   refreshRooms: () => Promise<void>;
   refreshAll: () => Promise<void>;
+  notifyAuthChange: (authenticated: boolean) => void;
   addEquipment: (item: Omit<Equipment, 'id' | 'qrCode' | 'createdAt'>) => Promise<Equipment>;
   updateEquipment: (id: string, data: Partial<Equipment>) => Promise<Equipment>;
   deleteEquipment: (id: string) => Promise<void>;
@@ -45,6 +46,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!localStorage.getItem('itam_token'));
 
   const refreshEquipment = useCallback(async () => {
     try {
@@ -93,8 +95,37 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, [refreshEquipment, refreshCategories, refreshEquipmentTypes, refreshUsers, refreshRooms]);
 
   useEffect(() => {
-    refreshAll();
-  }, [refreshAll]);
+    if (isAuthenticated) {
+      refreshAll();
+    } else {
+      setLoading(false);
+    }
+  }, [refreshAll, isAuthenticated]);
+
+  // Метод для уведомления об изменении авторизации (вызывается из AuthContext)
+  const notifyAuthChange = useCallback((authenticated: boolean) => {
+    setIsAuthenticated(authenticated);
+    if (!authenticated) {
+      // При выходе очищаем данные
+      setEquipment([]);
+      setCategories([]);
+      setEquipmentTypes([]);
+      setUsers([]);
+      setRooms([]);
+    }
+  }, []);
+
+  // Подписка на события авторизации
+  useEffect(() => {
+    const handleAuthChange = (event: CustomEvent) => {
+      notifyAuthChange(event.detail.authenticated);
+    };
+    
+    window.addEventListener('auth-change', handleAuthChange as EventListener);
+    return () => {
+      window.removeEventListener('auth-change', handleAuthChange as EventListener);
+    };
+  }, [notifyAuthChange]);
 
   // Equipment
   const addEquipment = async (item: Omit<Equipment, 'id' | 'qrCode' | 'createdAt'>) => {
@@ -219,6 +250,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const value: DataContextType = {
     equipment, categories, equipmentTypes, users, rooms, loading, error,
     refreshEquipment, refreshCategories, refreshEquipmentTypes, refreshUsers, refreshRooms, refreshAll,
+    notifyAuthChange,
     addEquipment, updateEquipment: updateEquipmentFn, deleteEquipment: deleteEquipmentFn, changeEquipmentStatus, moveEquipment: moveEquipmentFn,
     addCategory, updateCategory: updateCategoryFn, deleteCategory: deleteCategoryFn,
     addEquipmentType, updateEquipmentType: updateEquipmentTypeFn, deleteEquipmentType: deleteEquipmentTypeFn,

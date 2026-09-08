@@ -78,6 +78,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('itam_token', data.token);
     setToken(data.token);
     setUser(data.user);
+    
+    // Уведомляем DataContext об изменении авторизации
+    window.dispatchEvent(new CustomEvent('auth-change', { detail: { authenticated: true } }));
   };
 
   const logout = async () => {
@@ -92,6 +95,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('itam_token');
       setToken(null);
       setUser(null);
+      
+      // Уведомляем DataContext об изменении авторизации
+      window.dispatchEvent(new CustomEvent('auth-change', { detail: { authenticated: false } }));
     }
   };
 

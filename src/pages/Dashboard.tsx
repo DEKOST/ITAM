@@ -124,7 +124,7 @@ export default function Dashboard() {
                     </span>
                   </td>
                   <td className="py-3 text-gray-600">
-                    {eq.userId ? (() => { const u = users.find(u => u.id === eq.userId); return u ? `${u.lastName} ${u.firstName}` : '—'; })() : '—'}
+                    {eq.userId ? (() => { const u = users.find(u => u.id === eq.userId); return u ? `${u.lastName} ${u.firstName} ${u.middleName || ''}`.trim() : '—'; })() : '—'}
                   </td>
                 </tr>
               ))}

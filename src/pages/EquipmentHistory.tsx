@@ -39,7 +39,7 @@ export default function EquipmentHistory() {
   const getUserName = (userId: string | null) => {
     if (!userId) return 'Не назначен';
     const user = users.find(u => u.id === userId);
-    return user ? `${user.lastName} ${user.firstName}` : 'Неизвестный';
+    return user ? `${user.lastName} ${user.firstName} ${user.middleName || ''}`.trim() : 'Неизвестный';
   };
 
   const getRoomName = (roomId: string | null) => {

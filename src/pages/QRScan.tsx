@@ -224,7 +224,7 @@ export default function QRScan() {
                     <div className="bg-gray-50 rounded-lg p-3">
                       <p className="text-xs text-gray-500">Сотрудник</p>
                       <p className="text-sm font-medium text-gray-800">
-                        {scannedEq.userId ? (() => { const u = users.find(u => u.id === scannedEq.userId); return u ? `${u.lastName} ${u.firstName}` : '—'; })() : 'Не назначен'}
+                        {scannedEq.userId ? (() => { const u = users.find(u => u.id === scannedEq.userId); return u ? `${u.lastName} ${u.firstName} ${u.middleName || ''}`.trim() : '—'; })() : 'Не назначен'}
                       </p>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3">
@@ -293,7 +293,7 @@ export default function QRScan() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Сотрудник</label>
                 <select value={newUserId} onChange={e => setNewUserId(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                   <option value="">Не назначен</option>
-                  {users.map(u => <option key={u.id} value={u.id}>{u.lastName} {u.firstName}</option>)}
+                  {users.map(u => <option key={u.id} value={u.id}>{u.lastName} {u.firstName} {u.middleName || ''}</option>)}
                 </select>
               </div>
               <div>

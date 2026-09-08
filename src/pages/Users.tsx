@@ -6,12 +6,12 @@ export default function Users() {
   const { users, subdivisions, addUser, updateUser, deleteUser } = useData();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
-  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', subdivisionId: '', position: '' });
+  const [form, setForm] = useState({ firstName: '', lastName: '', middleName: '', email: '', subdivisionId: '', position: '' });
   const [search, setSearch] = useState('');
   const [filterSubdivision, setFilterSubdivision] = useState('');
 
   const filtered = users.filter(user => {
-    const fullName = `${user.lastName} ${user.firstName}`.toLowerCase();
+    const fullName = `${user.lastName} ${user.firstName} ${user.middleName || ''}`.toLowerCase();
     const matchSearch = fullName.includes(search.toLowerCase()) || 
                        user.email.toLowerCase().includes(search.toLowerCase()) ||
                        user.position.toLowerCase().includes(search.toLowerCase());
@@ -32,7 +32,7 @@ export default function Users() {
     } else {
       await addUser(form);
     }
-    setForm({ firstName: '', lastName: '', email: '', subdivisionId: '', position: '' });
+    setForm({ firstName: '', lastName: '', middleName: '', email: '', subdivisionId: '', position: '' });
     setShowForm(false);
     setEditing(null);
   };
@@ -41,6 +41,7 @@ export default function Users() {
     setForm({ 
       firstName: user.firstName, 
       lastName: user.lastName, 
+      middleName: user.middleName || '',
       email: user.email, 
       subdivisionId: user.subdivisionId || '', 
       position: user.position 
@@ -53,7 +54,7 @@ export default function Users() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Сотрудники</h2>
-        <button onClick={() => { setShowForm(!showForm); setEditing(null); setForm({ firstName: '', lastName: '', email: '', subdivisionId: '', position: '' }); }} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+        <button onClick={() => { setShowForm(!showForm); setEditing(null); setForm({ firstName: '', lastName: '', middleName: '', email: '', subdivisionId: '', position: '' }); }} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
           {showForm ? 'Скрыть форму' : '+ Добавить'}
         </button>
       </div>
@@ -69,6 +70,10 @@ export default function Users() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Имя *</label>
               <input required value={form.firstName} onChange={e => setForm({...form, firstName: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Отчество</label>
+              <input value={form.middleName} onChange={e => setForm({...form, middleName: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -126,7 +131,7 @@ export default function Users() {
               <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500">Сотрудники не найдены</td></tr>
             ) : filtered.map(user => (
               <tr key={user.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium text-gray-800">{user.lastName} {user.firstName}</td>
+                <td className="px-4 py-3 font-medium text-gray-800">{user.lastName} {user.firstName} {user.middleName}</td>
                 <td className="px-4 py-3 text-gray-600">{user.email}</td>
                 <td className="px-4 py-3 text-gray-600">{getSubdivisionName(user.subdivisionId)}</td>
                 <td className="px-4 py-3 text-gray-600">{user.position}</td>

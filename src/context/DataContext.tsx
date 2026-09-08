@@ -254,6 +254,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const apiData = {
       first_name: item.firstName,
       last_name: item.lastName,
+      middle_name: item.middleName || '',
       email: item.email || '',
       subdivision_id: item.subdivisionId || null,
       position: item.position || ''
@@ -268,6 +269,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const apiData: any = {};
     if (data.firstName !== undefined) apiData.first_name = data.firstName;
     if (data.lastName !== undefined) apiData.last_name = data.lastName;
+    if (data.middleName !== undefined) apiData.middle_name = data.middleName;
     if (data.email !== undefined) apiData.email = data.email;
     if (data.subdivisionId !== undefined) apiData.subdivision_id = data.subdivisionId;
     if (data.position !== undefined) apiData.position = data.position;
@@ -378,6 +380,7 @@ function mapUserFromAPI(data: any): User {
     id: data.id,
     firstName: data.first_name,
     lastName: data.last_name,
+    middleName: data.middle_name || '',
     email: data.email || '',
     subdivisionId: data.subdivision_id || null,
     position: data.position || '',

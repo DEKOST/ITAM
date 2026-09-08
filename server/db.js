@@ -121,6 +121,7 @@ function initDatabase() {
       id TEXT PRIMARY KEY,
       first_name TEXT NOT NULL,
       last_name TEXT NOT NULL,
+      middle_name TEXT DEFAULT '',
       email TEXT DEFAULT '',
       subdivision_id TEXT,
       position TEXT DEFAULT '',
@@ -213,6 +214,17 @@ function initDatabase() {
     const hasWebAuthnColumn = columns.some(col => col.name === 'webauthn_challenge');
     if (!hasWebAuthnColumn) {
       db.exec('ALTER TABLE auth_users ADD COLUMN webauthn_challenge TEXT');
+    }
+  } catch (e) {
+    // Игнорируем ошибки миграции
+  }
+
+  // Миграция: добавляем колонку middle_name в таблицу users если её нет
+  try {
+    const columns = db.prepare("PRAGMA table_info(users)").all();
+    const hasMiddleNameColumn = columns.some(col => col.name === 'middle_name');
+    if (!hasMiddleNameColumn) {
+      db.exec('ALTER TABLE users ADD COLUMN middle_name TEXT DEFAULT ""');
     }
   } catch (e) {
     // Игнорируем ошибки миграции

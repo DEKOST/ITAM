@@ -69,7 +69,7 @@ export default function EquipmentView() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-semibold text-gray-700 mb-4">Привязка</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <InfoRow label="Сотрудник" value={user ? `${user.lastName} ${user.firstName}${subdivision ? ` (${subdivision.name})` : ''}` : 'Не назначен'} />
+              <InfoRow label="Сотрудник" value={user ? `${user.lastName} ${user.firstName} ${user.middleName || ''}`.trim() + `${subdivision ? ` (${subdivision.name})` : ''}` : 'Не назначен'} />
               <InfoRow label="Помещение" value={room ? `${room.name} — ${room.building}, этаж ${room.floor}` : 'Не указано'} />
             </div>
           </div>
@@ -148,7 +148,7 @@ export default function EquipmentView() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Сотрудник</label>
                 <select value={newUserId} onChange={e => setNewUserId(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                   <option value="">Не назначен</option>
-                  {users.map(u => <option key={u.id} value={u.id}>{u.lastName} {u.firstName}</option>)}
+                  {users.map(u => <option key={u.id} value={u.id}>{u.lastName} {u.firstName} {u.middleName || ''}</option>)}
                 </select>
               </div>
               <div>

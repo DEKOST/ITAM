@@ -28,7 +28,7 @@ export default function Equipment() {
   const getUserName = (userId: string | null) => {
     if (!userId) return '—';
     const user = users.find(u => u.id === userId);
-    return user ? `${user.lastName} ${user.firstName}` : '—';
+    return user ? `${user.lastName} ${user.firstName} ${user.middleName || ''}`.trim() : '—';
   };
   const getRoomName = (roomId: string | null) => {
     if (!roomId) return '—';

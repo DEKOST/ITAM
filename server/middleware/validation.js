@@ -56,6 +56,7 @@ const equipmentTypeSchema = Joi.object({
 const userSchema = Joi.object({
   first_name: Joi.string().min(1).max(50).required(),
   last_name: Joi.string().min(1).max(50).required(),
+  middle_name: Joi.string().max(50).optional().allow(''),
   email: Joi.string().email().optional().allow(''),
   subdivision_id: Joi.string().uuid().optional().allow(null),
   position: Joi.string().max(100).optional().allow('')

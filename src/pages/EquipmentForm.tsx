@@ -3,6 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { EquipmentStatus, STATUS_LABELS } from '../types';
 
+// Генерация уникального инвентарного номера в формате INV-XXXXXXXX
+function generateInventoryNumber(): string {
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `INV-${timestamp}${random}`;
+}
+
 export default function EquipmentForm() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -25,6 +32,9 @@ export default function EquipmentForm() {
         purchaseDate: existing.purchaseDate, warrantyEnd: existing.warrantyEnd,
         lastMaintenanceDate: existing.lastMaintenanceDate, nextMaintenanceDate: existing.nextMaintenanceDate, notes: existing.notes
       });
+    } else {
+      // Автоматически генерируем инвентарный номер для нового оборудования
+      setForm(prev => ({ ...prev, inventoryNumber: generateInventoryNumber() }));
     }
   }, [existing]);
 

@@ -40,6 +40,7 @@ export default function EquipmentView() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">{eq.name}</h2>
         <div className="flex gap-2">
+          <Link to={`/equipment/${eq.id}/history`} className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors">📜 История</Link>
           <Link to={`/equipment/${eq.id}/edit`} className="px-4 py-2 bg-amber-100 text-amber-700 rounded-lg text-sm font-medium hover:bg-amber-200 transition-colors">✏️ Редактировать</Link>
           <button onClick={() => navigate('/equipment')} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">← Назад</button>
         </div>

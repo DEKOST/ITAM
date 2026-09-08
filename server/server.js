@@ -38,6 +38,7 @@ app.use('/api/rooms', authMiddleware, require('./routes/rooms'));
 app.use('/api/subdivisions', authMiddleware, require('./routes/subdivisions'));
 app.use('/api/certificates', authMiddleware, require('./routes/certificates'));
 app.use('/api/backups', authMiddleware, require('./routes/backups'));
+app.use('/api', authMiddleware, require('./routes/history'));
 
 // Статистика
 app.get('/api/stats', authMiddleware, (req, res) => {

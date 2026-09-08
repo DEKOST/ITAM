@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Equipment from './pages/Equipment';
 import EquipmentForm from './pages/EquipmentForm';
 import EquipmentView from './pages/EquipmentView';
+import EquipmentHistory from './pages/EquipmentHistory';
 import Categories from './pages/Categories';
 import Users from './pages/Users';
 import Rooms from './pages/Rooms';
@@ -82,6 +83,7 @@ function AppRoutes() {
       <Route path="/equipment/new" element={<ProtectedRoute><EquipmentForm /></ProtectedRoute>} />
       <Route path="/equipment/:id" element={<ProtectedRoute><EquipmentView /></ProtectedRoute>} />
       <Route path="/equipment/:id/edit" element={<ProtectedRoute><EquipmentForm /></ProtectedRoute>} />
+      <Route path="/equipment/:id/history" element={<ProtectedRoute><EquipmentHistory /></ProtectedRoute>} />
       <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
       <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
       <Route path="/rooms" element={<ProtectedRoute><Rooms /></ProtectedRoute>} />

@@ -44,6 +44,7 @@ export const getEquipment = (params?: Record<string, string>) => {
 };
 export const getEquipmentById = (id: string) => fetchAPI(`/equipment/${id}`);
 export const getEquipmentByQR = (code: string) => fetchAPI(`/equipment/qr/${code}`);
+export const getEquipmentHistory = (id: string) => fetchAPI(`/equipment/${id}/history`);
 export const createEquipment = (data: any) => fetchAPI('/equipment', { method: 'POST', body: JSON.stringify(data) });
 export const updateEquipment = (id: string, data: any) => fetchAPI(`/equipment/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const changeEquipmentStatus = (id: string, status: string, comment?: string) => 

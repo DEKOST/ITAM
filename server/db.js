@@ -11,6 +11,58 @@ db.pragma('foreign_keys = ON');
 // Инициализация схемы БД
 function initDatabase() {
   db.exec(`
+    -- Пользователи авторизации
+    CREATE TABLE IF NOT EXISTS auth_users (
+      id TEXT PRIMARY KEY,
+      username TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      full_name TEXT DEFAULT '',
+      email TEXT DEFAULT '',
+      role TEXT DEFAULT 'user',
+      is_active INTEGER DEFAULT 1,
+      last_login DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- SSL/TLS сертификаты
+    CREATE TABLE IF NOT EXISTS ssl_certificates (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      domain TEXT NOT NULL,
+      cert_path TEXT NOT NULL,
+      key_path TEXT NOT NULL,
+      ca_path TEXT,
+      issuer TEXT DEFAULT '',
+      valid_from DATETIME,
+      valid_to DATETIME,
+      is_active INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Сессии
+    CREATE TABLE IF NOT EXISTS sessions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      token TEXT UNIQUE NOT NULL,
+      ip_address TEXT,
+      user_agent TEXT,
+      expires_at DATETIME NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES auth_users(id) ON DELETE CASCADE
+    );
+
+    -- Журнал авторизации
+    CREATE TABLE IF NOT EXISTS auth_logs (
+      id TEXT PRIMARY KEY,
+      user_id TEXT,
+      username TEXT,
+      action TEXT NOT NULL,
+      ip_address TEXT,
+      user_agent TEXT,
+      success INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     -- Категории оборудования
     CREATE TABLE IF NOT EXISTS categories (
       id TEXT PRIMARY KEY,
@@ -121,6 +173,20 @@ function initDatabase() {
 
 // Заполнение демо-данными
 function seedDemoData() {
+  const bcrypt = require('bcryptjs');
+  
+  // Создание администратора по умолчанию
+  const adminExists = db.prepare('SELECT COUNT(*) as count FROM auth_users WHERE username = ?').get('admin');
+  if (adminExists.count === 0) {
+    const { v4: uuidv4 } = require('uuid');
+    const passwordHash = bcrypt.hashSync('admin123', 10);
+    db.prepare(`
+      INSERT INTO auth_users (id, username, password_hash, full_name, email, role)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(uuidv4(), 'admin', passwordHash, 'Администратор системы', 'admin@domain.ru', 'admin');
+    console.log('✅ Администратор создан: admin / admin123');
+  }
+
   const categoriesCount = db.prepare('SELECT COUNT(*) as count FROM categories').get();
   if (categoriesCount.count > 0) return;
 

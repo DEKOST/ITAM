@@ -1,10 +1,15 @@
 const express = require('express');
+const http = require('http');
+const https = require('https');
 const cors = require('cors');
 const path = require('path');
 const { db, initDatabase, seedDemoData } = require('./db');
+const { authMiddleware } = require('./middleware/auth');
+const { getActiveCertificate } = require('./routes/certificates');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const HTTP_PORT = process.env.PORT || 3001;
+const HTTPS_PORT = process.env.HTTPS_PORT || 3443;
 
 // Middleware
 app.use(cors());
@@ -14,15 +19,19 @@ app.use(express.json());
 initDatabase();
 seedDemoData();
 
-// API Routes
-app.use('/api/equipment', require('./routes/equipment'));
-app.use('/api/categories', require('./routes/categories'));
-app.use('/api/types', require('./routes/types'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/rooms', require('./routes/rooms'));
+// Публичные роуты (без авторизации)
+app.use('/api/auth', require('./routes/auth'));
+
+// Защищённые роуты (требуют авторизации)
+app.use('/api/equipment', authMiddleware, require('./routes/equipment'));
+app.use('/api/categories', authMiddleware, require('./routes/categories'));
+app.use('/api/types', authMiddleware, require('./routes/types'));
+app.use('/api/users', authMiddleware, require('./routes/users'));
+app.use('/api/rooms', authMiddleware, require('./routes/rooms'));
+app.use('/api/certificates', require('./routes/certificates'));
 
 // Статистика
-app.get('/api/stats', (req, res) => {
+app.get('/api/stats', authMiddleware, (req, res) => {
   const totalEquipment = db.prepare('SELECT COUNT(*) as count FROM equipment').get();
   const totalUsers = db.prepare('SELECT COUNT(*) as count FROM users').get();
   const totalRooms = db.prepare('SELECT COUNT(*) as count FROM rooms').get();
@@ -59,11 +68,26 @@ app.get('/api/stats', (req, res) => {
   });
 });
 
+// Проверка статуса сервера (публичный)
+app.get('/api/health', (req, res) => {
+  const activeCert = db.prepare('SELECT * FROM ssl_certificates WHERE is_active = 1').get();
+  res.json({ 
+    status: 'ok', 
+    https: !!activeCert,
+    domain: activeCert ? activeCert.domain : null,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Раздача статики фронтенда
 app.use(express.static(path.join(__dirname, '../dist')));
 
-// SPA fallback
+// SPA fallback - все остальные запросы отдают index.html
 app.get('*', (req, res) => {
+  // Не отдаём index.html для API запросов
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
   res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
@@ -73,18 +97,45 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Внутренняя ошибка сервера' });
 });
 
-app.listen(PORT, () => {
+// Запуск HTTP сервера
+const httpServer = http.createServer(app);
+httpServer.listen(HTTP_PORT, () => {
   console.log(`
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
 ║   🖥️  ITAM Service Server запущен!                       ║
 ║                                                           ║
-║   📡 API:      http://localhost:${PORT}/api                ║
-║   🌐 Frontend: http://localhost:${PORT}                    ║
-║                                                           ║
-║   Для разработки фронтенда:                               ║
-║   npm run dev (порт 5173)                                 ║
+║   📡 HTTP:  http://localhost:${HTTP_PORT}                   ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
   `);
 });
+
+// Запуск HTTPS сервера если есть активный сертификат
+function startHttpsServer() {
+  const certOptions = getActiveCertificate();
+  if (certOptions) {
+    const httpsServer = https.createServer(certOptions, app);
+    httpsServer.listen(HTTPS_PORT, () => {
+      const activeCert = db.prepare('SELECT domain FROM ssl_certificates WHERE is_active = 1').get();
+      console.log(`
+╔═══════════════════════════════════════════════════════════╗
+║                                                           ║
+║   🔒 HTTPS сервер запущен!                               ║
+║                                                           ║
+║   📡 HTTPS: https://localhost:${HTTPS_PORT}                 ║
+║   🌐 Домен: https://${activeCert?.domain || 'domain.ru'}            ║
+║                                                           ║
+╚═══════════════════════════════════════════════════════════╝
+      `);
+    });
+    return httpsServer;
+  }
+  return null;
+}
+
+// Пробуем запустить HTTPS при старте
+let httpsServer = startHttpsServer();
+
+// Экспортируем для возможности перезапуска HTTPS
+module.exports = { app, httpServer, httpsServer, startHttpsServer };

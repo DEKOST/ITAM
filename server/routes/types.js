@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../db');
 const { v4: uuidv4 } = require('uuid');
+const { writeLimiter } = require('../middleware/rateLimit');
+const { equipmentTypeSchema, validate } = require('../middleware/validation');
 
 // Получить все типы с категорией
 router.get('/', (req, res) => {
@@ -25,7 +27,7 @@ router.get('/:id', (req, res) => {
   res.json(item);
 });
 
-router.post('/', (req, res) => {
+router.post('/', writeLimiter, validate(equipmentTypeSchema), (req, res) => {
   const { name, category_id } = req.body;
   const id = uuidv4();
   db.prepare('INSERT INTO equipment_types (id, name, category_id) VALUES (?, ?, ?)').run(id, name, category_id);
@@ -38,7 +40,7 @@ router.post('/', (req, res) => {
   res.status(201).json(item);
 });
 
-router.put('/:id', (req, res) => {
+router.put('/:id', writeLimiter, validate(equipmentTypeSchema), (req, res) => {
   const { name, category_id } = req.body;
   const existing = db.prepare('SELECT * FROM equipment_types WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ error: 'Тип не найден' });

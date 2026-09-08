@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../db');
 const { v4: uuidv4 } = require('uuid');
+const { writeLimiter } = require('../middleware/rateLimit');
+const { userSchema, validate } = require('../middleware/validation');
 
 router.get('/', (req, res) => {
   const items = db.prepare(`
@@ -34,7 +36,7 @@ router.get('/:id', (req, res) => {
   res.json({ ...item, equipment });
 });
 
-router.post('/', (req, res) => {
+router.post('/', writeLimiter, validate(userSchema), (req, res) => {
   const { first_name, last_name, email, department, position } = req.body;
   const id = uuidv4();
   db.prepare('INSERT INTO users (id, first_name, last_name, email, department, position) VALUES (?, ?, ?, ?, ?, ?)').run(id, first_name, last_name, email || '', department || '', position || '');
@@ -42,7 +44,7 @@ router.post('/', (req, res) => {
   res.status(201).json(item);
 });
 
-router.put('/:id', (req, res) => {
+router.put('/:id', writeLimiter, validate(userSchema), (req, res) => {
   const { first_name, last_name, email, department, position } = req.body;
   const existing = db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ error: 'Сотрудник не найден' });

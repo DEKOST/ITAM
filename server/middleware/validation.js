@@ -27,16 +27,16 @@ const updateUserSchema = Joi.object({
 // Валидация для оборудования
 const equipmentSchema = Joi.object({
   name: Joi.string().min(1).max(200).required(),
-  serialNumber: Joi.string().max(100).optional().allow(''),
-  inventoryNumber: Joi.string().max(100).optional().allow(''),
-  typeId: Joi.string().uuid().required(),
+  serial_number: Joi.string().max(100).optional().allow(''),
+  inventory_number: Joi.string().max(100).optional().allow(''),
+  type_id: Joi.string().uuid().required(),
   status: Joi.string().valid('in_use', 'in_reserve', 'written_off', 'in_repair').required(),
-  userId: Joi.string().uuid().optional().allow(null),
-  roomId: Joi.string().uuid().optional().allow(null),
-  purchaseDate: Joi.string().isoDate().optional().allow(''),
-  warrantyEnd: Joi.string().isoDate().optional().allow(''),
-  lastMaintenanceDate: Joi.string().isoDate().optional().allow(''),
-  nextMaintenanceDate: Joi.string().isoDate().optional().allow(''),
+  user_id: Joi.string().uuid().optional().allow(null, ''),
+  room_id: Joi.string().uuid().optional().allow(null, ''),
+  purchase_date: Joi.string().isoDate().optional().allow(''),
+  warranty_end: Joi.string().isoDate().optional().allow(''),
+  last_maintenance_date: Joi.string().isoDate().optional().allow(''),
+  next_maintenance_date: Joi.string().isoDate().optional().allow(''),
   notes: Joi.string().max(1000).optional().allow('')
 });
 
@@ -49,13 +49,13 @@ const categorySchema = Joi.object({
 // Валидация для типа оборудования
 const equipmentTypeSchema = Joi.object({
   name: Joi.string().min(1).max(100).required(),
-  categoryId: Joi.string().uuid().required()
+  category_id: Joi.string().uuid().required()
 });
 
 // Валидация для пользователя (сотрудника)
 const userSchema = Joi.object({
-  firstName: Joi.string().min(1).max(50).required(),
-  lastName: Joi.string().min(1).max(50).required(),
+  first_name: Joi.string().min(1).max(50).required(),
+  last_name: Joi.string().min(1).max(50).required(),
   email: Joi.string().email().optional().allow(''),
   department: Joi.string().max(100).optional().allow(''),
   position: Joi.string().max(100).optional().allow('')
@@ -77,8 +77,8 @@ const changeStatusSchema = Joi.object({
 
 // Валидация для перемещения
 const moveSchema = Joi.object({
-  userId: Joi.string().uuid().optional().allow(null),
-  roomId: Joi.string().uuid().optional().allow(null),
+  user_id: Joi.string().uuid().optional().allow(null, ''),
+  room_id: Joi.string().uuid().optional().allow(null, ''),
   comment: Joi.string().max(500).optional().allow('')
 });
 

@@ -143,13 +143,22 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   // Types
   const addEquipmentType = async (item: Omit<EquipmentType, 'id'>) => {
-    const data = await api.createEquipmentType(item);
+    // Конвертируем camelCase в snake_case для API
+    const apiData = {
+      name: item.name,
+      category_id: item.categoryId
+    };
+    const data = await api.createEquipmentType(apiData);
     await refreshEquipmentTypes();
     return mapTypeFromAPI(data);
   };
 
   const updateEquipmentTypeFn = async (id: string, data: Partial<EquipmentType>) => {
-    await api.updateEquipmentType(id, data);
+    // Конвертируем camelCase в snake_case для API
+    const apiData: any = {};
+    if (data.name !== undefined) apiData.name = data.name;
+    if (data.categoryId !== undefined) apiData.category_id = data.categoryId;
+    await api.updateEquipmentType(id, apiData);
     await refreshEquipmentTypes();
   };
 
@@ -160,13 +169,28 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   // Users
   const addUser = async (item: Omit<User, 'id'>) => {
-    const data = await api.createUser(item);
+    // Конвертируем camelCase в snake_case для API
+    const apiData = {
+      first_name: item.firstName,
+      last_name: item.lastName,
+      email: item.email || '',
+      department: item.department || '',
+      position: item.position || ''
+    };
+    const data = await api.createUser(apiData);
     await refreshUsers();
     return mapUserFromAPI(data);
   };
 
   const updateUserFn = async (id: string, data: Partial<User>) => {
-    await api.updateUser(id, data);
+    // Конвертируем camelCase в snake_case для API
+    const apiData: any = {};
+    if (data.firstName !== undefined) apiData.first_name = data.firstName;
+    if (data.lastName !== undefined) apiData.last_name = data.lastName;
+    if (data.email !== undefined) apiData.email = data.email;
+    if (data.department !== undefined) apiData.department = data.department;
+    if (data.position !== undefined) apiData.position = data.position;
+    await api.updateUser(id, apiData);
     await refreshUsers();
   };
 

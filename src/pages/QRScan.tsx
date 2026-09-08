@@ -3,9 +3,10 @@ import { Html5Qrcode } from 'html5-qrcode';
 import { useData } from '../context/DataContext';
 import { STATUS_LABELS, STATUS_COLORS, EquipmentStatus } from '../types';
 import { Link } from 'react-router-dom';
+import * as api from '../api';
 
 export default function QRScan() {
-  const { equipment, equipmentTypes, categories, users, rooms, updateEquipment } = useData();
+  const { equipment, equipmentTypes, users, rooms, refreshEquipment, changeEquipmentStatus, moveEquipment } = useData();
   const [scannedId, setScannedId] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState('');
@@ -15,15 +16,13 @@ export default function QRScan() {
   const [newUserId, setNewUserId] = useState('');
   const [newRoomId, setNewRoomId] = useState('');
   const [manualInput, setManualInput] = useState('');
-  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
 
   const scannedEq = scannedId ? equipment.find(e => e.qrCode === scannedId || e.id === scannedId) : null;
 
   useEffect(() => {
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current.stop().catch(() => {});
-      }
+      stopScanner();
     };
   }, []);
 
@@ -31,18 +30,16 @@ export default function QRScan() {
     setError('');
     setIsScanning(true);
     try {
-      const html5Qrcode = new Html5Qrcode('qr-reader');
-      scannerRef.current = html5Qrcode;
-      await html5Qrcode.start(
+      const html5QrCode = new Html5Qrcode('qr-reader');
+      html5QrCodeRef.current = html5QrCode;
+      await html5QrCode.start(
         { facingMode: 'environment' },
         { fps: 10, qrbox: { width: 250, height: 250 } },
         (decodedText) => {
           setScannedId(decodedText);
-          html5Qrcode.stop().catch(() => {});
-          scannerRef.current = null;
-          setIsScanning(false);
+          stopScanner();
         },
-        () => {} // ignore errors
+        () => {}
       );
     } catch (err) {
       setError('Не удалось получить доступ к камере. Используйте ручной ввод.');
@@ -52,13 +49,13 @@ export default function QRScan() {
 
   const stopScanner = async () => {
     setIsScanning(false);
-    if (scannerRef.current) {
+    if (html5QrCodeRef.current) {
       try {
-        await scannerRef.current.stop();
+        await html5QrCodeRef.current.stop();
+        html5QrCodeRef.current = null;
       } catch (e) {
         // ignore
       }
-      scannerRef.current = null;
     }
   };
 
@@ -69,16 +66,16 @@ export default function QRScan() {
     }
   };
 
-  const handleStatusChange = () => {
+  const handleStatusChange = async () => {
     if (scannedEq) {
-      updateEquipment({ ...scannedEq, status: newStatus });
+      await changeEquipmentStatus(scannedEq.id, newStatus);
       setShowStatusModal(false);
     }
   };
 
-  const handleMove = () => {
+  const handleMove = async () => {
     if (scannedEq) {
-      updateEquipment({ ...scannedEq, userId: newUserId || null, roomId: newRoomId || null });
+      await moveEquipment(scannedEq.id, { user_id: newUserId || undefined, room_id: newRoomId || undefined });
       setShowMoveModal(false);
     }
   };
@@ -93,7 +90,6 @@ export default function QRScan() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-semibold text-gray-700 mb-4">Сканирование</h3>
 
-            {/* Camera scanner */}
             <div id="qr-reader" className="mb-4 rounded-lg overflow-hidden" style={{ display: isScanning ? 'block' : 'none' }}></div>
 
             {!isScanning && (

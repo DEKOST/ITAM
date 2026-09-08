@@ -1,124 +1,160 @@
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
-import { v4 as uuidv4 } from 'uuid';
+import { Category, EquipmentType } from '../types';
 
 export default function Categories() {
   const { categories, equipmentTypes, addCategory, updateCategory, deleteCategory, addEquipmentType, updateEquipmentType, deleteEquipmentType } = useData();
-  const [catName, setCatName] = useState('');
-  const [catDesc, setCatDesc] = useState('');
-  const [typeName, setTypeName] = useState('');
-  const [typeCatId, setTypeCatId] = useState('');
+  const [showCatForm, setShowCatForm] = useState(false);
+  const [showTypeForm, setShowTypeForm] = useState(false);
   const [editingCat, setEditingCat] = useState<string | null>(null);
   const [editingType, setEditingType] = useState<string | null>(null);
+  const [catForm, setCatForm] = useState({ name: '', description: '' });
+  const [typeForm, setTypeForm] = useState({ name: '', categoryId: '' });
 
-  const handleAddCategory = (e: React.FormEvent) => {
+  const handleCatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingCat) {
-      updateCategory({ id: editingCat, name: catName, description: catDesc });
-      setEditingCat(null);
+      await updateCategory(editingCat, catForm);
     } else {
-      addCategory({ id: uuidv4(), name: catName, description: catDesc });
+      await addCategory(catForm);
     }
-    setCatName(''); setCatDesc('');
+    setCatForm({ name: '', description: '' });
+    setShowCatForm(false);
+    setEditingCat(null);
   };
 
-  const handleAddType = (e: React.FormEvent) => {
+  const handleTypeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!typeCatId) return;
     if (editingType) {
-      updateEquipmentType({ id: editingType, name: typeName, categoryId: typeCatId });
-      setEditingType(null);
+      await updateEquipmentType(editingType, { name: typeForm.name, categoryId: typeForm.categoryId });
     } else {
-      addEquipmentType({ id: uuidv4(), name: typeName, categoryId: typeCatId });
+      await addEquipmentType({ name: typeForm.name, categoryId: typeForm.categoryId });
     }
-    setTypeName('');
+    setTypeForm({ name: '', categoryId: '' });
+    setShowTypeForm(false);
+    setEditingType(null);
   };
 
-  const startEditCat = (id: string) => {
-    const cat = categories.find(c => c.id === id);
-    if (cat) { setCatName(cat.name); setCatDesc(cat.description); setEditingCat(id); }
+  const startEditCat = (cat: Category) => {
+    setCatForm({ name: cat.name, description: cat.description });
+    setEditingCat(cat.id);
+    setShowCatForm(true);
   };
 
-  const startEditType = (id: string) => {
-    const type = equipmentTypes.find(t => t.id === id);
-    if (type) { setTypeName(type.name); setTypeCatId(type.categoryId); setEditingType(id); }
+  const startEditType = (type: EquipmentType) => {
+    setTypeForm({ name: type.name, categoryId: type.categoryId });
+    setEditingType(type.id);
+    setShowTypeForm(true);
   };
 
   return (
     <div>
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Категории и типы оборудования</h2>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Categories */}
-        <div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-4">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">{editingCat ? 'Редактировать категорию' : 'Новая категория'}</h3>
-            <form onSubmit={handleAddCategory} className="space-y-3">
-              <input required value={catName} onChange={e => setCatName(e.target.value)} placeholder="Название категории" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <input value={catDesc} onChange={e => setCatDesc(e.target.value)} placeholder="Описание" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <div className="flex gap-2">
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">{editingCat ? 'Сохранить' : 'Добавить'}</button>
-                {editingCat && <button type="button" onClick={() => { setEditingCat(null); setCatName(''); setCatDesc(''); }} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Отмена</button>}
-              </div>
-            </form>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">Категории ({categories.length})</h3>
-            <div className="space-y-2">
-              {categories.map(cat => (
-                <div key={cat.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="font-medium text-gray-800">{cat.name}</p>
-                    <p className="text-xs text-gray-500">{cat.description}</p>
-                  </div>
-                  <div className="flex gap-1">
-                    <button onClick={() => startEditCat(cat.id)} className="px-2 py-1 text-amber-600 hover:bg-amber-50 rounded text-xs">✏️</button>
-                    <button onClick={() => { if (confirm('Удалить категорию?')) deleteCategory(cat.id); }} className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-xs">🗑️</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+      {/* Категории */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-700">Категории</h3>
+          <button onClick={() => { setShowCatForm(!showCatForm); setEditingCat(null); setCatForm({ name: '', description: '' }); }} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+            {showCatForm ? 'Скрыть' : '+ Добавить категорию'}
+          </button>
         </div>
 
-        {/* Equipment Types */}
-        <div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-4">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">{editingType ? 'Редактировать тип' : 'Новый тип оборудования'}</h3>
-            <form onSubmit={handleAddType} className="space-y-3">
-              <input required value={typeName} onChange={e => setTypeName(e.target.value)} placeholder="Название типа" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <select required value={typeCatId} onChange={e => setTypeCatId(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">Выберите категорию</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-              <div className="flex gap-2">
-                <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">{editingType ? 'Сохранить' : 'Добавить'}</button>
-                {editingType && <button type="button" onClick={() => { setEditingType(null); setTypeName(''); }} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Отмена</button>}
+        {showCatForm && (
+          <form onSubmit={handleCatSubmit} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-4">
+            <h4 className="font-medium text-gray-700 mb-3">{editingCat ? 'Редактировать категорию' : 'Новая категория'}</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Название *</label>
+                <input required value={catForm.name} onChange={e => setCatForm({...catForm, name: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
-            </form>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">Типы оборудования ({equipmentTypes.length})</h3>
-            <div className="space-y-2">
-              {equipmentTypes.map(type => {
-                const cat = categories.find(c => c.id === type.categoryId);
-                return (
-                  <div key={type.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-gray-800">{type.name}</p>
-                      <p className="text-xs text-gray-500">{cat?.name || 'Без категории'}</p>
-                    </div>
-                    <div className="flex gap-1">
-                      <button onClick={() => startEditType(type.id)} className="px-2 py-1 text-amber-600 hover:bg-amber-50 rounded text-xs">✏️</button>
-                      <button onClick={() => { if (confirm('Удалить тип?')) deleteEquipmentType(type.id); }} className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-xs">🗑️</button>
-                    </div>
-                  </div>
-                );
-              })}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Описание</label>
+                <input value={catForm.description} onChange={e => setCatForm({...catForm, description: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
             </div>
-          </div>
+            <div className="flex gap-2">
+              <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">{editingCat ? 'Сохранить' : 'Добавить'}</button>
+              <button type="button" onClick={() => { setShowCatForm(false); setEditingCat(null); }} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Отмена</button>
+            </div>
+          </form>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {categories.map(cat => (
+            <div key={cat.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h4 className="font-semibold text-gray-800">{cat.name}</h4>
+                  {cat.description && <p className="text-sm text-gray-500 mt-1">{cat.description}</p>}
+                  <p className="text-xs text-gray-400 mt-2">Типов: {equipmentTypes.filter(t => t.categoryId === cat.id).length}</p>
+                </div>
+                <div className="flex gap-1">
+                  <button onClick={() => startEditCat(cat)} className="px-2 py-1 text-amber-600 hover:bg-amber-50 rounded text-xs">✏️</button>
+                  <button onClick={async () => { if (confirm('Удалить категорию?')) { try { await deleteCategory(cat.id); } catch(e: any) { alert(e.message); } } }} className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-xs">🗑️</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Типы */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-700">Типы оборудования</h3>
+          <button onClick={() => { setShowTypeForm(!showTypeForm); setEditingType(null); setTypeForm({ name: '', categoryId: '' }); }} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">
+            {showTypeForm ? 'Скрыть' : '+ Добавить тип'}
+          </button>
+        </div>
+
+        {showTypeForm && (
+          <form onSubmit={handleTypeSubmit} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-4">
+            <h4 className="font-medium text-gray-700 mb-3">{editingType ? 'Редактировать тип' : 'Новый тип'}</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Название *</label>
+                <input required value={typeForm.name} onChange={e => setTypeForm({...typeForm, name: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Категория *</label>
+                <select required value={typeForm.categoryId} onChange={e => setTypeForm({...typeForm, categoryId: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="">Выберите категорию</option>
+                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">{editingType ? 'Сохранить' : 'Добавить'}</button>
+              <button type="button" onClick={() => { setShowTypeForm(false); setEditingType(null); }} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Отмена</button>
+            </div>
+          </form>
+        )}
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Тип</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Категория</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Действия</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {equipmentTypes.map(type => (
+                <tr key={type.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 font-medium text-gray-800">{type.name}</td>
+                  <td className="px-4 py-3 text-gray-600">{categories.find(c => c.id === type.categoryId)?.name || '—'}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-1">
+                      <button onClick={() => startEditType(type)} className="px-2 py-1 text-amber-600 hover:bg-amber-50 rounded text-xs">✏️</button>
+                      <button onClick={async () => { if (confirm('Удалить тип?')) { try { await deleteEquipmentType(type.id); } catch(e: any) { alert(e.message); } } }} className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-xs">🗑️</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

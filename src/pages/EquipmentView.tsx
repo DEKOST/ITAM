@@ -7,7 +7,7 @@ import { QRCodeSVG } from 'qrcode.react';
 export default function EquipmentView() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { equipment, equipmentTypes, categories, users, rooms, updateEquipment } = useData();
+  const { equipment, equipmentTypes, categories, users, rooms, updateEquipment, changeEquipmentStatus, moveEquipment } = useData();
   const eq = equipment.find(e => e.id === id);
 
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -23,13 +23,13 @@ export default function EquipmentView() {
   const user = eq.userId ? users.find(u => u.id === eq.userId) : null;
   const room = eq.roomId ? rooms.find(r => r.id === eq.roomId) : null;
 
-  const handleStatusChange = () => {
-    updateEquipment({ ...eq, status: newStatus });
+  const handleStatusChange = async () => {
+    await changeEquipmentStatus(eq.id, newStatus);
     setShowStatusModal(false);
   };
 
-  const handleMove = () => {
-    updateEquipment({ ...eq, userId: newUserId || null, roomId: newRoomId || null });
+  const handleMove = async () => {
+    await moveEquipment(eq.id, { user_id: newUserId || undefined, room_id: newRoomId || undefined });
     setShowMoveModal(false);
   };
 

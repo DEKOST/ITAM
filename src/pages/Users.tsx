@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
-import { v4 as uuidv4 } from 'uuid';
 import { User } from '../types';
 
 export default function Users() {
@@ -9,12 +8,12 @@ export default function Users() {
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', department: '', position: '' });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editing) {
-      updateUser({ id: editing, ...form });
+      await updateUser(editing, form);
     } else {
-      addUser({ id: uuidv4(), ...form });
+      await addUser(form);
     }
     setForm({ firstName: '', lastName: '', email: '', department: '', position: '' });
     setShowForm(false);
@@ -91,7 +90,7 @@ export default function Users() {
                 <td className="px-4 py-3">
                   <div className="flex gap-1">
                     <button onClick={() => startEdit(user)} className="px-2 py-1 text-amber-600 hover:bg-amber-50 rounded text-xs">✏️</button>
-                    <button onClick={() => { if (confirm('Удалить сотрудника?')) deleteUser(user.id); }} className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-xs">🗑️</button>
+                    <button onClick={async () => { if (confirm('Удалить сотрудника?')) await deleteUser(user.id); }} className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-xs">🗑️</button>
                   </div>
                 </td>
               </tr>

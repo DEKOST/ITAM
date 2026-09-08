@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
-import { v4 as uuidv4 } from 'uuid';
 import { Room } from '../types';
 
 export default function Rooms() {
@@ -9,12 +8,12 @@ export default function Rooms() {
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', building: '', floor: 1, description: '' });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editing) {
-      updateRoom({ id: editing, ...form });
+      await updateRoom(editing, form);
     } else {
-      addRoom({ id: uuidv4(), ...form });
+      await addRoom(form);
     }
     setForm({ name: '', building: '', floor: 1, description: '' });
     setShowForm(false);
@@ -77,7 +76,7 @@ export default function Rooms() {
               </div>
               <div className="flex gap-1">
                 <button onClick={() => startEdit(room)} className="px-2 py-1 text-amber-600 hover:bg-amber-50 rounded text-xs">✏️</button>
-                <button onClick={() => { if (confirm('Удалить помещение?')) deleteRoom(room.id); }} className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-xs">🗑️</button>
+                <button onClick={async () => { if (confirm('Удалить помещение?')) await deleteRoom(room.id); }} className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-xs">🗑️</button>
               </div>
             </div>
           </div>

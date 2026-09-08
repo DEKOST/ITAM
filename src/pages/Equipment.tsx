@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { STATUS_LABELS, STATUS_COLORS } from '../types';
 import { Link } from 'react-router-dom';
+import * as api from '../api';
 
 export default function Equipment() {
-  const { equipment, equipmentTypes, categories, users, rooms, deleteEquipment } = useData();
+  const { equipment, equipmentTypes, categories, users, rooms, deleteEquipment, refreshEquipment } = useData();
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterType, setFilterType] = useState('');
@@ -104,7 +105,7 @@ export default function Equipment() {
                     <div className="flex items-center gap-1">
                       <Link to={`/equipment/${eq.id}`} className="px-2 py-1 text-blue-600 hover:bg-blue-50 rounded text-xs">👁️</Link>
                       <Link to={`/equipment/${eq.id}/edit`} className="px-2 py-1 text-amber-600 hover:bg-amber-50 rounded text-xs">✏️</Link>
-                      <button onClick={() => { if (confirm('Удалить оборудование?')) deleteEquipment(eq.id); }} className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-xs">🗑️</button>
+                      <button onClick={async () => { if (confirm('Удалить оборудование?')) await deleteEquipment(eq.id); }} className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-xs">🗑️</button>
                     </div>
                   </td>
                 </tr>

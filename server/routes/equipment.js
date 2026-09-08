@@ -17,7 +17,7 @@ router.get('/', (req, res) => {
       c.name as category_name,
       u.first_name as user_first_name,
       u.last_name as user_last_name,
-      u.department as user_department,
+      u.subdivision_id as user_subdivision_id,
       r.name as room_name,
       r.building as room_building
     FROM equipment e
@@ -67,7 +67,7 @@ router.get('/:id', (req, res) => {
       c.name as category_name,
       u.first_name as user_first_name,
       u.last_name as user_last_name,
-      u.department as user_department,
+      u.subdivision_id as user_subdivision_id,
       r.name as room_name,
       r.building as room_building,
       r.floor as room_floor

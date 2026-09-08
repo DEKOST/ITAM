@@ -128,3 +128,16 @@ export const webAuthnAuthBegin = (username: string) => fetchAPI('/webauthn/auth/
 export const webAuthnAuthComplete = (data: any) => fetchAPI('/webauthn/auth/complete', { method: 'POST', body: JSON.stringify(data) });
 export const getWebAuthnDevices = () => fetchAPI('/webauthn/devices');
 export const deleteWebAuthnDevice = (id: string) => fetchAPI(`/webauthn/devices/${id}`, { method: 'DELETE' });
+
+// Maintenance Types
+export const getMaintenanceTypes = () => fetchAPI('/maintenance-types');
+export const getMaintenanceTypeById = (id: string) => fetchAPI(`/maintenance-types/${id}`);
+export const createMaintenanceType = (data: any) => fetchAPI('/maintenance-types', { method: 'POST', body: JSON.stringify(data) });
+export const updateMaintenanceType = (id: string, data: any) => fetchAPI(`/maintenance-types/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const deleteMaintenanceType = (id: string) => fetchAPI(`/maintenance-types/${id}`, { method: 'DELETE' });
+
+// Maintenance Logs
+export const getEquipmentMaintenance = (id: string) => fetchAPI(`/equipment/${id}/maintenance`);
+export const getLastMaintenance = (id: string, typeId: string) => fetchAPI(`/equipment/${id}/maintenance/last/${typeId}`);
+export const addMaintenance = (id: string, data: any) => fetchAPI(`/equipment/${id}/maintenance`, { method: 'POST', body: JSON.stringify(data) });
+export const getNextMaintenance = (id: string) => fetchAPI(`/equipment/${id}/next-maintenance`);

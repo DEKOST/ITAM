@@ -36,6 +36,8 @@ app.use('/api/types', authMiddleware, require('./routes/types'));
 app.use('/api/users', authMiddleware, require('./routes/users'));
 app.use('/api/rooms', authMiddleware, require('./routes/rooms'));
 app.use('/api/subdivisions', authMiddleware, require('./routes/subdivisions'));
+app.use('/api/maintenance-types', authMiddleware, require('./routes/maintenanceTypes'));
+app.use('/api', authMiddleware, require('./routes/maintenance'));
 app.use('/api/certificates', authMiddleware, require('./routes/certificates'));
 app.use('/api/backups', authMiddleware, require('./routes/backups'));
 app.use('/api', authMiddleware, require('./routes/history'));

@@ -6,6 +6,7 @@ const navItems = [
   { path: '/', label: 'Дашборд', icon: '📊', roles: ['admin', 'user'] },
   { path: '/equipment', label: 'Оборудование', icon: '💻', roles: ['admin', 'user'] },
   { path: '/categories', label: 'Категории и типы', icon: '🏷️', roles: ['admin', 'user'] },
+  { path: '/maintenance-types', label: 'Типы обслуживания', icon: '🔧', roles: ['admin', 'user'] },
   { path: '/users', label: 'Сотрудники', icon: '👥', roles: ['admin', 'user'] },
   { path: '/subdivisions', label: 'Подразделения', icon: '🏛️', roles: ['admin', 'user'] },
   { path: '/rooms', label: 'Помещения', icon: '🏢', roles: ['admin', 'user'] },

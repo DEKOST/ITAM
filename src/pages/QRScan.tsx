@@ -5,19 +5,44 @@ import { STATUS_LABELS, STATUS_COLORS, EquipmentStatus, Equipment } from '../typ
 import { Link } from 'react-router-dom';
 import * as api from '../api';
 
+interface NextMaintenance {
+  maintenance_type_id: string;
+  maintenance_type_name: string;
+  maintenance_type_description: string;
+  interval_days: number;
+  interval_months: number;
+  interval_years: number;
+  last_maintenance_date: string | null;
+  last_maintenance_description: string | null;
+  next_maintenance_date: string | null;
+  days_until: number | null;
+  is_overdue: boolean;
+}
+
 export default function QRScan() {
   const { equipment, equipmentTypes, users, rooms, refreshEquipment, changeEquipmentStatus, moveEquipment } = useData();
   const [scannedId, setScannedId] = useState<string | null>(null);
   const [scannedEq, setScannedEq] = useState<Equipment | null>(null);
+  const [nextMaintenances, setNextMaintenances] = useState<NextMaintenance[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showMoveModal, setShowMoveModal] = useState(false);
+  const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
   const [newStatus, setNewStatus] = useState<EquipmentStatus>('in_use');
   const [newUserId, setNewUserId] = useState('');
   const [newRoomId, setNewRoomId] = useState('');
   const [manualInput, setManualInput] = useState('');
+  const [maintenanceTypes, setMaintenanceTypes] = useState<any[]>([]);
+  const [maintenanceForm, setMaintenanceForm] = useState({
+    maintenance_type_id: '',
+    date: new Date().toISOString().split('T')[0],
+    description: '',
+    cost: 0,
+    performed_by: '',
+    notes: ''
+  });
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
 
   // Функция поиска оборудования по QR-коду через API
@@ -45,6 +70,14 @@ export default function QRScan() {
         createdAt: data.created_at || '',
       };
       setScannedEq(equipment);
+      
+      // Загружаем информацию о следующем обслуживании
+      const maintenances = await api.getNextMaintenance(data.id);
+      setNextMaintenances(maintenances);
+      
+      // Загружаем типы обслуживания
+      const types = await api.getMaintenanceTypes();
+      setMaintenanceTypes(types);
     } catch (err: any) {
       setScannedEq(null);
       if (err.message.includes('не найдено')) {
@@ -122,6 +155,40 @@ export default function QRScan() {
       // Обновляем данные оборудования
       await searchEquipmentByQR(scannedEq.qrCode);
     }
+  };
+
+  const handleAddMaintenance = async () => {
+    if (scannedEq && maintenanceForm.maintenance_type_id && maintenanceForm.date) {
+      try {
+        await api.addMaintenance(scannedEq.id, maintenanceForm);
+        setShowMaintenanceModal(false);
+        setMaintenanceForm({
+          maintenance_type_id: '',
+          date: new Date().toISOString().split('T')[0],
+          description: '',
+          cost: 0,
+          performed_by: '',
+          notes: ''
+        });
+        // Обновляем данные оборудования
+        await searchEquipmentByQR(scannedEq.qrCode);
+        alert('✅ Обслуживание добавлено');
+      } catch (err: any) {
+        alert('❌ Ошибка: ' + err.message);
+      }
+    }
+  };
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString('ru-RU');
+  };
+
+  const getDaysUntilText = (days: number | null) => {
+    if (days === null) return 'Не указано';
+    if (days < 0) return `Просрочено на ${Math.abs(days)} дн.`;
+    if (days === 0) return 'Сегодня';
+    if (days === 1) return 'Завтра';
+    return `Через ${days} дн.`;
   };
 
   return (
@@ -235,14 +302,42 @@ export default function QRScan() {
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-500">Последнее ТО</p>
-                    <p className="text-sm font-medium text-gray-800">{scannedEq.lastMaintenanceDate || '—'}</p>
-                  </div>
+                  {/* Информация об обслуживании */}
+                  {nextMaintenances.length > 0 && (
+                    <div className="mt-4">
+                      <h5 className="text-sm font-semibold text-gray-700 mb-2">🔧 Обслуживание</h5>
+                      <div className="space-y-2">
+                        {nextMaintenances.map((m, idx) => (
+                          <div key={idx} className={`rounded-lg p-3 ${m.is_overdue ? 'bg-red-50 border border-red-200' : 'bg-gray-50'}`}>
+                            <div className="flex items-start justify-between mb-1">
+                              <p className="text-sm font-medium text-gray-800">{m.maintenance_type_name}</p>
+                              {m.is_overdue && (
+                                <span className="text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded-full font-medium">Просрочено</span>
+                              )}
+                            </div>
+                            {m.last_maintenance_date && (
+                              <p className="text-xs text-gray-600">
+                                Последнее: {formatDate(m.last_maintenance_date)}
+                                {m.last_maintenance_description && ` — ${m.last_maintenance_description}`}
+                              </p>
+                            )}
+                            {m.next_maintenance_date && (
+                              <p className={`text-xs ${m.is_overdue ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
+                                Следующее: {formatDate(m.next_maintenance_date)} ({getDaysUntilText(m.days_until)})
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Actions */}
                 <div className="space-y-2">
+                  <button onClick={() => setShowMaintenanceModal(true)} className="w-full px-4 py-2.5 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-100 transition-colors text-left">
+                    🔧 Добавить обслуживание
+                  </button>
                   <button onClick={() => { setNewStatus(scannedEq.status); setShowStatusModal(true); }} className="w-full px-4 py-2.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors text-left">
                     🔄 Сменить статус
                   </button>
@@ -252,7 +347,7 @@ export default function QRScan() {
                   <Link to={`/equipment/${scannedEq.id}`} className="block w-full px-4 py-2.5 bg-gray-50 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors text-left text-center">
                     📋 Полная информация
                   </Link>
-                  <button onClick={() => { setScannedId(null); setScannedEq(null); setError(''); }} className="w-full px-4 py-2.5 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors text-left text-center">
+                  <button onClick={() => { setScannedId(null); setScannedEq(null); setError(''); setNextMaintenances([]); }} className="w-full px-4 py-2.5 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors text-left text-center">
                     🔄 Сканировать другой
                   </button>
                 </div>
@@ -307,6 +402,84 @@ export default function QRScan() {
             <div className="flex gap-3">
               <button onClick={handleMove} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">Переместить</button>
               <button onClick={() => setShowMoveModal(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Отмена</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Maintenance Modal */}
+      {showMaintenanceModal && scannedEq && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Добавить обслуживание — {scannedEq.name}</h3>
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Тип обслуживания *</label>
+                <select
+                  value={maintenanceForm.maintenance_type_id}
+                  onChange={e => setMaintenanceForm({ ...maintenanceForm, maintenance_type_id: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  required
+                >
+                  <option value="">Выберите тип</option>
+                  {maintenanceTypes.map(type => (
+                    <option key={type.id} value={type.id}>{type.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Дата обслуживания *</label>
+                <input
+                  type="date"
+                  value={maintenanceForm.date}
+                  onChange={e => setMaintenanceForm({ ...maintenanceForm, date: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Описание работ</label>
+                <textarea
+                  value={maintenanceForm.description}
+                  onChange={e => setMaintenanceForm({ ...maintenanceForm, description: e.target.value })}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Что было сделано..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Стоимость (₽)</label>
+                <input
+                  type="number"
+                  value={maintenanceForm.cost}
+                  onChange={e => setMaintenanceForm({ ...maintenanceForm, cost: parseFloat(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Выполнено кем</label>
+                <input
+                  type="text"
+                  value={maintenanceForm.performed_by}
+                  onChange={e => setMaintenanceForm({ ...maintenanceForm, performed_by: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Имя исполнителя"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Заметки</label>
+                <textarea
+                  value={maintenanceForm.notes}
+                  onChange={e => setMaintenanceForm({ ...maintenanceForm, notes: e.target.value })}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Дополнительная информация..."
+                />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={handleAddMaintenance} className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">Добавить</button>
+              <button onClick={() => setShowMaintenanceModal(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Отмена</button>
             </div>
           </div>
         </div>

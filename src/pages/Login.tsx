@@ -27,6 +27,65 @@ export default function Login() {
     }
   };
 
+  const handleBiometricLogin = async () => {
+    if (!username) {
+      setError('Сначала введите логин');
+      return;
+    }
+    setError('');
+    setBiometricLoading(true);
+
+    try {
+      // Запрашиваем опции аутентификации
+      const { options, userId } = await api.webAuthnAuthBegin(username);
+
+      // Вызов WebAuthn API браузера
+      const credential = await navigator.credentials.get({
+        publicKey: {
+          ...options,
+          challenge: base64ToBuffer(options.challenge),
+          allowCredentials: options.allowCredentials?.map((cred: any) => ({
+            ...cred,
+            id: base64ToBuffer(cred.id)
+          }))
+        }
+      } as any);
+
+      if (!credential) {
+        throw new Error('Аутентификация отменена');
+      }
+
+      const cred = credential as PublicKeyCredential;
+      const authResponse = cred.response as AuthenticatorAssertionResponse;
+
+      // Отправляем ответ на сервер
+      const result = await api.webAuthnAuthComplete({
+        id: cred.id,
+        rawId: bufferToBase64(cred.rawId),
+        type: cred.type,
+        response: {
+          clientDataJSON: bufferToBase64(authResponse.clientDataJSON),
+          authenticatorData: bufferToBase64(authResponse.authenticatorData),
+          signature: bufferToBase64(authResponse.signature),
+          userHandle: authResponse.userHandle ? bufferToBase64(authResponse.userHandle) : null
+        },
+        userId
+      });
+
+      // Сохраняем токен и перенаправляем
+      setAuth(result.token, result.user);
+      navigate('/');
+    } catch (err: any) {
+      if (err.name === 'NotAllowedError') {
+        setError('Аутентификация отменена пользователем');
+      } else {
+        setError(err.message || 'Ошибка биометрической аутентификации');
+      }
+    } finally {
+      setBiometricLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4">
       <div className="w-full max-w-md">
@@ -120,4 +179,23 @@ export default function Login() {
       </div>
     </div>
   );
+}
+
+// Утилиты для конвертации base64
+function base64ToBuffer(base64: string): ArrayBuffer {
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
+
+function bufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
 }

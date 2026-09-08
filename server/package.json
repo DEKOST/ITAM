@@ -1,6 +1,7 @@
 {
   "name": "itam-server",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "ITAM Service Backend",
   "main": "server.js",
   "scripts": {
@@ -8,19 +9,19 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "better-sqlite3": "^9.4.3",
-    "cors": "^2.8.5",
-    "uuid": "^9.0.1",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
-    "express-rate-limit": "^7.1.5",
-    "joi": "^17.11.0",
-    "node-cron": "^3.0.3",
     "@simplewebauthn/server": "^13.1.0",
-    "openssl-wrapper": "^0.3.4"
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^11.8.2",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^1.4.5-lts.1",
+    "node-cron": "^3.0.3",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.1.9"
   }
 }

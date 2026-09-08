@@ -130,10 +130,14 @@ router.get('/equipment/:id/next-maintenance', (req, res) => {
     
     // Получаем типы обслуживания для этой категории (или общие без категории)
     const maintenanceTypes = db.prepare(`
-      SELECT * FROM maintenance_types 
-      WHERE is_active = 1 
-      AND (category_id = ? OR category_id IS NULL)
-      ORDER BY name
+      SELECT DISTINCT mt.*
+      FROM maintenance_types mt
+      LEFT JOIN maintenance_type_categories mtc ON mt.id = mtc.maintenance_type_id
+      WHERE mt.is_active = 1 
+      AND (mtc.category_id = ? OR NOT EXISTS (
+        SELECT 1 FROM maintenance_type_categories WHERE maintenance_type_id = mt.id
+      ))
+      ORDER BY mt.name
     `).all(equipment.category_id);
     
     const nextMaintenances = maintenanceTypes.map(type => {

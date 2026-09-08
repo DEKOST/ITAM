@@ -6,8 +6,8 @@ interface MaintenanceType {
   id: string;
   name: string;
   description: string;
-  category_id: string | null;
-  category_name?: string;
+  category_ids?: string;
+  category_names?: string;
   interval_days: number;
   interval_months: number;
   interval_years: number;
@@ -22,7 +22,7 @@ export default function MaintenanceTypes() {
   const [form, setForm] = useState({
     name: '',
     description: '',
-    category_id: '',
+    category_ids: [] as string[],
     interval_days: 0,
     interval_months: 0,
     interval_years: 0
@@ -48,7 +48,7 @@ export default function MaintenanceTypes() {
     try {
       const submitData = {
         ...form,
-        category_id: form.category_id || null
+        category_ids: form.category_ids.length > 0 ? form.category_ids : null
       };
       if (editing) {
         await api.updateMaintenanceType(editing, submitData);
@@ -58,7 +58,7 @@ export default function MaintenanceTypes() {
       await loadTypes();
       setShowForm(false);
       setEditing(null);
-      setForm({ name: '', description: '', category_id: '', interval_days: 0, interval_months: 0, interval_years: 0 });
+      setForm({ name: '', description: '', category_ids: [], interval_days: 0, interval_months: 0, interval_years: 0 });
     } catch (err: any) {
       alert('Ошибка: ' + err.message);
     }
@@ -68,7 +68,7 @@ export default function MaintenanceTypes() {
     setForm({
       name: type.name,
       description: type.description,
-      category_id: type.category_id || '',
+      category_ids: type.category_ids ? type.category_ids.split(',').filter(id => id) : [],
       interval_days: type.interval_days,
       interval_months: type.interval_months,
       interval_years: type.interval_years
@@ -107,7 +107,7 @@ export default function MaintenanceTypes() {
           onClick={() => {
             setShowForm(!showForm);
             setEditing(null);
-            setForm({ name: '', description: '', category_id: '', interval_days: 0, interval_months: 0, interval_years: 0 });
+            setForm({ name: '', description: '', category_ids: [], interval_days: 0, interval_months: 0, interval_years: 0 });
           }}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
         >
@@ -130,19 +130,32 @@ export default function MaintenanceTypes() {
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Категория оборудования</label>
-              <select
-                value={form.category_id}
-                onChange={e => setForm({ ...form, category_id: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Все категории</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </select>
-              <p className="text-xs text-gray-500 mt-1">Оставьте пустым для применения ко всем категориям</p>
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Категории оборудования</label>
+              <div className="border border-gray-200 rounded-lg p-3 max-h-40 overflow-y-auto">
+                {categories.length === 0 ? (
+                  <p className="text-xs text-gray-500">Нет доступных категорий</p>
+                ) : (
+                  categories.map(cat => (
+                    <label key={cat.id} className="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-50 rounded px-2">
+                      <input
+                        type="checkbox"
+                        checked={form.category_ids.includes(cat.id)}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            setForm({ ...form, category_ids: [...form.category_ids, cat.id] });
+                          } else {
+                            setForm({ ...form, category_ids: form.category_ids.filter(id => id !== cat.id) });
+                          }
+                        }}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">{cat.name}</span>
+                    </label>
+                  ))
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Выберите категории или оставьте пустым для применения ко всем</p>
             </div>
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Описание</label>
@@ -223,7 +236,7 @@ export default function MaintenanceTypes() {
               types.map(type => (
                 <tr key={type.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium text-gray-800">{type.name}</td>
-                  <td className="px-4 py-3 text-gray-600">{type.category_name || 'Все категории'}</td>
+                  <td className="px-4 py-3 text-gray-600">{type.category_names || 'Все категории'}</td>
                   <td className="px-4 py-3 text-gray-600">{type.description || '—'}</td>
                   <td className="px-4 py-3 text-gray-600">{getIntervalText(type)}</td>
                   <td className="px-4 py-3">

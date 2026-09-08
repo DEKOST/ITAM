@@ -227,13 +227,20 @@ function initDatabase() {
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       description TEXT DEFAULT '',
-      category_id TEXT,
       interval_days INTEGER DEFAULT 0,
       interval_months INTEGER DEFAULT 0,
       interval_years INTEGER DEFAULT 0,
       is_active INTEGER DEFAULT 1,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Связь типов обслуживания с категориями (многие-ко-многим)
+    CREATE TABLE IF NOT EXISTS maintenance_type_categories (
+      maintenance_type_id TEXT NOT NULL,
+      category_id TEXT NOT NULL,
+      PRIMARY KEY (maintenance_type_id, category_id),
+      FOREIGN KEY (maintenance_type_id) REFERENCES maintenance_types(id) ON DELETE CASCADE,
+      FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
     );
 
     -- Индексы для быстрого поиска
@@ -312,6 +319,25 @@ function initDatabase() {
     const hasCategoryIdColumn = columns.some(col => col.name === 'category_id');
     if (!hasCategoryIdColumn) {
       db.exec('ALTER TABLE maintenance_types ADD COLUMN category_id TEXT');
+    }
+  } catch (e) {
+    // Игнорируем ошибки миграции
+  }
+
+  // Миграция: переносим данные из category_id в новую таблицу связей
+  try {
+    const tableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='maintenance_type_categories'").get();
+    if (tableExists) {
+      const columns = db.prepare("PRAGMA table_info(maintenance_types)").all();
+      const hasCategoryIdColumn = columns.some(col => col.name === 'category_id');
+      if (hasCategoryIdColumn) {
+        // Переносим старые связи
+        const oldLinks = db.prepare("SELECT id, category_id FROM maintenance_types WHERE category_id IS NOT NULL").all();
+        const insertLink = db.prepare("INSERT OR IGNORE INTO maintenance_type_categories (maintenance_type_id, category_id) VALUES (?, ?)");
+        for (const link of oldLinks) {
+          insertLink.run(link.id, link.category_id);
+        }
+      }
     }
   } catch (e) {
     // Игнорируем ошибки миграции

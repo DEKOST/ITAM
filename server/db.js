@@ -183,8 +183,10 @@ function initDatabase() {
       to_user_id TEXT,
       from_room_id TEXT,
       to_room_id TEXT,
+      changed_by TEXT,
       comment TEXT DEFAULT '',
-      FOREIGN KEY (equipment_id) REFERENCES equipment(id) ON DELETE CASCADE
+      FOREIGN KEY (equipment_id) REFERENCES equipment(id) ON DELETE CASCADE,
+      FOREIGN KEY (changed_by) REFERENCES auth_users(id) ON DELETE SET NULL
     );
 
     -- Журнал изменений статуса
@@ -194,8 +196,10 @@ function initDatabase() {
       date DATETIME DEFAULT CURRENT_TIMESTAMP,
       from_status TEXT,
       to_status TEXT NOT NULL,
+      changed_by TEXT,
       comment TEXT DEFAULT '',
-      FOREIGN KEY (equipment_id) REFERENCES equipment(id) ON DELETE CASCADE
+      FOREIGN KEY (equipment_id) REFERENCES equipment(id) ON DELETE CASCADE,
+      FOREIGN KEY (changed_by) REFERENCES auth_users(id) ON DELETE SET NULL
     );
 
     -- Журнал изменений названия
@@ -205,8 +209,10 @@ function initDatabase() {
       date DATETIME DEFAULT CURRENT_TIMESTAMP,
       from_name TEXT,
       to_name TEXT NOT NULL,
+      changed_by TEXT,
       comment TEXT DEFAULT '',
-      FOREIGN KEY (equipment_id) REFERENCES equipment(id) ON DELETE CASCADE
+      FOREIGN KEY (equipment_id) REFERENCES equipment(id) ON DELETE CASCADE,
+      FOREIGN KEY (changed_by) REFERENCES auth_users(id) ON DELETE SET NULL
     );
 
     -- Универсальный журнал изменений полей оборудования
@@ -250,6 +256,20 @@ function initDatabase() {
     if (!hasMiddleNameColumn) {
       db.exec('ALTER TABLE users ADD COLUMN middle_name TEXT DEFAULT ""');
     }
+  } catch (e) {
+    // Игнорируем ошибки миграции
+  }
+
+  // Миграция: добавляем колонку changed_by в таблицы логов если её нет
+  try {
+    const tables = ['move_logs', 'status_logs', 'name_logs'];
+    tables.forEach(table => {
+      const columns = db.prepare(`PRAGMA table_info(${table})`).all();
+      const hasChangedByColumn = columns.some(col => col.name === 'changed_by');
+      if (!hasChangedByColumn) {
+        db.exec(`ALTER TABLE ${table} ADD COLUMN changed_by TEXT`);
+      }
+    });
   } catch (e) {
     // Игнорируем ошибки миграции
   }

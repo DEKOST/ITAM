@@ -28,9 +28,11 @@ router.get('/equipment/:id/history', (req, res) => {
   
   // 2. История изменений статуса
   const statusLogs = db.prepare(`
-    SELECT * FROM status_logs 
-    WHERE equipment_id = ? 
-    ORDER BY date DESC
+    SELECT sl.*, au.username as changed_by_username, au.full_name as changed_by_name
+    FROM status_logs sl
+    LEFT JOIN auth_users au ON sl.changed_by = au.id
+    WHERE sl.equipment_id = ? 
+    ORDER BY sl.date DESC
   `).all(equipmentId);
   
   statusLogs.forEach(log => {
@@ -42,6 +44,8 @@ router.get('/equipment/:id/history', (req, res) => {
       details: {
         from_status: log.from_status,
         to_status: log.to_status,
+        changed_by: log.changed_by_username || 'Неизвестно',
+        changed_by_name: log.changed_by_name || '',
         comment: log.comment
       }
     });
@@ -49,9 +53,11 @@ router.get('/equipment/:id/history', (req, res) => {
   
   // 3. История перемещений
   const moveLogs = db.prepare(`
-    SELECT * FROM move_logs 
-    WHERE equipment_id = ? 
-    ORDER BY date DESC
+    SELECT ml.*, au.username as changed_by_username, au.full_name as changed_by_name
+    FROM move_logs ml
+    LEFT JOIN auth_users au ON ml.changed_by = au.id
+    WHERE ml.equipment_id = ? 
+    ORDER BY ml.date DESC
   `).all(equipmentId);
   
   moveLogs.forEach(log => {
@@ -65,6 +71,8 @@ router.get('/equipment/:id/history', (req, res) => {
         to_user_id: log.to_user_id,
         from_room_id: log.from_room_id,
         to_room_id: log.to_room_id,
+        changed_by: log.changed_by_username || 'Неизвестно',
+        changed_by_name: log.changed_by_name || '',
         comment: log.comment
       }
     });
@@ -94,9 +102,11 @@ router.get('/equipment/:id/history', (req, res) => {
   
   // 5. История изменений названия
   const nameLogs = db.prepare(`
-    SELECT * FROM name_logs 
-    WHERE equipment_id = ? 
-    ORDER BY date DESC
+    SELECT nl.*, au.username as changed_by_username, au.full_name as changed_by_name
+    FROM name_logs nl
+    LEFT JOIN auth_users au ON nl.changed_by = au.id
+    WHERE nl.equipment_id = ? 
+    ORDER BY nl.date DESC
   `).all(equipmentId);
   
   nameLogs.forEach(log => {
@@ -108,6 +118,8 @@ router.get('/equipment/:id/history', (req, res) => {
       details: {
         from_name: log.from_name,
         to_name: log.to_name,
+        changed_by: log.changed_by_username || 'Неизвестно',
+        changed_by_name: log.changed_by_name || '',
         comment: log.comment
       }
     });

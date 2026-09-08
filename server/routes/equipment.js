@@ -210,8 +210,10 @@ router.patch('/:id/status', writeLimiter, validate(changeStatusSchema), (req, re
   const existing = db.prepare('SELECT * FROM equipment WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ error: 'Оборудование не найдено' });
 
+  const changedBy = req.user ? req.user.id : null;
+
   db.prepare('UPDATE equipment SET status = ? WHERE id = ?').run(status, req.params.id);
-  db.prepare('INSERT INTO status_logs (id, equipment_id, from_status, to_status, comment) VALUES (?, ?, ?, ?, ?)').run(uuidv4(), req.params.id, existing.status, status, comment || '');
+  db.prepare('INSERT INTO status_logs (id, equipment_id, from_status, to_status, changed_by, comment) VALUES (?, ?, ?, ?, ?, ?)').run(uuidv4(), req.params.id, existing.status, status, changedBy, comment || '');
 
   const item = db.prepare('SELECT * FROM equipment WHERE id = ?').get(req.params.id);
   res.json(item);
@@ -223,8 +225,10 @@ router.patch('/:id/move', writeLimiter, validate(moveSchema), (req, res) => {
   const existing = db.prepare('SELECT * FROM equipment WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ error: 'Оборудование не найдено' });
 
+  const changedBy = req.user ? req.user.id : null;
+
   db.prepare('UPDATE equipment SET user_id = ?, room_id = ? WHERE id = ?').run(user_id || null, room_id || null, req.params.id);
-  db.prepare('INSERT INTO move_logs (id, equipment_id, from_user_id, to_user_id, from_room_id, to_room_id, comment) VALUES (?, ?, ?, ?, ?, ?, ?)').run(uuidv4(), req.params.id, existing.user_id, user_id || null, existing.room_id, room_id || null, comment || '');
+  db.prepare('INSERT INTO move_logs (id, equipment_id, from_user_id, to_user_id, from_room_id, to_room_id, changed_by, comment) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(uuidv4(), req.params.id, existing.user_id, user_id || null, existing.room_id, room_id || null, changedBy, comment || '');
 
   const item = db.prepare('SELECT * FROM equipment WHERE id = ?').get(req.params.id);
   res.json(item);
@@ -246,15 +250,18 @@ router.patch('/:id/name', writeLimiter, (req, res) => {
     return res.json(existing);
   }
 
+  const changedBy = req.user ? req.user.id : null;
+
   // Обновляем название
   db.prepare('UPDATE equipment SET name = ? WHERE id = ?').run(name, req.params.id);
   
   // Логируем изменение
-  db.prepare('INSERT INTO name_logs (id, equipment_id, from_name, to_name, comment) VALUES (?, ?, ?, ?, ?)').run(
+  db.prepare('INSERT INTO name_logs (id, equipment_id, from_name, to_name, changed_by, comment) VALUES (?, ?, ?, ?, ?, ?)').run(
     uuidv4(), 
     req.params.id, 
     existing.name, 
     name, 
+    changedBy,
     comment || ''
   );
 

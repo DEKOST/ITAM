@@ -145,6 +145,9 @@ export default function EquipmentHistory() {
                     <div className="mt-2 space-y-1 text-sm text-gray-600">
                       {entry.type === 'status_change' && (
                         <>
+                          <p className="text-gray-700">
+                            Пользователь: <span className="font-medium">{entry.details.changed_by_name || entry.details.changed_by}</span>
+                          </p>
                           <p>Статус: <span className="font-medium">{getStatusLabel(entry.details.from_status)}</span> → <span className="font-medium">{getStatusLabel(entry.details.to_status)}</span></p>
                           {entry.details.comment && <p className="text-gray-500">Комментарий: {entry.details.comment}</p>}
                         </>
@@ -152,6 +155,9 @@ export default function EquipmentHistory() {
                       
                       {entry.type === 'move' && (
                         <>
+                          <p className="text-gray-700">
+                            Изменил: <span className="font-medium">{entry.details.changed_by_name || entry.details.changed_by}</span>
+                          </p>
                           <p>Сотрудник: <span className="font-medium">{getUserName(entry.details.from_user_id)}</span> → <span className="font-medium">{getUserName(entry.details.to_user_id)}</span></p>
                           <p>Помещение: <span className="font-medium">{getRoomName(entry.details.from_room_id)}</span> → <span className="font-medium">{getRoomName(entry.details.to_room_id)}</span></p>
                           {entry.details.comment && <p className="text-gray-500">Комментарий: {entry.details.comment}</p>}
@@ -169,6 +175,9 @@ export default function EquipmentHistory() {
                       
                       {entry.type === 'name_change' && (
                         <>
+                          <p className="text-gray-700">
+                            Изменил: <span className="font-medium">{entry.details.changed_by_name || entry.details.changed_by}</span>
+                          </p>
                           <p>Название: <span className="font-medium line-through text-gray-400">{entry.details.from_name}</span> → <span className="font-medium text-gray-800">{entry.details.to_name}</span></p>
                           {entry.details.comment && <p className="text-gray-500">Комментарий: {entry.details.comment}</p>}
                         </>

@@ -20,7 +20,7 @@ interface NextMaintenance {
 }
 
 export default function QRScan() {
-  const { equipment, equipmentTypes, users, rooms, refreshEquipment, changeEquipmentStatus, moveEquipment } = useData();
+  const { equipment, equipmentTypes, users, rooms, refreshEquipment, changeEquipmentStatus, moveEquipment, changeEquipmentName } = useData();
   const [scannedId, setScannedId] = useState<string | null>(null);
   const [scannedEq, setScannedEq] = useState<Equipment | null>(null);
   const [nextMaintenances, setNextMaintenances] = useState<NextMaintenance[]>([]);
@@ -30,9 +30,12 @@ export default function QRScan() {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
+  const [showNameModal, setShowNameModal] = useState(false);
   const [newStatus, setNewStatus] = useState<EquipmentStatus>('in_use');
   const [newUserId, setNewUserId] = useState('');
   const [newRoomId, setNewRoomId] = useState('');
+  const [newName, setNewName] = useState('');
+  const [nameComment, setNameComment] = useState('');
   const [manualInput, setManualInput] = useState('');
   const [maintenanceTypes, setMaintenanceTypes] = useState<any[]>([]);
   const [maintenanceForm, setMaintenanceForm] = useState({
@@ -152,6 +155,24 @@ export default function QRScan() {
       setShowMoveModal(false);
       // Обновляем данные оборудования
       await searchEquipmentByQR(scannedEq.qrCode);
+    }
+  };
+
+  const handleNameChange = async () => {
+    if (scannedEq && newName.trim()) {
+      try {
+        await changeEquipmentName(scannedEq.id, newName.trim(), nameComment.trim() || undefined);
+        setShowNameModal(false);
+        setNewName('');
+        setNameComment('');
+        // Обновляем данные оборудования
+        await searchEquipmentByQR(scannedEq.qrCode);
+        alert('✅ Название изменено');
+      } catch (err: any) {
+        alert('❌ Ошибка: ' + err.message);
+      }
+    } else {
+      alert('Название не может быть пустым');
     }
   };
 
@@ -334,6 +355,9 @@ export default function QRScan() {
                   <button onClick={() => setShowMaintenanceModal(true)} className="w-full px-4 py-2.5 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-100 transition-colors text-left">
                     🔧 Добавить обслуживание
                   </button>
+                  <button onClick={() => { setNewName(scannedEq.name); setShowNameModal(true); }} className="w-full px-4 py-2.5 bg-orange-50 text-orange-700 rounded-lg text-sm font-medium hover:bg-orange-100 transition-colors text-left">
+                    📝 Изменить название
+                  </button>
                   <button onClick={() => { setNewStatus(scannedEq.status); setShowStatusModal(true); }} className="w-full px-4 py-2.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors text-left">
                     🔄 Сменить статус
                   </button>
@@ -457,6 +481,41 @@ export default function QRScan() {
             <div className="flex gap-3">
               <button onClick={handleAddMaintenance} className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">Добавить</button>
               <button onClick={() => setShowMaintenanceModal(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Отмена</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Name Change Modal */}
+      {showNameModal && scannedEq && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Изменение названия — {scannedEq.name}</h3>
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Новое название *</label>
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={e => setNewName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="Введите новое название"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Комментарий (необязательно)</label>
+                <textarea
+                  value={nameComment}
+                  onChange={e => setNameComment(e.target.value)}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="Причина изменения..."
+                />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={handleNameChange} className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700">Изменить</button>
+              <button onClick={() => { setShowNameModal(false); setNewName(''); setNameComment(''); }} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Отмена</button>
             </div>
           </div>
         </div>

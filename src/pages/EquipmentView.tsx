@@ -28,16 +28,25 @@ export default function EquipmentView() {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [showNameModal, setShowNameModal] = useState(false);
+  const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
   const [newStatus, setNewStatus] = useState<EquipmentStatus>('in_use');
   const [newUserId, setNewUserId] = useState('');
   const [newRoomId, setNewRoomId] = useState('');
   const [newName, setNewName] = useState('');
   const [nameComment, setNameComment] = useState('');
   const [nextMaintenances, setNextMaintenances] = useState<NextMaintenance[]>([]);
+  const [maintenanceTypes, setMaintenanceTypes] = useState<any[]>([]);
+  const [maintenanceForm, setMaintenanceForm] = useState({
+    maintenance_type_id: '',
+    date: new Date().toISOString().split('T')[0],
+    description: '',
+    notes: ''
+  });
 
   useEffect(() => {
     if (id) {
       api.getNextMaintenance(id).then(setNextMaintenances).catch(console.error);
+      api.getMaintenanceTypes().then(setMaintenanceTypes).catch(console.error);
     }
   }, [id]);
 
@@ -81,6 +90,26 @@ export default function EquipmentView() {
     setShowNameModal(false);
     setNewName('');
     setNameComment('');
+  };
+
+  const handleAddMaintenance = async () => {
+    if (maintenanceForm.maintenance_type_id && maintenanceForm.date) {
+      try {
+        await api.addMaintenance(eq.id, maintenanceForm);
+        setShowMaintenanceModal(false);
+        setMaintenanceForm({
+          maintenance_type_id: '',
+          date: new Date().toISOString().split('T')[0],
+          description: '',
+          notes: ''
+        });
+        // Обновляем информацию об обслуживании
+        api.getNextMaintenance(eq.id).then(setNextMaintenances).catch(console.error);
+        alert('✅ Обслуживание добавлено');
+      } catch (err: any) {
+        alert('❌ Ошибка: ' + err.message);
+      }
+    }
   };
 
   return (
@@ -184,7 +213,10 @@ export default function EquipmentView() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-semibold text-gray-700 mb-4">Действия</h3>
             <div className="space-y-2">
-              <button onClick={() => { setNewName(eq.name); setShowNameModal(true); }} className="w-full px-4 py-2.5 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-100 transition-colors text-left">
+              <button onClick={() => setShowMaintenanceModal(true)} className="w-full px-4 py-2.5 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-100 transition-colors text-left">
+                🔧 Добавить обслуживание
+              </button>
+              <button onClick={() => { setNewName(eq.name); setShowNameModal(true); }} className="w-full px-4 py-2.5 bg-orange-50 text-orange-700 rounded-lg text-sm font-medium hover:bg-orange-100 transition-colors text-left">
                 📝 Изменить название
               </button>
               <button onClick={() => { setNewStatus(eq.status); setShowStatusModal(true); }} className="w-full px-4 py-2.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors text-left">
@@ -278,6 +310,65 @@ export default function EquipmentView() {
             <div className="flex gap-3">
               <button onClick={handleNameChange} className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">Изменить</button>
               <button onClick={() => { setShowNameModal(false); setNewName(''); setNameComment(''); }} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Отмена</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Maintenance Modal */}
+      {showMaintenanceModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Добавить обслуживание — {eq.name}</h3>
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Тип обслуживания *</label>
+                <select
+                  value={maintenanceForm.maintenance_type_id}
+                  onChange={e => setMaintenanceForm({ ...maintenanceForm, maintenance_type_id: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  required
+                >
+                  <option value="">Выберите тип</option>
+                  {maintenanceTypes.map(type => (
+                    <option key={type.id} value={type.id}>{type.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Дата обслуживания *</label>
+                <input
+                  type="date"
+                  value={maintenanceForm.date}
+                  onChange={e => setMaintenanceForm({ ...maintenanceForm, date: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Описание работ</label>
+                <textarea
+                  value={maintenanceForm.description}
+                  onChange={e => setMaintenanceForm({ ...maintenanceForm, description: e.target.value })}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Что было сделано..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Заметки</label>
+                <textarea
+                  value={maintenanceForm.notes}
+                  onChange={e => setMaintenanceForm({ ...maintenanceForm, notes: e.target.value })}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Дополнительная информация..."
+                />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={handleAddMaintenance} className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">Добавить</button>
+              <button onClick={() => setShowMaintenanceModal(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Отмена</button>
             </div>
           </div>
         </div>

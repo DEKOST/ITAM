@@ -1,4 +1,9 @@
-const API_BASE = 'http://localhost:3001/api';
+// Автоматически определяем базовый URL API
+// Для production используем относительный путь (работает через reverse proxy)
+// Для разработки можно указать явно
+const API_BASE = window.location.hostname === 'localhost' && window.location.port === '5173'
+  ? 'http://localhost:3001/api'  // Режим разработки Vite
+  : '/api';  // Production (через Apache/Nginx reverse proxy)
 
 async function fetchAPI(endpoint: string, options: RequestInit = {}) {
   const token = localStorage.getItem('itam_token');

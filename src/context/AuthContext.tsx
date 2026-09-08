@@ -22,7 +22,10 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_BASE = 'http://localhost:3001/api';
+// Автоматически определяем базовый URL API
+const API_BASE = window.location.hostname === 'localhost' && window.location.port === '5173'
+  ? 'http://localhost:3001/api'  // Режим разработки Vite
+  : '/api';  // Production (через Apache/Nginx reverse proxy)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);

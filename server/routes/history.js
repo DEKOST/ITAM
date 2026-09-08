@@ -88,7 +88,7 @@ router.get('/equipment/:id/history', (req, res) => {
   maintenanceLogs.forEach(log => {
     history.push({
       id: log.id,
-      date: log.date,
+      date: log.created_at,
       type: 'maintenance',
       description: 'Техническое обслуживание',
       details: {

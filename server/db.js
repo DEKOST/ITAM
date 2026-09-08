@@ -21,6 +21,7 @@ function initDatabase() {
       role TEXT DEFAULT 'user',
       is_active INTEGER DEFAULT 1,
       last_login DATETIME,
+      webauthn_challenge TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -87,9 +88,6 @@ function initDatabase() {
       last_used DATETIME,
       FOREIGN KEY (user_id) REFERENCES auth_users(id) ON DELETE CASCADE
     );
-
-    -- WebAuthn challenge (временное хранение)
-    ALTER TABLE auth_users ADD COLUMN webauthn_challenge TEXT;
 
     -- Категории оборудования
     CREATE TABLE IF NOT EXISTS categories (
@@ -197,6 +195,17 @@ function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_equipment_inventory ON equipment(inventory_number);
     CREATE INDEX IF NOT EXISTS idx_equipment_serial ON equipment(serial_number);
   `);
+
+  // Миграция: добавляем колонку webauthn_challenge если её нет (для существующих БД)
+  try {
+    const columns = db.prepare("PRAGMA table_info(auth_users)").all();
+    const hasWebAuthnColumn = columns.some(col => col.name === 'webauthn_challenge');
+    if (!hasWebAuthnColumn) {
+      db.exec('ALTER TABLE auth_users ADD COLUMN webauthn_challenge TEXT');
+    }
+  } catch (e) {
+    // Игнорируем ошибки миграции
+  }
 }
 
 // Заполнение демо-данными

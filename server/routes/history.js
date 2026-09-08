@@ -3,7 +3,7 @@ const router = express.Router();
 const { db } = require('../db');
 
 // Получение полной истории оборудования
-router.get('/:id/history', (req, res) => {
+router.get('/equipment/:id/history', (req, res) => {
   const equipmentId = req.params.id;
   
   // Проверяем существование оборудования

@@ -11,6 +11,7 @@ import EquipmentView from './pages/EquipmentView';
 import Categories from './pages/Categories';
 import Users from './pages/Users';
 import Rooms from './pages/Rooms';
+import Subdivisions from './pages/Subdivisions';
 import QRGenerator from './pages/QRGenerator';
 import QRScan from './pages/QRScan';
 import Certificates from './pages/Certificates';
@@ -84,6 +85,7 @@ function AppRoutes() {
       <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
       <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
       <Route path="/rooms" element={<ProtectedRoute><Rooms /></ProtectedRoute>} />
+      <Route path="/subdivisions" element={<ProtectedRoute><Subdivisions /></ProtectedRoute>} />
       <Route path="/qr-generator" element={<ProtectedRoute><QRGenerator /></ProtectedRoute>} />
       <Route path="/qr-scan" element={<ProtectedRoute><QRScan /></ProtectedRoute>} />
       <Route path="/certificates" element={<ProtectedRoute adminOnly><Certificates /></ProtectedRoute>} />

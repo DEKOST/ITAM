@@ -57,8 +57,15 @@ const userSchema = Joi.object({
   first_name: Joi.string().min(1).max(50).required(),
   last_name: Joi.string().min(1).max(50).required(),
   email: Joi.string().email().optional().allow(''),
-  department: Joi.string().max(100).optional().allow(''),
+  subdivision_id: Joi.string().uuid().optional().allow(null),
   position: Joi.string().max(100).optional().allow('')
+});
+
+// Валидация для подразделения
+const subdivisionSchema = Joi.object({
+  name: Joi.string().min(1).max(100).required(),
+  description: Joi.string().max(500).optional().allow(''),
+  parent_id: Joi.string().uuid().optional().allow(null)
 });
 
 // Валидация для помещения
@@ -103,6 +110,7 @@ module.exports = {
   equipmentTypeSchema,
   userSchema,
   roomSchema,
+  subdivisionSchema,
   changeStatusSchema,
   moveSchema,
   validate

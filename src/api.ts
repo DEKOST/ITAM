@@ -79,6 +79,13 @@ export const createRoom = (data: any) => fetchAPI('/rooms', { method: 'POST', bo
 export const updateRoom = (id: string, data: any) => fetchAPI(`/rooms/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const deleteRoom = (id: string) => fetchAPI(`/rooms/${id}`, { method: 'DELETE' });
 
+// Subdivisions
+export const getSubdivisions = () => fetchAPI('/subdivisions');
+export const getSubdivisionById = (id: string) => fetchAPI(`/subdivisions/${id}`);
+export const createSubdivision = (data: any) => fetchAPI('/subdivisions', { method: 'POST', body: JSON.stringify(data) });
+export const updateSubdivision = (id: string, data: any) => fetchAPI(`/subdivisions/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const deleteSubdivision = (id: string) => fetchAPI(`/subdivisions/${id}`, { method: 'DELETE' });
+
 // Certificates (SSL)
 export const getCertificates = () => fetchAPI('/certificates');
 export const uploadCertificate = (formData: FormData) => {

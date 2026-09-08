@@ -17,8 +17,15 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
-  department: string;
+  subdivisionId: string | null;
   position: string;
+}
+
+export interface Subdivision {
+  id: string;
+  name: string;
+  description: string;
+  parentId: string | null;
 }
 
 export interface Room {

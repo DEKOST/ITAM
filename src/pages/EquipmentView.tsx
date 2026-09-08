@@ -18,10 +18,12 @@ export default function EquipmentView() {
 
   if (!eq) return <div className="text-center py-12"><p className="text-gray-500">Оборудование не найдено</p></div>;
 
+  const { subdivisions } = useData();
   const type = equipmentTypes.find(t => t.id === eq.typeId);
   const category = type ? categories.find(c => c.id === type.categoryId) : null;
   const user = eq.userId ? users.find(u => u.id === eq.userId) : null;
   const room = eq.roomId ? rooms.find(r => r.id === eq.roomId) : null;
+  const subdivision = user?.subdivisionId ? subdivisions.find(s => s.id === user.subdivisionId) : null;
 
   const handleStatusChange = async () => {
     await changeEquipmentStatus(eq.id, newStatus);
@@ -66,7 +68,7 @@ export default function EquipmentView() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-semibold text-gray-700 mb-4">Привязка</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <InfoRow label="Сотрудник" value={user ? `${user.lastName} ${user.firstName} (${user.department})` : 'Не назначен'} />
+              <InfoRow label="Сотрудник" value={user ? `${user.lastName} ${user.firstName}${subdivision ? ` (${subdivision.name})` : ''}` : 'Не назначен'} />
               <InfoRow label="Помещение" value={room ? `${room.name} — ${room.building}, этаж ${room.floor}` : 'Не указано'} />
             </div>
           </div>

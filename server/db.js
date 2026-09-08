@@ -106,15 +106,26 @@ function initDatabase() {
       FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
     );
 
+    -- Подразделения
+    CREATE TABLE IF NOT EXISTS subdivisions (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      parent_id TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (parent_id) REFERENCES subdivisions(id) ON DELETE SET NULL
+    );
+
     -- Сотрудники
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       first_name TEXT NOT NULL,
       last_name TEXT NOT NULL,
       email TEXT DEFAULT '',
-      department TEXT DEFAULT '',
+      subdivision_id TEXT,
       position TEXT DEFAULT '',
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (subdivision_id) REFERENCES subdivisions(id) ON DELETE SET NULL
     );
 
     -- Помещения
@@ -257,17 +268,30 @@ function seedDemoData() {
     insertType.run(type.id, type.name, type.category_id);
   }
 
-  // Сотрудники
-  const users = [
-    { id: 'user-1', first_name: 'Иван', last_name: 'Петров', email: 'petrov@company.ru', department: 'IT отдел', position: 'Системный администратор' },
-    { id: 'user-2', first_name: 'Мария', last_name: 'Сидорова', email: 'sidorova@company.ru', department: 'Бухгалтерия', position: 'Главный бухгалтер' },
-    { id: 'user-3', first_name: 'Алексей', last_name: 'Козлов', email: 'kozlov@company.ru', department: 'Отдел разработки', position: 'Разработчик' },
-    { id: 'user-4', first_name: 'Елена', last_name: 'Волкова', email: 'volkova@company.ru', department: 'HR', position: 'HR менеджер' },
+  // Подразделения
+  const subdivisions = [
+    { id: 'sub-1', name: 'IT отдел', description: 'Информационные технологии', parent_id: null },
+    { id: 'sub-2', name: 'Бухгалтерия', description: 'Финансовый учет', parent_id: null },
+    { id: 'sub-3', name: 'Отдел разработки', description: 'Разработка программного обеспечения', parent_id: 'sub-1' },
+    { id: 'sub-4', name: 'HR', description: 'Управление персоналом', parent_id: null },
   ];
 
-  const insertUser = db.prepare('INSERT INTO users (id, first_name, last_name, email, department, position) VALUES (?, ?, ?, ?, ?, ?)');
+  const insertSubdivision = db.prepare('INSERT INTO subdivisions (id, name, description, parent_id) VALUES (?, ?, ?, ?)');
+  for (const sub of subdivisions) {
+    insertSubdivision.run(sub.id, sub.name, sub.description, sub.parent_id);
+  }
+
+  // Сотрудники
+  const users = [
+    { id: 'user-1', first_name: 'Иван', last_name: 'Петров', email: 'petrov@company.ru', subdivision_id: 'sub-1', position: 'Системный администратор' },
+    { id: 'user-2', first_name: 'Мария', last_name: 'Сидорова', email: 'sidorova@company.ru', subdivision_id: 'sub-2', position: 'Главный бухгалтер' },
+    { id: 'user-3', first_name: 'Алексей', last_name: 'Козлов', email: 'kozlov@company.ru', subdivision_id: 'sub-3', position: 'Разработчик' },
+    { id: 'user-4', first_name: 'Елена', last_name: 'Волкова', email: 'volkova@company.ru', subdivision_id: 'sub-4', position: 'HR менеджер' },
+  ];
+
+  const insertUser = db.prepare('INSERT INTO users (id, first_name, last_name, email, subdivision_id, position) VALUES (?, ?, ?, ?, ?, ?)');
   for (const user of users) {
-    insertUser.run(user.id, user.first_name, user.last_name, user.email, user.department, user.position);
+    insertUser.run(user.id, user.first_name, user.last_name, user.email, user.subdivision_id, user.position);
   }
 
   // Помещения

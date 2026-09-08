@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Equipment, Category, EquipmentType, User, Room, MaintenanceLog } from '../types';
+import { Equipment, Category, EquipmentType, User, Room, MaintenanceLog, Subdivision } from '../types';
 import * as api from '../api';
 
 interface DataContextType {
@@ -8,6 +8,7 @@ interface DataContextType {
   equipmentTypes: EquipmentType[];
   users: User[];
   rooms: Room[];
+  subdivisions: Subdivision[];
   loading: boolean;
   error: string | null;
   refreshEquipment: () => Promise<void>;
@@ -15,6 +16,7 @@ interface DataContextType {
   refreshEquipmentTypes: () => Promise<void>;
   refreshUsers: () => Promise<void>;
   refreshRooms: () => Promise<void>;
+  refreshSubdivisions: () => Promise<void>;
   refreshAll: () => Promise<void>;
   notifyAuthChange: (authenticated: boolean) => void;
   addEquipment: (item: Omit<Equipment, 'id' | 'qrCode' | 'createdAt'>) => Promise<Equipment>;
@@ -34,6 +36,9 @@ interface DataContextType {
   addRoom: (item: Omit<Room, 'id'>) => Promise<Room>;
   updateRoom: (id: string, data: Partial<Room>) => Promise<void>;
   deleteRoom: (id: string) => Promise<void>;
+  addSubdivision: (item: Omit<Subdivision, 'id'>) => Promise<Subdivision>;
+  updateSubdivision: (id: string, data: Partial<Subdivision>) => Promise<void>;
+  deleteSubdivision: (id: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -44,6 +49,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [equipmentTypes, setEquipmentTypes] = useState<EquipmentType[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [subdivisions, setSubdivisions] = useState<Subdivision[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!localStorage.getItem('itam_token'));
@@ -83,16 +89,23 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     } catch (e: any) { setError(e.message); }
   }, []);
 
+  const refreshSubdivisions = useCallback(async () => {
+    try {
+      const data = await api.getSubdivisions();
+      setSubdivisions(data.map(mapSubdivisionFromAPI));
+    } catch (e: any) { setError(e.message); }
+  }, []);
+
   const refreshAll = useCallback(async () => {
     setLoading(true);
     try {
-      await Promise.all([refreshEquipment(), refreshCategories(), refreshEquipmentTypes(), refreshUsers(), refreshRooms()]);
+      await Promise.all([refreshEquipment(), refreshCategories(), refreshEquipmentTypes(), refreshUsers(), refreshRooms(), refreshSubdivisions()]);
     } catch (e: any) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
-  }, [refreshEquipment, refreshCategories, refreshEquipmentTypes, refreshUsers, refreshRooms]);
+  }, [refreshEquipment, refreshCategories, refreshEquipmentTypes, refreshUsers, refreshRooms, refreshSubdivisions]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -112,6 +125,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       setEquipmentTypes([]);
       setUsers([]);
       setRooms([]);
+      setSubdivisions([]);
     }
   }, []);
 
@@ -241,7 +255,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       first_name: item.firstName,
       last_name: item.lastName,
       email: item.email || '',
-      department: item.department || '',
+      subdivision_id: item.subdivisionId || null,
       position: item.position || ''
     };
     const data = await api.createUser(apiData);
@@ -255,7 +269,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (data.firstName !== undefined) apiData.first_name = data.firstName;
     if (data.lastName !== undefined) apiData.last_name = data.lastName;
     if (data.email !== undefined) apiData.email = data.email;
-    if (data.department !== undefined) apiData.department = data.department;
+    if (data.subdivisionId !== undefined) apiData.subdivision_id = data.subdivisionId;
     if (data.position !== undefined) apiData.position = data.position;
     await api.updateUser(id, apiData);
     await refreshUsers();
@@ -283,15 +297,42 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     await refreshRooms();
   };
 
+  // Subdivisions
+  const addSubdivision = async (item: Omit<Subdivision, 'id'>) => {
+    const apiData = {
+      name: item.name,
+      description: item.description || '',
+      parent_id: item.parentId || null
+    };
+    const data = await api.createSubdivision(apiData);
+    await refreshSubdivisions();
+    return mapSubdivisionFromAPI(data);
+  };
+
+  const updateSubdivisionFn = async (id: string, data: Partial<Subdivision>) => {
+    const apiData: any = {};
+    if (data.name !== undefined) apiData.name = data.name;
+    if (data.description !== undefined) apiData.description = data.description;
+    if (data.parentId !== undefined) apiData.parent_id = data.parentId;
+    await api.updateSubdivision(id, apiData);
+    await refreshSubdivisions();
+  };
+
+  const deleteSubdivisionFn = async (id: string) => {
+    await api.deleteSubdivision(id);
+    await refreshSubdivisions();
+  };
+
   const value: DataContextType = {
-    equipment, categories, equipmentTypes, users, rooms, loading, error,
-    refreshEquipment, refreshCategories, refreshEquipmentTypes, refreshUsers, refreshRooms, refreshAll,
+    equipment, categories, equipmentTypes, users, rooms, subdivisions, loading, error,
+    refreshEquipment, refreshCategories, refreshEquipmentTypes, refreshUsers, refreshRooms, refreshSubdivisions, refreshAll,
     notifyAuthChange,
     addEquipment, updateEquipment: updateEquipmentFn, deleteEquipment: deleteEquipmentFn, changeEquipmentStatus, moveEquipment: moveEquipmentFn,
     addCategory, updateCategory: updateCategoryFn, deleteCategory: deleteCategoryFn,
     addEquipmentType, updateEquipmentType: updateEquipmentTypeFn, deleteEquipmentType: deleteEquipmentTypeFn,
     addUser, updateUser: updateUserFn, deleteUser: deleteUserFn,
     addRoom, updateRoom: updateRoomFn, deleteRoom: deleteRoomFn,
+    addSubdivision, updateSubdivision: updateSubdivisionFn, deleteSubdivision: deleteSubdivisionFn,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
@@ -338,8 +379,17 @@ function mapUserFromAPI(data: any): User {
     firstName: data.first_name,
     lastName: data.last_name,
     email: data.email || '',
-    department: data.department || '',
+    subdivisionId: data.subdivision_id || null,
     position: data.position || '',
+  };
+}
+
+function mapSubdivisionFromAPI(data: any): Subdivision {
+  return {
+    id: data.id,
+    name: data.name,
+    description: data.description || '',
+    parentId: data.parent_id || null,
   };
 }
 

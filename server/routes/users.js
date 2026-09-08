@@ -37,23 +37,23 @@ router.get('/:id', (req, res) => {
 });
 
 router.post('/', writeLimiter, validate(userSchema), (req, res) => {
-  const { first_name, last_name, email, department, position } = req.body;
+  const { first_name, last_name, email, subdivision_id, position } = req.body;
   const id = uuidv4();
-  db.prepare('INSERT INTO users (id, first_name, last_name, email, department, position) VALUES (?, ?, ?, ?, ?, ?)').run(id, first_name, last_name, email || '', department || '', position || '');
+  db.prepare('INSERT INTO users (id, first_name, last_name, email, subdivision_id, position) VALUES (?, ?, ?, ?, ?, ?)').run(id, first_name, last_name, email || '', subdivision_id || null, position || '');
   const item = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
   res.status(201).json(item);
 });
 
 router.put('/:id', writeLimiter, validate(userSchema), (req, res) => {
-  const { first_name, last_name, email, department, position } = req.body;
+  const { first_name, last_name, email, subdivision_id, position } = req.body;
   const existing = db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ error: 'Сотрудник не найден' });
   
-  db.prepare('UPDATE users SET first_name = ?, last_name = ?, email = ?, department = ?, position = ? WHERE id = ?').run(
+  db.prepare('UPDATE users SET first_name = ?, last_name = ?, email = ?, subdivision_id = ?, position = ? WHERE id = ?').run(
     first_name || existing.first_name,
     last_name || existing.last_name,
     email !== undefined ? email : existing.email,
-    department !== undefined ? department : existing.department,
+    subdivision_id !== undefined ? subdivision_id : existing.subdivision_id,
     position !== undefined ? position : existing.position,
     req.params.id
   );

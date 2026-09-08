@@ -35,6 +35,7 @@ app.use('/api/categories', authMiddleware, require('./routes/categories'));
 app.use('/api/types', authMiddleware, require('./routes/types'));
 app.use('/api/users', authMiddleware, require('./routes/users'));
 app.use('/api/rooms', authMiddleware, require('./routes/rooms'));
+app.use('/api/subdivisions', authMiddleware, require('./routes/subdivisions'));
 app.use('/api/certificates', authMiddleware, require('./routes/certificates'));
 app.use('/api/backups', authMiddleware, require('./routes/backups'));
 

@@ -141,6 +141,47 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     };
   }, [notifyAuthChange]);
 
+  // Polling: автоматическое обновление данных каждые 10 секунд
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const interval = setInterval(() => {
+      // Тихое обновление без показа loading
+      Promise.all([
+        refreshEquipment(),
+        refreshCategories(),
+        refreshEquipmentTypes(),
+        refreshUsers(),
+        refreshRooms(),
+        refreshSubdivisions()
+      ]).catch(() => {
+        // Игнорируем ошибки polling
+      });
+    }, 10000); // 10 секунд
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, refreshEquipment, refreshCategories, refreshEquipmentTypes, refreshUsers, refreshRooms, refreshSubdivisions]);
+
+  // Синхронизация между вкладками через localStorage events
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'itam_data_update') {
+        // Данные обновлены в другой вкладке
+        refreshAll();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [isAuthenticated, refreshAll]);
+
+  // Функция для уведомления других вкладок об изменении данных
+  const notifyDataChange = useCallback(() => {
+    localStorage.setItem('itam_data_update', Date.now().toString());
+  }, []);
+
   // Equipment
   const addEquipment = async (item: Omit<Equipment, 'id' | 'qrCode' | 'createdAt'>) => {
     // Конвертируем camelCase в snake_case для API
@@ -160,6 +201,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     };
     const data = await api.createEquipment(apiData);
     await refreshEquipment();
+    notifyDataChange();
     return mapEquipmentFromAPI(data);
   };
 
@@ -181,17 +223,20 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     
     const result = await api.updateEquipment(id, apiData);
     await refreshEquipment();
+    notifyDataChange();
     return mapEquipmentFromAPI(result);
   };
 
   const deleteEquipmentFn = async (id: string) => {
     await api.deleteEquipment(id);
     await refreshEquipment();
+    notifyDataChange();
   };
 
   const changeEquipmentStatus = async (id: string, status: string, comment?: string) => {
     await api.changeEquipmentStatus(id, status, comment);
     await refreshEquipment();
+    notifyDataChange();
   };
 
   const moveEquipmentFn = async (id: string, data: { user_id?: string; room_id?: string; comment?: string }) => {
@@ -203,23 +248,27 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     };
     await api.moveEquipment(id, apiData);
     await refreshEquipment();
+    notifyDataChange();
   };
 
   // Categories
   const addCategory = async (item: Omit<Category, 'id'>) => {
     const data = await api.createCategory(item);
     await refreshCategories();
+    notifyDataChange();
     return mapCategoryFromAPI(data);
   };
 
   const updateCategoryFn = async (id: string, data: Partial<Category>) => {
     await api.updateCategory(id, data);
     await refreshCategories();
+    notifyDataChange();
   };
 
   const deleteCategoryFn = async (id: string) => {
     await api.deleteCategory(id);
     await refreshCategories();
+    notifyDataChange();
   };
 
   // Types
@@ -231,6 +280,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     };
     const data = await api.createEquipmentType(apiData);
     await refreshEquipmentTypes();
+    notifyDataChange();
     return mapTypeFromAPI(data);
   };
 
@@ -241,11 +291,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (data.categoryId !== undefined) apiData.category_id = data.categoryId;
     await api.updateEquipmentType(id, apiData);
     await refreshEquipmentTypes();
+    notifyDataChange();
   };
 
   const deleteEquipmentTypeFn = async (id: string) => {
     await api.deleteEquipmentType(id);
     await refreshEquipmentTypes();
+    notifyDataChange();
   };
 
   // Users
@@ -261,6 +313,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     };
     const data = await api.createUser(apiData);
     await refreshUsers();
+    notifyDataChange();
     return mapUserFromAPI(data);
   };
 
@@ -275,28 +328,33 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (data.position !== undefined) apiData.position = data.position;
     await api.updateUser(id, apiData);
     await refreshUsers();
+    notifyDataChange();
   };
 
   const deleteUserFn = async (id: string) => {
     await api.deleteUser(id);
     await refreshUsers();
+    notifyDataChange();
   };
 
   // Rooms
   const addRoom = async (item: Omit<Room, 'id'>) => {
     const data = await api.createRoom(item);
     await refreshRooms();
+    notifyDataChange();
     return mapRoomFromAPI(data);
   };
 
   const updateRoomFn = async (id: string, data: Partial<Room>) => {
     await api.updateRoom(id, data);
     await refreshRooms();
+    notifyDataChange();
   };
 
   const deleteRoomFn = async (id: string) => {
     await api.deleteRoom(id);
     await refreshRooms();
+    notifyDataChange();
   };
 
   // Subdivisions
@@ -308,6 +366,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     };
     const data = await api.createSubdivision(apiData);
     await refreshSubdivisions();
+    notifyDataChange();
     return mapSubdivisionFromAPI(data);
   };
 
@@ -318,11 +377,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (data.parentId !== undefined) apiData.parent_id = data.parentId;
     await api.updateSubdivision(id, apiData);
     await refreshSubdivisions();
+    notifyDataChange();
   };
 
   const deleteSubdivisionFn = async (id: string) => {
     await api.deleteSubdivision(id);
     await refreshSubdivisions();
+    notifyDataChange();
   };
 
   const value: DataContextType = {

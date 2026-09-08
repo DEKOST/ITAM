@@ -48,7 +48,7 @@ export const createEquipment = (data: any) => fetchAPI('/equipment', { method: '
 export const updateEquipment = (id: string, data: any) => fetchAPI(`/equipment/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const changeEquipmentStatus = (id: string, status: string, comment?: string) => 
   fetchAPI(`/equipment/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status, comment }) });
-export const moveEquipment = (id: string, data: { user_id?: string; room_id?: string; comment?: string }) => 
+export const moveEquipment = (id: string, data: { user_id?: string | null; room_id?: string | null; comment?: string }) => 
   fetchAPI(`/equipment/${id}/move`, { method: 'PATCH', body: JSON.stringify(data) });
 export const deleteEquipment = (id: string) => fetchAPI(`/equipment/${id}`, { method: 'DELETE' });
 export const getEquipmentStats = () => fetchAPI('/stats');

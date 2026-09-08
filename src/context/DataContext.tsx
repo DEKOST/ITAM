@@ -129,13 +129,43 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   // Equipment
   const addEquipment = async (item: Omit<Equipment, 'id' | 'qrCode' | 'createdAt'>) => {
-    const data = await api.createEquipment(item);
+    // Конвертируем camelCase в snake_case для API
+    const apiData = {
+      name: item.name,
+      serial_number: item.serialNumber || '',
+      inventory_number: item.inventoryNumber || '',
+      type_id: item.typeId,
+      status: item.status,
+      user_id: item.userId || null,
+      room_id: item.roomId || null,
+      purchase_date: item.purchaseDate || '',
+      warranty_end: item.warrantyEnd || '',
+      last_maintenance_date: item.lastMaintenanceDate || '',
+      next_maintenance_date: item.nextMaintenanceDate || '',
+      notes: item.notes || ''
+    };
+    const data = await api.createEquipment(apiData);
     await refreshEquipment();
     return mapEquipmentFromAPI(data);
   };
 
   const updateEquipmentFn = async (id: string, data: Partial<Equipment>) => {
-    const result = await api.updateEquipment(id, data);
+    // Конвертируем camelCase в snake_case для API
+    const apiData: any = {};
+    if (data.name !== undefined) apiData.name = data.name;
+    if (data.serialNumber !== undefined) apiData.serial_number = data.serialNumber;
+    if (data.inventoryNumber !== undefined) apiData.inventory_number = data.inventoryNumber;
+    if (data.typeId !== undefined) apiData.type_id = data.typeId;
+    if (data.status !== undefined) apiData.status = data.status;
+    if (data.userId !== undefined) apiData.user_id = data.userId || null;
+    if (data.roomId !== undefined) apiData.room_id = data.roomId || null;
+    if (data.purchaseDate !== undefined) apiData.purchase_date = data.purchaseDate;
+    if (data.warrantyEnd !== undefined) apiData.warranty_end = data.warrantyEnd;
+    if (data.lastMaintenanceDate !== undefined) apiData.last_maintenance_date = data.lastMaintenanceDate;
+    if (data.nextMaintenanceDate !== undefined) apiData.next_maintenance_date = data.nextMaintenanceDate;
+    if (data.notes !== undefined) apiData.notes = data.notes;
+    
+    const result = await api.updateEquipment(id, apiData);
     await refreshEquipment();
     return mapEquipmentFromAPI(result);
   };
@@ -151,7 +181,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   };
 
   const moveEquipmentFn = async (id: string, data: { user_id?: string; room_id?: string; comment?: string }) => {
-    await api.moveEquipment(id, data);
+    // Конвертируем пустые строки в null для корректной валидации
+    const apiData = {
+      user_id: data.user_id || null,
+      room_id: data.room_id || null,
+      comment: data.comment || ''
+    };
+    await api.moveEquipment(id, apiData);
     await refreshEquipment();
   };
 

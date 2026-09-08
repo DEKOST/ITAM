@@ -24,6 +24,7 @@ interface DataContextType {
   deleteEquipment: (id: string) => Promise<void>;
   changeEquipmentStatus: (id: string, status: string, comment?: string) => Promise<void>;
   moveEquipment: (id: string, data: { user_id?: string; room_id?: string; comment?: string }) => Promise<void>;
+  changeEquipmentName: (id: string, name: string, comment?: string) => Promise<void>;
   addCategory: (item: Omit<Category, 'id'>) => Promise<Category>;
   updateCategory: (id: string, data: Partial<Category>) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
@@ -241,6 +242,12 @@ export function DataProvider({ children, isAuthenticated: authIsAuthenticated }:
     notifyDataChange();
   };
 
+  const changeEquipmentName = async (id: string, name: string, comment?: string) => {
+    await api.changeEquipmentName(id, name, comment);
+    await refreshEquipment();
+    notifyDataChange();
+  };
+
   // Categories
   const addCategory = async (item: Omit<Category, 'id'>) => {
     const data = await api.createCategory(item);
@@ -380,7 +387,7 @@ export function DataProvider({ children, isAuthenticated: authIsAuthenticated }:
     equipment, categories, equipmentTypes, users, rooms, subdivisions, loading, error,
     refreshEquipment, refreshCategories, refreshEquipmentTypes, refreshUsers, refreshRooms, refreshSubdivisions, refreshAll,
     notifyAuthChange,
-    addEquipment, updateEquipment: updateEquipmentFn, deleteEquipment: deleteEquipmentFn, changeEquipmentStatus, moveEquipment: moveEquipmentFn,
+    addEquipment, updateEquipment: updateEquipmentFn, deleteEquipment: deleteEquipmentFn, changeEquipmentStatus, moveEquipment: moveEquipmentFn, changeEquipmentName,
     addCategory, updateCategory: updateCategoryFn, deleteCategory: deleteCategoryFn,
     addEquipmentType, updateEquipmentType: updateEquipmentTypeFn, deleteEquipmentType: deleteEquipmentTypeFn,
     addUser, updateUser: updateUserFn, deleteUser: deleteUserFn,

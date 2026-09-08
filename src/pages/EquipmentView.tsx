@@ -7,14 +7,17 @@ import { QRCodeSVG } from 'qrcode.react';
 export default function EquipmentView() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { equipment, equipmentTypes, categories, users, rooms, updateEquipment, changeEquipmentStatus, moveEquipment } = useData();
+  const { equipment, equipmentTypes, categories, users, rooms, updateEquipment, changeEquipmentStatus, moveEquipment, changeEquipmentName } = useData();
   const eq = equipment.find(e => e.id === id);
 
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showMoveModal, setShowMoveModal] = useState(false);
+  const [showNameModal, setShowNameModal] = useState(false);
   const [newStatus, setNewStatus] = useState<EquipmentStatus>('in_use');
   const [newUserId, setNewUserId] = useState('');
   const [newRoomId, setNewRoomId] = useState('');
+  const [newName, setNewName] = useState('');
+  const [nameComment, setNameComment] = useState('');
 
   if (!eq) return <div className="text-center py-12"><p className="text-gray-500">Оборудование не найдено</p></div>;
 
@@ -33,6 +36,17 @@ export default function EquipmentView() {
   const handleMove = async () => {
     await moveEquipment(eq.id, { user_id: newUserId || undefined, room_id: newRoomId || undefined });
     setShowMoveModal(false);
+  };
+
+  const handleNameChange = async () => {
+    if (!newName.trim()) {
+      alert('Название не может быть пустым');
+      return;
+    }
+    await changeEquipmentName(eq.id, newName.trim(), nameComment.trim() || undefined);
+    setShowNameModal(false);
+    setNewName('');
+    setNameComment('');
   };
 
   return (
@@ -106,6 +120,9 @@ export default function EquipmentView() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-semibold text-gray-700 mb-4">Действия</h3>
             <div className="space-y-2">
+              <button onClick={() => { setNewName(eq.name); setShowNameModal(true); }} className="w-full px-4 py-2.5 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-100 transition-colors text-left">
+                📝 Изменить название
+              </button>
               <button onClick={() => { setNewStatus(eq.status); setShowStatusModal(true); }} className="w-full px-4 py-2.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors text-left">
                 🔄 Сменить статус
               </button>
@@ -162,6 +179,41 @@ export default function EquipmentView() {
             <div className="flex gap-3">
               <button onClick={handleMove} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">Переместить</button>
               <button onClick={() => setShowMoveModal(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Отмена</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Name Change Modal */}
+      {showNameModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Изменение названия</h3>
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Новое название *</label>
+                <input 
+                  type="text" 
+                  value={newName} 
+                  onChange={e => setNewName(e.target.value)} 
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Введите новое название"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Комментарий (необязательно)</label>
+                <textarea 
+                  value={nameComment} 
+                  onChange={e => setNameComment(e.target.value)} 
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Причина изменения названия..."
+                />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={handleNameChange} className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">Изменить</button>
+              <button onClick={() => { setShowNameModal(false); setNewName(''); setNameComment(''); }} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Отмена</button>
             </div>
           </div>
         </div>

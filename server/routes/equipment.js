@@ -200,6 +200,38 @@ router.patch('/:id/move', writeLimiter, validate(moveSchema), (req, res) => {
   res.json(item);
 });
 
+// Изменить название оборудования
+router.patch('/:id/name', writeLimiter, (req, res) => {
+  const { name, comment } = req.body;
+  
+  if (!name || name.trim() === '') {
+    return res.status(400).json({ error: 'Название не может быть пустым' });
+  }
+  
+  const existing = db.prepare('SELECT * FROM equipment WHERE id = ?').get(req.params.id);
+  if (!existing) return res.status(404).json({ error: 'Оборудование не найдено' });
+
+  // Если название не изменилось
+  if (existing.name === name) {
+    return res.json(existing);
+  }
+
+  // Обновляем название
+  db.prepare('UPDATE equipment SET name = ? WHERE id = ?').run(name, req.params.id);
+  
+  // Логируем изменение
+  db.prepare('INSERT INTO name_logs (id, equipment_id, from_name, to_name, comment) VALUES (?, ?, ?, ?, ?)').run(
+    uuidv4(), 
+    req.params.id, 
+    existing.name, 
+    name, 
+    comment || ''
+  );
+
+  const item = db.prepare('SELECT * FROM equipment WHERE id = ?').get(req.params.id);
+  res.json(item);
+});
+
 // Удалить оборудование
 router.delete('/:id', writeLimiter, (req, res) => {
   const existing = db.prepare('SELECT * FROM equipment WHERE id = ?').get(req.params.id);

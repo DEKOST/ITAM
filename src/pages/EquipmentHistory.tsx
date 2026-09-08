@@ -6,7 +6,7 @@ import * as api from '../api';
 interface HistoryEntry {
   id: string;
   date: string;
-  type: 'status_change' | 'move' | 'maintenance' | 'created' | 'updated';
+  type: 'status_change' | 'move' | 'maintenance' | 'created' | 'updated' | 'name_change';
   description: string;
   details?: any;
 }
@@ -65,6 +65,7 @@ export default function EquipmentHistory() {
       case 'maintenance': return '🔧';
       case 'created': return '✨';
       case 'updated': return '✏️';
+      case 'name_change': return '📝';
       default: return '📝';
     }
   };
@@ -76,6 +77,7 @@ export default function EquipmentHistory() {
       case 'maintenance': return 'bg-purple-50 border-purple-200';
       case 'created': return 'bg-emerald-50 border-emerald-200';
       case 'updated': return 'bg-gray-50 border-gray-200';
+      case 'name_change': return 'bg-orange-50 border-orange-200';
       default: return 'bg-gray-50 border-gray-200';
     }
   };
@@ -142,6 +144,13 @@ export default function EquipmentHistory() {
                           {entry.details.description && <p>Описание: {entry.details.description}</p>}
                           {entry.details.cost > 0 && <p>Стоимость: {entry.details.cost} ₽</p>}
                           {entry.details.performed_by && <p>Выполнено: {entry.details.performed_by}</p>}
+                        </>
+                      )}
+                      
+                      {entry.type === 'name_change' && (
+                        <>
+                          <p>Название: <span className="font-medium line-through text-gray-400">{entry.details.from_name}</span> → <span className="font-medium text-gray-800">{entry.details.to_name}</span></p>
+                          {entry.details.comment && <p className="text-gray-500">Комментарий: {entry.details.comment}</p>}
                         </>
                       )}
                     </div>

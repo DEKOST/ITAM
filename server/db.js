@@ -198,6 +198,17 @@ function initDatabase() {
       FOREIGN KEY (equipment_id) REFERENCES equipment(id) ON DELETE CASCADE
     );
 
+    -- Журнал изменений названия
+    CREATE TABLE IF NOT EXISTS name_logs (
+      id TEXT PRIMARY KEY,
+      equipment_id TEXT NOT NULL,
+      date DATETIME DEFAULT CURRENT_TIMESTAMP,
+      from_name TEXT,
+      to_name TEXT NOT NULL,
+      comment TEXT DEFAULT '',
+      FOREIGN KEY (equipment_id) REFERENCES equipment(id) ON DELETE CASCADE
+    );
+
     -- Индексы для быстрого поиска
     CREATE INDEX IF NOT EXISTS idx_equipment_type ON equipment(type_id);
     CREATE INDEX IF NOT EXISTS idx_equipment_user ON equipment(user_id);

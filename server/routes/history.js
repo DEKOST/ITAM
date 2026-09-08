@@ -92,6 +92,27 @@ router.get('/equipment/:id/history', (req, res) => {
     });
   });
   
+  // 5. История изменений названия
+  const nameLogs = db.prepare(`
+    SELECT * FROM name_logs 
+    WHERE equipment_id = ? 
+    ORDER BY date DESC
+  `).all(equipmentId);
+  
+  nameLogs.forEach(log => {
+    history.push({
+      id: log.id,
+      date: log.date,
+      type: 'name_change',
+      description: 'Изменение названия',
+      details: {
+        from_name: log.from_name,
+        to_name: log.to_name,
+        comment: log.comment
+      }
+    });
+  });
+  
   // Сортируем все записи по дате (новые сначала)
   history.sort((a, b) => new Date(b.date) - new Date(a.date));
   

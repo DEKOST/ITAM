@@ -51,6 +51,8 @@ export const changeEquipmentStatus = (id: string, status: string, comment?: stri
   fetchAPI(`/equipment/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status, comment }) });
 export const moveEquipment = (id: string, data: { user_id?: string | null; room_id?: string | null; comment?: string }) => 
   fetchAPI(`/equipment/${id}/move`, { method: 'PATCH', body: JSON.stringify(data) });
+export const changeEquipmentName = (id: string, name: string, comment?: string) => 
+  fetchAPI(`/equipment/${id}/name`, { method: 'PATCH', body: JSON.stringify({ name, comment }) });
 export const deleteEquipment = (id: string) => fetchAPI(`/equipment/${id}`, { method: 'DELETE' });
 export const getEquipmentStats = () => fetchAPI('/stats');
 

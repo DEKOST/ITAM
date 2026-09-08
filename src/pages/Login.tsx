@@ -170,11 +170,14 @@ export default function Login() {
             <p className="text-xs text-gray-500 text-center">
               По умолчанию: <code className="bg-gray-100 px-1.5 py-0.5 rounded">admin</code> / <code className="bg-gray-100 px-1.5 py-0.5 rounded">admin123</code>
             </p>
+            <p className="text-xs text-amber-600 text-center mt-2">
+              ⚠️ Для обеспечения безопасности создайте нового пользователя с правами администратора и заблокируйте автоматически созданного администратора
+            </p>
           </div>
         </div>
 
         <p className="text-center text-blue-200 text-sm mt-6">
-          © 2024 ITAM Service. Все права защищены.
+          © {new Date().getFullYear()} ITAM Service. Все права защищены.
         </p>
       </div>
     </div>

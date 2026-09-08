@@ -209,6 +209,19 @@ function initDatabase() {
       FOREIGN KEY (equipment_id) REFERENCES equipment(id) ON DELETE CASCADE
     );
 
+    -- Универсальный журнал изменений полей оборудования
+    CREATE TABLE IF NOT EXISTS equipment_field_changes (
+      id TEXT PRIMARY KEY,
+      equipment_id TEXT NOT NULL,
+      field_name TEXT NOT NULL,
+      old_value TEXT,
+      new_value TEXT,
+      changed_by TEXT,
+      changed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (equipment_id) REFERENCES equipment(id) ON DELETE CASCADE,
+      FOREIGN KEY (changed_by) REFERENCES auth_users(id) ON DELETE SET NULL
+    );
+
     -- Индексы для быстрого поиска
     CREATE INDEX IF NOT EXISTS idx_equipment_type ON equipment(type_id);
     CREATE INDEX IF NOT EXISTS idx_equipment_user ON equipment(user_id);

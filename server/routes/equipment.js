@@ -137,6 +137,7 @@ router.put('/:id', writeLimiter, validate(equipmentSchema), (req, res) => {
   if (!existing) return res.status(404).json({ error: 'Оборудование не найдено' });
 
   const { name, serial_number, inventory_number, type_id, status, user_id, room_id, purchase_date, warranty_end, last_maintenance_date, next_maintenance_date, notes } = req.body;
+  const changedBy = req.user ? req.user.id : null;
 
   // Если статус изменился - логируем
   if (status && status !== existing.status) {
@@ -147,6 +148,35 @@ router.put('/:id', writeLimiter, validate(equipmentSchema), (req, res) => {
   if ((user_id !== undefined && user_id !== existing.user_id) || (room_id !== undefined && room_id !== existing.room_id)) {
     db.prepare('INSERT INTO move_logs (id, equipment_id, from_user_id, to_user_id, from_room_id, to_room_id) VALUES (?, ?, ?, ?, ?, ?)').run(uuidv4(), req.params.id, existing.user_id, user_id || null, existing.room_id, room_id || null);
   }
+
+  // Логируем все изменения полей
+  const fieldsToLog = [
+    { field: 'name', oldValue: existing.name, newValue: name || existing.name },
+    { field: 'serial_number', oldValue: existing.serial_number, newValue: serial_number !== undefined ? serial_number : existing.serial_number },
+    { field: 'inventory_number', oldValue: existing.inventory_number, newValue: inventory_number !== undefined ? inventory_number : existing.inventory_number },
+    { field: 'type_id', oldValue: existing.type_id, newValue: type_id || existing.type_id },
+    { field: 'user_id', oldValue: existing.user_id, newValue: user_id !== undefined ? user_id : existing.user_id },
+    { field: 'room_id', oldValue: existing.room_id, newValue: room_id !== undefined ? room_id : existing.room_id },
+    { field: 'purchase_date', oldValue: existing.purchase_date, newValue: purchase_date !== undefined ? purchase_date : existing.purchase_date },
+    { field: 'warranty_end', oldValue: existing.warranty_end, newValue: warranty_end !== undefined ? warranty_end : existing.warranty_end },
+    { field: 'last_maintenance_date', oldValue: existing.last_maintenance_date, newValue: last_maintenance_date !== undefined ? last_maintenance_date : existing.last_maintenance_date },
+    { field: 'next_maintenance_date', oldValue: existing.next_maintenance_date, newValue: next_maintenance_date !== undefined ? next_maintenance_date : existing.next_maintenance_date },
+    { field: 'notes', oldValue: existing.notes, newValue: notes !== undefined ? notes : existing.notes }
+  ];
+
+  fieldsToLog.forEach(({ field, oldValue, newValue }) => {
+    // Логируем только если значение действительно изменилось
+    if (String(oldValue || '') !== String(newValue || '')) {
+      db.prepare('INSERT INTO equipment_field_changes (id, equipment_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)').run(
+        uuidv4(),
+        req.params.id,
+        field,
+        oldValue || null,
+        newValue || null,
+        changedBy
+      );
+    }
+  });
 
   db.prepare(`
     UPDATE equipment SET 

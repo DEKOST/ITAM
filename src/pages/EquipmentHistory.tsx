@@ -6,7 +6,7 @@ import * as api from '../api';
 interface HistoryEntry {
   id: string;
   date: string;
-  type: 'status_change' | 'move' | 'maintenance' | 'created' | 'updated' | 'name_change';
+  type: 'status_change' | 'move' | 'maintenance' | 'created' | 'updated' | 'name_change' | 'edit';
   description: string;
   details?: any;
 }
@@ -66,6 +66,7 @@ export default function EquipmentHistory() {
       case 'created': return '✨';
       case 'updated': return '✏️';
       case 'name_change': return '📝';
+      case 'edit': return '✏️';
       default: return '📝';
     }
   };
@@ -78,8 +79,27 @@ export default function EquipmentHistory() {
       case 'created': return 'bg-emerald-50 border-emerald-200';
       case 'updated': return 'bg-gray-50 border-gray-200';
       case 'name_change': return 'bg-orange-50 border-orange-200';
+      case 'edit': return 'bg-indigo-50 border-indigo-200';
       default: return 'bg-gray-50 border-gray-200';
     }
+  };
+
+  const getFieldLabel = (field: string) => {
+    const labels: Record<string, string> = {
+      'name': 'Название',
+      'serial_number': 'Серийный номер',
+      'inventory_number': 'Инвентарный номер',
+      'type_id': 'Тип оборудования',
+      'status': 'Статус',
+      'user_id': 'Сотрудник',
+      'room_id': 'Помещение',
+      'purchase_date': 'Дата покупки',
+      'warranty_end': 'Гарантия до',
+      'last_maintenance_date': 'Последнее ТО',
+      'next_maintenance_date': 'Следующее ТО',
+      'notes': 'Заметки'
+    };
+    return labels[field] || field;
   };
 
   if (!eq) {
@@ -151,6 +171,24 @@ export default function EquipmentHistory() {
                         <>
                           <p>Название: <span className="font-medium line-through text-gray-400">{entry.details.from_name}</span> → <span className="font-medium text-gray-800">{entry.details.to_name}</span></p>
                           {entry.details.comment && <p className="text-gray-500">Комментарий: {entry.details.comment}</p>}
+                        </>
+                      )}
+
+                      {entry.type === 'edit' && (
+                        <>
+                          <p className="text-gray-700">
+                            Пользователь: <span className="font-medium">{entry.details.changed_by_name || entry.details.changed_by}</span>
+                          </p>
+                          <div className="mt-2 space-y-1">
+                            {entry.details.changes.map((change: any, idx: number) => (
+                              <div key={idx} className="text-sm">
+                                <span className="font-medium text-gray-700">{getFieldLabel(change.field)}:</span>{' '}
+                                <span className="line-through text-gray-400">{change.old_value || '—'}</span>
+                                {' → '}
+                                <span className="text-gray-800">{change.new_value || '—'}</span>
+                              </div>
+                            ))}
+                          </div>
                         </>
                       )}
                     </div>

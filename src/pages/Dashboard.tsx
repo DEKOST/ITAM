@@ -30,7 +30,7 @@ export default function Dashboard() {
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Дашборд</h2>
 
       {/* Stats cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <StatCard icon="💻" label="Оборудование" value={equipment.length} color="blue" />
         <StatCard icon="👥" label="Сотрудники" value={users.length} color="green" />
         <StatCard icon="🏢" label="Помещения" value={rooms.length} color="purple" />
@@ -144,12 +144,12 @@ function StatCard({ icon, label, value, color }: { icon: string; label: string; 
     amber: 'bg-amber-50 border-amber-100',
   };
   return (
-    <div className={`rounded-xl border p-4 ${colors[color] || colors.blue}`}>
-      <div className="flex items-center gap-3">
-        <span className="text-3xl">{icon}</span>
+    <div className={`rounded-xl border p-3 sm:p-4 ${colors[color] || colors.blue}`}>
+      <div className="flex items-center gap-2 sm:gap-3">
+        <span className="text-2xl sm:text-3xl">{icon}</span>
         <div>
-          <p className="text-2xl font-bold text-gray-800">{value}</p>
-          <p className="text-sm text-gray-600">{label}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-800">{value}</p>
+          <p className="text-xs sm:text-sm text-gray-600">{label}</p>
         </div>
       </div>
     </div>

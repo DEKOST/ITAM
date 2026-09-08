@@ -379,8 +379,8 @@ export default function QRScan() {
 
       {/* Status Modal */}
       {showStatusModal && scannedEq && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white rounded-t-xl sm:rounded-xl p-4 sm:p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Смена статуса — {scannedEq.name}</h3>
             <div className="space-y-2 mb-6">
               {Object.entries(STATUS_LABELS).map(([k, v]) => (
@@ -400,8 +400,8 @@ export default function QRScan() {
 
       {/* Move Modal */}
       {showMoveModal && scannedEq && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white rounded-t-xl sm:rounded-xl p-4 sm:p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Перемещение — {scannedEq.name}</h3>
             <div className="space-y-4 mb-6">
               <div>
@@ -429,8 +429,8 @@ export default function QRScan() {
 
       {/* Maintenance Modal */}
       {showMaintenanceModal && scannedEq && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white rounded-t-xl sm:rounded-xl p-4 sm:p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Добавить обслуживание — {scannedEq.name}</h3>
             <div className="space-y-4 mb-6">
               <div>
@@ -488,8 +488,8 @@ export default function QRScan() {
 
       {/* Name Change Modal */}
       {showNameModal && scannedEq && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white rounded-t-xl sm:rounded-xl p-4 sm:p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Изменение названия — {scannedEq.name}</h3>
             <div className="space-y-4 mb-6">
               <div>

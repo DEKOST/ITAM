@@ -52,9 +52,9 @@ export default function Users() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Сотрудники</h2>
-        <button onClick={() => { setShowForm(!showForm); setEditing(null); setForm({ firstName: '', lastName: '', middleName: '', email: '', subdivisionId: '', position: '' }); }} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Сотрудники</h2>
+        <button onClick={() => { setShowForm(!showForm); setEditing(null); setForm({ firstName: '', lastName: '', middleName: '', email: '', subdivisionId: '', position: '' }); }} className="px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
           {showForm ? 'Скрыть форму' : '+ Добавить'}
         </button>
       </div>
@@ -115,7 +115,32 @@ export default function Users() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      {/* Mobile Cards */}
+      <div className="sm:hidden space-y-3">
+        {filtered.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center text-gray-500">Сотрудники не найдены</div>
+        ) : filtered.map(user => (
+          <div key={user.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-gray-800 truncate">{user.lastName} {user.firstName} {user.middleName}</h3>
+                <p className="text-xs text-gray-500 truncate">{user.position}</p>
+              </div>
+              <div className="flex gap-1 ml-2">
+                <button onClick={() => startEdit(user)} className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg">✏️</button>
+                <button onClick={async () => { if (confirm('Удалить сотрудника?')) await deleteUser(user.id); }} className="p-2 text-red-600 hover:bg-red-50 rounded-lg">🗑️</button>
+              </div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-600 space-y-1">
+              {user.email && <p><span className="text-gray-400">Email:</span> {user.email}</p>}
+              <p><span className="text-gray-400">Подразделение:</span> {getSubdivisionName(user.subdivisionId)}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table */}
+      <div className="hidden sm:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
@@ -137,8 +162,8 @@ export default function Users() {
                 <td className="px-4 py-3 text-gray-600">{user.position}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-1">
-                    <button onClick={() => startEdit(user)} className="px-2 py-1 text-amber-600 hover:bg-amber-50 rounded text-xs">✏️</button>
-                    <button onClick={async () => { if (confirm('Удалить сотрудника?')) await deleteUser(user.id); }} className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-xs">🗑️</button>
+                    <button onClick={() => startEdit(user)} className="px-3 py-1.5 text-amber-600 hover:bg-amber-50 rounded text-xs">✏️</button>
+                    <button onClick={async () => { if (confirm('Удалить сотрудника?')) await deleteUser(user.id); }} className="px-3 py-1.5 text-red-600 hover:bg-red-50 rounded text-xs">🗑️</button>
                   </div>
                 </td>
               </tr>

@@ -114,12 +114,12 @@ export default function EquipmentView() {
 
   return (
     <div className="max-w-4xl">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">{eq.name}</h2>
-        <div className="flex gap-2">
-          <Link to={`/equipment/${eq.id}/history`} className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors">📜 История</Link>
-          <Link to={`/equipment/${eq.id}/edit`} className="px-4 py-2 bg-amber-100 text-amber-700 rounded-lg text-sm font-medium hover:bg-amber-200 transition-colors">✏️ Редактировать</Link>
-          <button onClick={() => navigate('/equipment')} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">← Назад</button>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">{eq.name}</h2>
+        <div className="flex flex-wrap gap-2">
+          <Link to={`/equipment/${eq.id}/history`} className="flex-1 sm:flex-none px-3 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors text-center">📜 История</Link>
+          <Link to={`/equipment/${eq.id}/edit`} className="flex-1 sm:flex-none px-3 py-2 bg-amber-100 text-amber-700 rounded-lg text-sm font-medium hover:bg-amber-200 transition-colors text-center">✏️ Изменить</Link>
+          <button onClick={() => navigate('/equipment')} className="flex-1 sm:flex-none px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">← Назад</button>
         </div>
       </div>
 
@@ -232,8 +232,8 @@ export default function EquipmentView() {
 
       {/* Status Modal */}
       {showStatusModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white rounded-t-xl sm:rounded-xl p-4 sm:p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Смена статуса</h3>
             <div className="space-y-2 mb-6">
               {Object.entries(STATUS_LABELS).map(([k, v]) => (
@@ -253,8 +253,8 @@ export default function EquipmentView() {
 
       {/* Move Modal */}
       {showMoveModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white rounded-t-xl sm:rounded-xl p-4 sm:p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Перемещение оборудования</h3>
             <div className="space-y-4 mb-6">
               <div>
@@ -282,8 +282,8 @@ export default function EquipmentView() {
 
       {/* Name Change Modal */}
       {showNameModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white rounded-t-xl sm:rounded-xl p-4 sm:p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Изменение названия</h3>
             <div className="space-y-4 mb-6">
               <div>
@@ -317,8 +317,8 @@ export default function EquipmentView() {
 
       {/* Maintenance Modal */}
       {showMaintenanceModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white rounded-t-xl sm:rounded-xl p-4 sm:p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Добавить обслуживание — {eq.name}</h3>
             <div className="space-y-4 mb-6">
               <div>

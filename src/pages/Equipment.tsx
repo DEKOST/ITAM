@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { STATUS_LABELS, STATUS_COLORS } from '../types';
 import { Link } from 'react-router-dom';
-import * as api from '../api';
 
 export default function Equipment() {
-  const { equipment, equipmentTypes, categories, users, rooms, deleteEquipment, refreshEquipment } = useData();
+  const { equipment, equipmentTypes, categories, users, rooms, deleteEquipment } = useData();
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterType, setFilterType] = useState('');
@@ -28,7 +27,7 @@ export default function Equipment() {
   const getUserName = (userId: string | null) => {
     if (!userId) return '—';
     const user = users.find(u => u.id === userId);
-    return user ? `${user.lastName} ${user.firstName} ${user.middleName || ''}`.trim() : '—';
+    return user ? `${user.lastName} ${user.firstName}` : '—';
   };
   const getRoomName = (roomId: string | null) => {
     if (!roomId) return '—';
@@ -37,36 +36,75 @@ export default function Equipment() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-        <h2 className="text-2xl font-bold text-gray-800">Оборудование</h2>
-        <Link to="/equipment/new" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Оборудование</h2>
+        <Link to="/equipment/new" className="px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors text-center">
           + Добавить
         </Link>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 mb-4 sm:mb-6">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <input
             type="text"
-            placeholder="Поиск по названию, серийному/инвентарному номеру..."
+            placeholder="Поиск..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="">Все статусы</option>
             {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
-          <select value={filterType} onChange={e => setFilterType(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <select value={filterType} onChange={e => setFilterType(e.target.value)} className="px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="">Все типы</option>
             {equipmentTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      {/* Mobile Cards View */}
+      <div className="sm:hidden space-y-3">
+        {filtered.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center text-gray-500">
+            Оборудование не найдено
+          </div>
+        ) : filtered.map(eq => (
+          <Link key={eq.id} to={`/equipment/${eq.id}`} className="block">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 active:bg-gray-50">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-800 truncate">{eq.name}</h3>
+                  <p className="text-xs text-gray-500 truncate">{getTypeName(eq.typeId)} • {getCategoryName(eq.typeId)}</p>
+                </div>
+                <span className={`text-xs px-2 py-1 rounded-full font-medium ml-2 flex-shrink-0 ${STATUS_COLORS[eq.status]}`}>
+                  {STATUS_LABELS[eq.status]}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mt-3 pt-3 border-t border-gray-100">
+                <div>
+                  <span className="text-gray-400">Сотрудник:</span>
+                  <p className="font-medium truncate">{getUserName(eq.userId)}</p>
+                </div>
+                <div>
+                  <span className="text-gray-400">Помещение:</span>
+                  <p className="font-medium truncate">{getRoomName(eq.roomId)}</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                <span className="text-xs text-gray-400 font-mono">{eq.inventoryNumber}</span>
+                <div className="flex gap-2">
+                  <span className="text-blue-600 text-xs">Подробнее →</span>
+                </div>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden sm:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">

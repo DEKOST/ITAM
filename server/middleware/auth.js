@@ -29,7 +29,7 @@ function authMiddleware(req, res, next) {
     }
     
     // Проверяем сессию
-    const session = db.prepare('SELECT * FROM sessions WHERE token = ? AND expires_at > datetime("now")').get(token);
+    const session = db.prepare("SELECT * FROM sessions WHERE token = ? AND expires_at > datetime('now')").get(token);
     if (!session) {
       return res.status(401).json({ error: 'Сессия истекла' });
     }

@@ -45,7 +45,7 @@ router.post('/login', authLimiter, validate(loginSchema), (req, res) => {
     .run(sessionId, user.id, token, ip, userAgent, expiresAt);
 
   // Обновляем время последнего входа
-  db.prepare('UPDATE auth_users SET last_login = datetime("now") WHERE id = ?').run(user.id);
+  db.prepare("UPDATE auth_users SET last_login = datetime('now') WHERE id = ?").run(user.id);
 
   // Логируем успешный вход
   db.prepare('INSERT INTO auth_logs (id, user_id, username, action, ip_address, user_agent, success) VALUES (?, ?, ?, ?, ?, ?, ?)')

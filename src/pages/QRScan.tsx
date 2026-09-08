@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { useData } from '../context/DataContext';
-import { STATUS_LABELS, STATUS_COLORS, EquipmentStatus } from '../types';
+import { STATUS_LABELS, STATUS_COLORS, EquipmentStatus, Equipment } from '../types';
 import { Link } from 'react-router-dom';
 import * as api from '../api';
 
 export default function QRScan() {
   const { equipment, equipmentTypes, users, rooms, refreshEquipment, changeEquipmentStatus, moveEquipment } = useData();
   const [scannedId, setScannedId] = useState<string | null>(null);
+  const [scannedEq, setScannedEq] = useState<Equipment | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [newStatus, setNewStatus] = useState<EquipmentStatus>('in_use');
@@ -18,7 +20,42 @@ export default function QRScan() {
   const [manualInput, setManualInput] = useState('');
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
 
-  const scannedEq = scannedId ? equipment.find(e => e.qrCode === scannedId || e.id === scannedId) : null;
+  // Функция поиска оборудования по QR-коду через API
+  const searchEquipmentByQR = async (qrCode: string) => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await api.getEquipmentByQR(qrCode);
+      // Маппим данные из API в формат Equipment
+      const equipment: Equipment = {
+        id: data.id,
+        name: data.name,
+        serialNumber: data.serial_number || '',
+        inventoryNumber: data.inventory_number || '',
+        typeId: data.type_id,
+        status: data.status,
+        userId: data.user_id || null,
+        roomId: data.room_id || null,
+        purchaseDate: data.purchase_date || '',
+        warrantyEnd: data.warranty_end || '',
+        lastMaintenanceDate: data.last_maintenance_date || '',
+        nextMaintenanceDate: data.next_maintenance_date || '',
+        notes: data.notes || '',
+        qrCode: data.qr_code,
+        createdAt: data.created_at || '',
+      };
+      setScannedEq(equipment);
+    } catch (err: any) {
+      setScannedEq(null);
+      if (err.message.includes('не найдено')) {
+        setError(`Оборудование с кодом "${qrCode}" не найдено`);
+      } else {
+        setError(err.message || 'Ошибка поиска');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     return () => {
@@ -37,6 +74,7 @@ export default function QRScan() {
         { fps: 10, qrbox: { width: 250, height: 250 } },
         (decodedText) => {
           setScannedId(decodedText);
+          searchEquipmentByQR(decodedText);
           stopScanner();
         },
         () => {}
@@ -61,7 +99,9 @@ export default function QRScan() {
 
   const handleManualScan = () => {
     if (manualInput.trim()) {
-      setScannedId(manualInput.trim());
+      const code = manualInput.trim();
+      setScannedId(code);
+      searchEquipmentByQR(code);
       setManualInput('');
     }
   };
@@ -70,6 +110,8 @@ export default function QRScan() {
     if (scannedEq) {
       await changeEquipmentStatus(scannedEq.id, newStatus);
       setShowStatusModal(false);
+      // Обновляем данные оборудования
+      await searchEquipmentByQR(scannedEq.qrCode);
     }
   };
 
@@ -77,6 +119,8 @@ export default function QRScan() {
     if (scannedEq) {
       await moveEquipment(scannedEq.id, { user_id: newUserId || undefined, room_id: newRoomId || undefined });
       setShowMoveModal(false);
+      // Обновляем данные оборудования
+      await searchEquipmentByQR(scannedEq.qrCode);
     }
   };
 
@@ -133,22 +177,27 @@ export default function QRScan() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-semibold text-gray-700 mb-4">Результат</h3>
 
-            {!scannedEq ? (
+            {loading ? (
               <div className="text-center py-12">
-                {scannedId ? (
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Поиск оборудования...</p>
+              </div>
+            ) : !scannedEq ? (
+              <div className="text-center py-12">
+                {scannedId && !error ? (
                   <div>
                     <p className="text-4xl mb-3">❌</p>
                     <p className="text-gray-500">Оборудование с кодом "{scannedId}" не найдено</p>
-                    <button onClick={() => setScannedId(null)} className="mt-3 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">
+                    <button onClick={() => { setScannedId(null); setError(''); }} className="mt-3 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">
                       Сканировать снова
                     </button>
                   </div>
-                ) : (
+                ) : !scannedId ? (
                   <div>
                     <p className="text-4xl mb-3">📱</p>
                     <p className="text-gray-500">Отсканируйте QR код для просмотра информации</p>
                   </div>
-                )}
+                ) : null}
               </div>
             ) : (
               <div>
@@ -203,7 +252,7 @@ export default function QRScan() {
                   <Link to={`/equipment/${scannedEq.id}`} className="block w-full px-4 py-2.5 bg-gray-50 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors text-left text-center">
                     📋 Полная информация
                   </Link>
-                  <button onClick={() => setScannedId(null)} className="w-full px-4 py-2.5 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors text-left text-center">
+                  <button onClick={() => { setScannedId(null); setScannedEq(null); setError(''); }} className="w-full px-4 py-2.5 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors text-left text-center">
                     🔄 Сканировать другой
                   </button>
                 </div>

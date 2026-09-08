@@ -80,9 +80,13 @@ router.get('/equipment/:id/history', (req, res) => {
   
   // 4. История обслуживания
   const maintenanceLogs = db.prepare(`
-    SELECT * FROM maintenance_logs 
-    WHERE equipment_id = ? 
-    ORDER BY date DESC
+    SELECT 
+      ml.*,
+      mt.name as maintenance_type_name
+    FROM maintenance_logs ml
+    LEFT JOIN maintenance_types mt ON ml.maintenance_type_id = mt.id
+    WHERE ml.equipment_id = ? 
+    ORDER BY ml.created_at DESC
   `).all(equipmentId);
   
   maintenanceLogs.forEach(log => {
@@ -92,7 +96,7 @@ router.get('/equipment/:id/history', (req, res) => {
       type: 'maintenance',
       description: 'Техническое обслуживание',
       details: {
-        type: log.type,
+        type: log.maintenance_type_name || 'Не указан',
         description: log.description,
         cost: log.cost,
         performed_by: log.performed_by

@@ -1,8 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { STATUS_LABELS, STATUS_COLORS, EquipmentStatus } from '../types';
 import { QRCodeSVG } from 'qrcode.react';
+import * as api from '../api';
+
+interface NextMaintenance {
+  maintenance_type_id: string;
+  maintenance_type_name: string;
+  maintenance_type_description: string;
+  interval_days: number;
+  interval_months: number;
+  interval_years: number;
+  last_maintenance_date: string | null;
+  last_maintenance_description: string | null;
+  next_maintenance_date: string | null;
+  days_until: number | null;
+  is_overdue: boolean;
+}
 
 export default function EquipmentView() {
   const { id } = useParams();
@@ -18,6 +33,13 @@ export default function EquipmentView() {
   const [newRoomId, setNewRoomId] = useState('');
   const [newName, setNewName] = useState('');
   const [nameComment, setNameComment] = useState('');
+  const [nextMaintenances, setNextMaintenances] = useState<NextMaintenance[]>([]);
+
+  useEffect(() => {
+    if (id) {
+      api.getNextMaintenance(id).then(setNextMaintenances).catch(console.error);
+    }
+  }, [id]);
 
   if (!eq) return <div className="text-center py-12"><p className="text-gray-500">Оборудование не найдено</p></div>;
 
@@ -27,6 +49,18 @@ export default function EquipmentView() {
   const user = eq.userId ? users.find(u => u.id === eq.userId) : null;
   const room = eq.roomId ? rooms.find(r => r.id === eq.roomId) : null;
   const subdivision = user?.subdivisionId ? subdivisions.find(s => s.id === user.subdivisionId) : null;
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString('ru-RU');
+  };
+
+  const getDaysUntilText = (days: number | null) => {
+    if (days === null) return 'Не указано';
+    if (days < 0) return `Просрочено на ${Math.abs(days)} дн.`;
+    if (days === 0) return 'Сегодня';
+    if (days === 1) return 'Завтра';
+    return `Через ${days} дн.`;
+  };
 
   const handleStatusChange = async () => {
     await changeEquipmentStatus(eq.id, newStatus);
@@ -97,6 +131,36 @@ export default function EquipmentView() {
               <InfoRow label="Следующее ТО" value={eq.nextMaintenanceDate || '—'} />
             </div>
           </div>
+
+          {/* Информация об обслуживании */}
+          {nextMaintenances.length > 0 && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">🔧 Обслуживание</h3>
+              <div className="space-y-3">
+                {nextMaintenances.map((m, idx) => (
+                  <div key={idx} className={`rounded-lg p-4 ${m.is_overdue ? 'bg-red-50 border border-red-200' : 'bg-gray-50'}`}>
+                    <div className="flex items-start justify-between mb-2">
+                      <p className="text-sm font-semibold text-gray-800">{m.maintenance_type_name}</p>
+                      {m.is_overdue && (
+                        <span className="text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded-full font-medium">Просрочено</span>
+                      )}
+                    </div>
+                    {m.last_maintenance_date && (
+                      <p className="text-xs text-gray-600 mb-1">
+                        Последнее: {formatDate(m.last_maintenance_date)}
+                        {m.last_maintenance_description && ` — ${m.last_maintenance_description}`}
+                      </p>
+                    )}
+                    {m.next_maintenance_date && (
+                      <p className={`text-xs ${m.is_overdue ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
+                        Следующее: {formatDate(m.next_maintenance_date)} ({getDaysUntilText(m.days_until)})
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {eq.notes && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">

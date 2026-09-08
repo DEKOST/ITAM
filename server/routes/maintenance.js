@@ -54,7 +54,7 @@ router.get('/equipment/:id/maintenance/last/:typeId', (req, res) => {
 // Добавить новую запись обслуживания
 router.post('/equipment/:id/maintenance', (req, res) => {
   try {
-    const { maintenance_type_id, date, description, cost, performed_by, notes } = req.body;
+    const { maintenance_type_id, date, description, notes } = req.body;
     
     if (!maintenance_type_id || !date) {
       return res.status(400).json({ error: 'Тип обслуживания и дата обязательны' });
@@ -87,9 +87,9 @@ router.post('/equipment/:id/maintenance', (req, res) => {
 
     const id = uuidv4();
     db.prepare(`
-      INSERT INTO maintenance_logs (id, equipment_id, maintenance_type_id, date, description, cost, performed_by, next_maintenance_date, notes, changed_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, req.params.id, maintenance_type_id, date, description || '', cost || 0, performed_by || '', nextMaintenanceDate, notes || '', changedBy);
+      INSERT INTO maintenance_logs (id, equipment_id, maintenance_type_id, date, description, next_maintenance_date, notes, changed_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, req.params.id, maintenance_type_id, date, description || '', nextMaintenanceDate, notes || '', changedBy);
 
     // Обновляем next_maintenance_date в таблице equipment
     db.prepare('UPDATE equipment SET next_maintenance_date = ? WHERE id = ?').run(nextMaintenanceDate, req.params.id);
@@ -98,9 +98,12 @@ router.post('/equipment/:id/maintenance', (req, res) => {
       SELECT 
         ml.*,
         mt.name as maintenance_type_name,
-        mt.description as maintenance_type_description
+        mt.description as maintenance_type_description,
+        au.full_name as changed_by_name,
+        au.username as changed_by_username
       FROM maintenance_logs ml
       LEFT JOIN maintenance_types mt ON ml.maintenance_type_id = mt.id
+      LEFT JOIN auth_users au ON ml.changed_by = au.id
       WHERE ml.id = ?
     `).get(id);
 
@@ -113,8 +116,25 @@ router.post('/equipment/:id/maintenance', (req, res) => {
 // Получить информацию о следующем обслуживании для оборудования
 router.get('/equipment/:id/next-maintenance', (req, res) => {
   try {
-    // Получаем все типы обслуживания
-    const maintenanceTypes = db.prepare('SELECT * FROM maintenance_types WHERE is_active = 1').all();
+    // Получаем категорию оборудования
+    const equipment = db.prepare(`
+      SELECT e.*, et.category_id 
+      FROM equipment e
+      LEFT JOIN equipment_types et ON e.type_id = et.id
+      WHERE e.id = ?
+    `).get(req.params.id);
+    
+    if (!equipment) {
+      return res.status(404).json({ error: 'Оборудование не найдено' });
+    }
+    
+    // Получаем типы обслуживания для этой категории (или общие без категории)
+    const maintenanceTypes = db.prepare(`
+      SELECT * FROM maintenance_types 
+      WHERE is_active = 1 
+      AND (category_id = ? OR category_id IS NULL)
+      ORDER BY name
+    `).all(equipment.category_id);
     
     const nextMaintenances = maintenanceTypes.map(type => {
       // Получаем последнее обслуживание этого типа
@@ -137,8 +157,7 @@ router.get('/equipment/:id/next-maintenance', (req, res) => {
         isOverdue = daysUntil < 0;
       } else {
         // Если обслуживания никогда не было, рассчитываем от даты создания оборудования
-        const equipment = db.prepare('SELECT created_at FROM equipment WHERE id = ?').get(req.params.id);
-        if (equipment) {
+        if (equipment.created_at) {
           const createdDate = new Date(equipment.created_at);
           const nextDateObj = new Date(createdDate);
           

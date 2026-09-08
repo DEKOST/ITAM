@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import * as api from '../api';
+import { useData } from '../context/DataContext';
 
 interface MaintenanceType {
   id: string;
   name: string;
   description: string;
+  category_id: string | null;
+  category_name?: string;
   interval_days: number;
   interval_months: number;
   interval_years: number;
 }
 
 export default function MaintenanceTypes() {
+  const { categories } = useData();
   const [types, setTypes] = useState<MaintenanceType[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -18,6 +22,7 @@ export default function MaintenanceTypes() {
   const [form, setForm] = useState({
     name: '',
     description: '',
+    category_id: '',
     interval_days: 0,
     interval_months: 0,
     interval_years: 0
@@ -41,15 +46,19 @@ export default function MaintenanceTypes() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const submitData = {
+        ...form,
+        category_id: form.category_id || null
+      };
       if (editing) {
-        await api.updateMaintenanceType(editing, form);
+        await api.updateMaintenanceType(editing, submitData);
       } else {
-        await api.createMaintenanceType(form);
+        await api.createMaintenanceType(submitData);
       }
       await loadTypes();
       setShowForm(false);
       setEditing(null);
-      setForm({ name: '', description: '', interval_days: 0, interval_months: 0, interval_years: 0 });
+      setForm({ name: '', description: '', category_id: '', interval_days: 0, interval_months: 0, interval_years: 0 });
     } catch (err: any) {
       alert('Ошибка: ' + err.message);
     }
@@ -59,6 +68,7 @@ export default function MaintenanceTypes() {
     setForm({
       name: type.name,
       description: type.description,
+      category_id: type.category_id || '',
       interval_days: type.interval_days,
       interval_months: type.interval_months,
       interval_years: type.interval_years
@@ -97,7 +107,7 @@ export default function MaintenanceTypes() {
           onClick={() => {
             setShowForm(!showForm);
             setEditing(null);
-            setForm({ name: '', description: '', interval_days: 0, interval_months: 0, interval_years: 0 });
+            setForm({ name: '', description: '', category_id: '', interval_days: 0, interval_months: 0, interval_years: 0 });
           }}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
         >
@@ -121,6 +131,20 @@ export default function MaintenanceTypes() {
               />
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Категория оборудования</label>
+              <select
+                value={form.category_id}
+                onChange={e => setForm({ ...form, category_id: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Все категории</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">Оставьте пустым для применения ко всем категориям</p>
+            </div>
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Описание</label>
               <input
                 value={form.description}
@@ -182,6 +206,7 @@ export default function MaintenanceTypes() {
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Название</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Категория</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Описание</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Интервал</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Действия</th>
@@ -190,7 +215,7 @@ export default function MaintenanceTypes() {
           <tbody className="divide-y divide-gray-100">
             {types.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
                   Нет типов обслуживания
                 </td>
               </tr>
@@ -198,6 +223,7 @@ export default function MaintenanceTypes() {
               types.map(type => (
                 <tr key={type.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium text-gray-800">{type.name}</td>
+                  <td className="px-4 py-3 text-gray-600">{type.category_name || 'Все категории'}</td>
                   <td className="px-4 py-3 text-gray-600">{type.description || '—'}</td>
                   <td className="px-4 py-3 text-gray-600">{getIntervalText(type)}</td>
                   <td className="px-4 py-3">

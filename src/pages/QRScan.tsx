@@ -39,8 +39,6 @@ export default function QRScan() {
     maintenance_type_id: '',
     date: new Date().toISOString().split('T')[0],
     description: '',
-    cost: 0,
-    performed_by: '',
     notes: ''
   });
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
@@ -166,8 +164,6 @@ export default function QRScan() {
           maintenance_type_id: '',
           date: new Date().toISOString().split('T')[0],
           description: '',
-          cost: 0,
-          performed_by: '',
           notes: ''
         });
         // Обновляем данные оборудования
@@ -445,25 +441,6 @@ export default function QRScan() {
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   placeholder="Что было сделано..."
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Стоимость (₽)</label>
-                <input
-                  type="number"
-                  value={maintenanceForm.cost}
-                  onChange={e => setMaintenanceForm({ ...maintenanceForm, cost: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Выполнено кем</label>
-                <input
-                  type="text"
-                  value={maintenanceForm.performed_by}
-                  onChange={e => setMaintenanceForm({ ...maintenanceForm, performed_by: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="Имя исполнителя"
                 />
               </div>
               <div>

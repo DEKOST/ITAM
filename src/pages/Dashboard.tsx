@@ -7,10 +7,26 @@ import * as api from '../api';
 export default function Dashboard() {
   const { equipment, categories, equipmentTypes, users, rooms } = useData();
   const [stats, setStats] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     api.getEquipmentStats().then(setStats).catch(() => {});
   }, [equipment.length]);
+
+  // Поиск по оборудованию и сотрудникам
+  const searchResults = searchQuery.trim().length > 0 ? {
+    equipment: equipment.filter(eq => 
+      eq.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      eq.serialNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      eq.inventoryNumber.toLowerCase().includes(searchQuery.toLowerCase())
+    ).slice(0, 5),
+    users: users.filter(user => {
+      const fullName = `${user.lastName} ${user.firstName} ${user.middleName || ''}`.toLowerCase();
+      return fullName.includes(searchQuery.toLowerCase()) ||
+             user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+             user.position.toLowerCase().includes(searchQuery.toLowerCase());
+    }).slice(0, 5)
+  } : null;
 
   const statusCounts = Object.entries(STATUS_LABELS).map(([key, label]) => ({
     key,
@@ -28,6 +44,106 @@ export default function Dashboard() {
   return (
     <div>
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Дашборд</h2>
+
+      {/* Global Search */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
+        <div className="relative">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            placeholder="Поиск по оборудованию и сотрудникам..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoFocus
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {/* Search Results */}
+        {searchResults && (searchResults.equipment.length > 0 || searchResults.users.length > 0) && (
+          <div className="mt-4 space-y-4">
+            {/* Equipment Results */}
+            {searchResults.equipment.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <span>💻</span> Оборудование ({searchResults.equipment.length})
+                </h4>
+                <div className="space-y-2">
+                  {searchResults.equipment.map(eq => (
+                    <Link
+                      key={eq.id}
+                      to={`/equipment/${eq.id}`}
+                      className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-800 truncate">{eq.name}</p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {equipmentTypes.find(t => t.id === eq.typeId)?.name || '—'} • {eq.inventoryNumber || eq.serialNumber || '—'}
+                          </p>
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ml-2 ${STATUS_COLORS[eq.status]}`}>
+                          {STATUS_LABELS[eq.status]}
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Users Results */}
+            {searchResults.users.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <span>👥</span> Сотрудники ({searchResults.users.length})
+                </h4>
+                <div className="space-y-2">
+                  {searchResults.users.map(user => (
+                    <Link
+                      key={user.id}
+                      to={`/users`}
+                      className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-800 truncate">
+                            {user.lastName} {user.firstName} {user.middleName || ''}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {user.position || '—'} {user.email && `• ${user.email}`}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* No Results */}
+        {searchResults && searchResults.equipment.length === 0 && searchResults.users.length === 0 && (
+          <div className="mt-4 text-center py-4">
+            <p className="text-sm text-gray-500">Ничего не найдено</p>
+          </div>
+        )}
+      </div>
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">

@@ -14,9 +14,13 @@ function generateInventoryNumber(): string {
 export default function EquipmentForm() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { equipment, equipmentTypes, categories, users, rooms, addEquipment, updateEquipment } = useData();
+  const { equipment, equipmentTypes, categories, users, rooms, addEquipment, updateEquipment, addRoom } = useData();
   const isEdit = !!id;
   const existing = id ? equipment.find(e => e.id === id) : null;
+  
+  // Состояние для модального окна создания помещения
+  const [showRoomModal, setShowRoomModal] = useState(false);
+  const [newRoomForm, setNewRoomForm] = useState({ name: '', building: '', floor: 1, description: '' });
 
   // Инициализируем форму только один раз при монтировании
   const [form, setForm] = useState(() => {
@@ -75,6 +79,21 @@ export default function EquipmentForm() {
       alert(err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleCreateRoom = async () => {
+    if (!newRoomForm.name.trim()) {
+      alert('Введите название помещения');
+      return;
+    }
+    try {
+      const newRoom = await addRoom(newRoomForm);
+      setForm({ ...form, roomId: newRoom.id });
+      setShowRoomModal(false);
+      setNewRoomForm({ name: '', building: '', floor: 1, description: '' });
+    } catch (err: any) {
+      alert(err.message);
     }
   };
 
@@ -142,10 +161,20 @@ export default function EquipmentForm() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Помещение</label>
-              <select value={form.roomId} onChange={e => setForm({...form, roomId: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">Не указано</option>
-                {rooms.map(r => <option key={r.id} value={r.id}>{r.name} ({r.building})</option>)}
-              </select>
+              <div className="flex gap-2">
+                <select value={form.roomId} onChange={e => setForm({...form, roomId: e.target.value})} className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="">Не указано</option>
+                  {rooms.map(r => <option key={r.id} value={r.id}>{r.name} ({r.building})</option>)}
+                </select>
+                <button 
+                  type="button"
+                  onClick={() => setShowRoomModal(true)}
+                  className="px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+                  title="Создать новое помещение"
+                >
+                  +
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -241,6 +270,61 @@ export default function EquipmentForm() {
           <button type="button" onClick={() => navigate('/equipment')} className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Отмена</button>
         </div>
       </form>
+
+      {/* Модальное окно создания помещения */}
+      {showRoomModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Новое помещение</h3>
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Название *</label>
+                <input
+                  type="text"
+                  value={newRoomForm.name}
+                  onChange={e => setNewRoomForm({...newRoomForm, name: e.target.value})}
+                  placeholder="Например: Кабинет 301"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Здание *</label>
+                <input
+                  type="text"
+                  value={newRoomForm.building}
+                  onChange={e => setNewRoomForm({...newRoomForm, building: e.target.value})}
+                  placeholder="Например: Главный корпус"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Этаж</label>
+                <input
+                  type="number"
+                  value={newRoomForm.floor}
+                  onChange={e => setNewRoomForm({...newRoomForm, floor: parseInt(e.target.value) || 0})}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Описание</label>
+                <input
+                  type="text"
+                  value={newRoomForm.description}
+                  onChange={e => setNewRoomForm({...newRoomForm, description: e.target.value})}
+                  placeholder="Необязательно"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={handleCreateRoom} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">Создать</button>
+              <button onClick={() => { setShowRoomModal(false); setNewRoomForm({ name: '', building: '', floor: 1, description: '' }); }} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Отмена</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

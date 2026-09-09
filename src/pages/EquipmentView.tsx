@@ -113,6 +113,17 @@ export default function EquipmentView() {
     }
   };
 
+  const handleDuplicate = async () => {
+    if (!confirm('Создать копию оборудования?')) return;
+    try {
+      const newEquipment = await api.duplicateEquipment(eq.id);
+      alert('✅ Копия создана');
+      navigate(`/equipment/${newEquipment.id}`);
+    } catch (err: any) {
+      alert('❌ Ошибка: ' + err.message);
+    }
+  };
+
   return (
     <div className="max-w-4xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3">
@@ -257,6 +268,9 @@ export default function EquipmentView() {
               </button>
               <button onClick={() => { setNewName(eq.name); setShowNameModal(true); }} className="w-full px-4 py-2.5 bg-orange-50 text-orange-700 rounded-lg text-sm font-medium hover:bg-orange-100 transition-colors text-left">
                 📝 Изменить название
+              </button>
+              <button data-action="duplicate" onClick={handleDuplicate} className="w-full px-4 py-2.5 bg-cyan-50 text-cyan-700 rounded-lg text-sm font-medium hover:bg-cyan-100 transition-colors text-left">
+                📋 Создать копию
               </button>
               <button onClick={() => { setNewStatus(eq.status); setShowStatusModal(true); }} className="w-full px-4 py-2.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors text-left">
                 🔄 Сменить статус

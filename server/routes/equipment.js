@@ -274,6 +274,43 @@ router.patch('/:id/name', writeLimiter, (req, res) => {
   res.json(item);
 });
 
+// Дублировать оборудование
+router.post('/:id/duplicate', writeLimiter, (req, res) => {
+  const existing = db.prepare('SELECT * FROM equipment WHERE id = ?').get(req.params.id);
+  if (!existing) return res.status(404).json({ error: 'Оборудование не найдено' });
+
+  const newId = uuidv4();
+  const newName = `${existing.name} (копия)`;
+  
+  // Создаём копию с новым ID и именем
+  db.prepare(`
+    INSERT INTO equipment (id, name, serial_number, inventory_number, type_id, status, user_id, room_id, purchase_date, warranty_end, last_maintenance_date, next_maintenance_date, notes, qr_code, cpu, ram, storage_type, storage_size)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    newId,
+    newName,
+    '', // serial_number очищаем
+    '', // inventory_number очищаем
+    existing.type_id,
+    'in_reserve', // статус по умолчанию "в резерве"
+    null, // user_id очищаем
+    existing.room_id, // room_id сохраняем
+    '', // purchase_date очищаем
+    '', // warranty_end очищаем
+    '', // last_maintenance_date очищаем
+    '', // next_maintenance_date очищаем
+    `Скопировано с: ${existing.name}`, // notes
+    newId, // qr_code = newId
+    existing.cpu,
+    existing.ram,
+    existing.storage_type,
+    existing.storage_size
+  );
+
+  const newItem = db.prepare('SELECT * FROM equipment WHERE id = ?').get(newId);
+  res.status(201).json(newItem);
+});
+
 // Удалить оборудование
 router.delete('/:id', writeLimiter, (req, res) => {
   const existing = db.prepare('SELECT * FROM equipment WHERE id = ?').get(req.params.id);

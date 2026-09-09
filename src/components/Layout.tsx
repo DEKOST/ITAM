@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 
 interface NavItem {
   path: string;
@@ -30,6 +31,7 @@ const navGroups: NavGroup[] = [
     roles: ['admin', 'user'],
     items: [
       { path: '/equipment', label: 'Оборудование', icon: '💻', roles: ['admin', 'user'] },
+      { path: '/equipment-templates', label: 'Шаблоны оборудования', icon: '📋', roles: ['admin', 'user'] },
       { path: '/replacement-recommendations', label: 'Рекомендации по замене', icon: '🔄', roles: ['admin', 'user'] },
       { path: '/categories', label: 'Категории и типы', icon: '🏷️', roles: ['admin', 'user'] },
       { path: '/maintenance-types', label: 'Типы обслуживания', icon: '🔧', roles: ['admin', 'user'] },
@@ -64,6 +66,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  
+  // Активируем горячие клавиши
+  useKeyboardShortcuts();
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
     // Восстанавливаем состояние из localStorage
     try {

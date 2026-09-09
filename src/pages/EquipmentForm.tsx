@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { EquipmentStatus, STATUS_LABELS } from '../types';
+import AutocompleteInput from '../components/AutocompleteInput';
 
 // Генерация уникального инвентарного номера в формате INV-XXXXXXXX
 function generateInventoryNumber(): string {
@@ -36,6 +37,11 @@ export default function EquipmentForm() {
     };
   });
   const [saving, setSaving] = useState(false);
+
+  // Получаем уникальные значения для автодополнения
+  const nameSuggestions = Array.from(new Set(equipment.map(e => e.name))).filter((n): n is string => !!n);
+  const serialNumberSuggestions = Array.from(new Set(equipment.map(e => e.serialNumber))).filter((s): s is string => !!s);
+  const cpuSuggestions = Array.from(new Set(equipment.map(e => e.cpu).filter((c): c is string => !!c)));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,10 +91,14 @@ export default function EquipmentForm() {
         <div>
           <h3 className="text-md font-semibold text-gray-700 mb-3">Основная информация</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Название *</label>
-              <input required value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
+            <AutocompleteInput
+              label="Название *"
+              value={form.name}
+              onChange={value => setForm({...form, name: value})}
+              suggestions={nameSuggestions}
+              placeholder="Например: AOC 24B3HA2"
+              required
+            />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Тип *</label>
               <select required value={form.typeId} onChange={e => setForm({...form, typeId: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -100,10 +110,13 @@ export default function EquipmentForm() {
                 ))}
               </select>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Серийный номер</label>
-              <input value={form.serialNumber} onChange={e => setForm({...form, serialNumber: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
+            <AutocompleteInput
+              label="Серийный номер"
+              value={form.serialNumber}
+              onChange={value => setForm({...form, serialNumber: value})}
+              suggestions={serialNumberSuggestions}
+              placeholder="Начните вводить для поиска"
+            />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Инвентарный номер</label>
               <input value={form.inventoryNumber} onChange={e => setForm({...form, inventoryNumber: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
@@ -169,15 +182,13 @@ export default function EquipmentForm() {
               <h3 className="text-md font-semibold text-gray-700 mb-3">Технические характеристики</h3>
               <p className="text-xs text-gray-500 mb-3">Заполняется для ПК и ноутбуков</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Процессор (ЦП)</label>
-                  <input 
-                    value={form.cpu} 
-                    onChange={e => setForm({...form, cpu: e.target.value})} 
-                    placeholder="Например: Intel Core i5-12400"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                  />
-                </div>
+                <AutocompleteInput
+                  label="Процессор (ЦП)"
+                  value={form.cpu}
+                  onChange={value => setForm({...form, cpu: value})}
+                  suggestions={cpuSuggestions}
+                  placeholder="Начните вводить для поиска"
+                />
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Оперативная память (ОЗУ), ГБ</label>
                   <input 

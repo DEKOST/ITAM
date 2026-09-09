@@ -28,9 +28,9 @@ router.get('/:id', (req, res) => {
 });
 
 router.post('/', writeLimiter, validate(equipmentTypeSchema), (req, res) => {
-  const { name, category_id } = req.body;
+  const { name, category_id, has_specs } = req.body;
   const id = uuidv4();
-  db.prepare('INSERT INTO equipment_types (id, name, category_id) VALUES (?, ?, ?)').run(id, name, category_id);
+  db.prepare('INSERT INTO equipment_types (id, name, category_id, has_specs) VALUES (?, ?, ?, ?)').run(id, name, category_id, has_specs ? 1 : 0);
   const item = db.prepare(`
     SELECT et.*, c.name as category_name 
     FROM equipment_types et 
@@ -41,11 +41,16 @@ router.post('/', writeLimiter, validate(equipmentTypeSchema), (req, res) => {
 });
 
 router.put('/:id', writeLimiter, validate(equipmentTypeSchema), (req, res) => {
-  const { name, category_id } = req.body;
+  const { name, category_id, has_specs } = req.body;
   const existing = db.prepare('SELECT * FROM equipment_types WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ error: 'Тип не найден' });
   
-  db.prepare('UPDATE equipment_types SET name = ?, category_id = ? WHERE id = ?').run(name || existing.name, category_id || existing.category_id, req.params.id);
+  db.prepare('UPDATE equipment_types SET name = ?, category_id = ?, has_specs = ? WHERE id = ?').run(
+    name || existing.name, 
+    category_id || existing.category_id, 
+    has_specs !== undefined ? (has_specs ? 1 : 0) : existing.has_specs,
+    req.params.id
+  );
   const item = db.prepare('SELECT * FROM equipment_types WHERE id = ?').get(req.params.id);
   res.json(item);
 });

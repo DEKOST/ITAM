@@ -281,7 +281,8 @@ export function DataProvider({ children, isAuthenticated: authIsAuthenticated }:
     // Конвертируем camelCase в snake_case для API
     const apiData = {
       name: item.name,
-      category_id: item.categoryId
+      category_id: item.categoryId,
+      has_specs: item.hasSpecs || false
     };
     const data = await api.createEquipmentType(apiData);
     await refreshEquipmentTypes();
@@ -294,6 +295,7 @@ export function DataProvider({ children, isAuthenticated: authIsAuthenticated }:
     const apiData: any = {};
     if (data.name !== undefined) apiData.name = data.name;
     if (data.categoryId !== undefined) apiData.category_id = data.categoryId;
+    if (data.hasSpecs !== undefined) apiData.has_specs = data.hasSpecs;
     await api.updateEquipmentType(id, apiData);
     await refreshEquipmentTypes();
     notifyDataChange();
@@ -442,7 +444,7 @@ function mapCategoryFromAPI(data: any): Category {
 }
 
 function mapTypeFromAPI(data: any): EquipmentType {
-  return { id: data.id, name: data.name, categoryId: data.category_id };
+  return { id: data.id, name: data.name, categoryId: data.category_id, hasSpecs: !!data.has_specs };
 }
 
 function mapUserFromAPI(data: any): User {

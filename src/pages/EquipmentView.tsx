@@ -162,8 +162,14 @@ export default function EquipmentView() {
             </div>
           </div>
 
-          {/* Технические характеристики */}
-          {(eq.cpu || (eq.ram && eq.ram > 0) || eq.storageType || (eq.storageSize && eq.storageSize > 0)) && (() => {
+          {/* Технические характеристики - показываем только если тип оборудования имеет hasSpecs */}
+          {(() => {
+            const selectedType = equipmentTypes.find(t => t.id === eq.typeId);
+            if (!selectedType?.hasSpecs) return null;
+            
+            const hasSpecsData = eq.cpu || (eq.ram && eq.ram > 0) || eq.storageType || (eq.storageSize && eq.storageSize > 0);
+            if (!hasSpecsData) return null;
+            
             const cpuInfo = eq.cpu ? evaluateCPU(eq.cpu) : null;
             return (
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -182,7 +188,7 @@ export default function EquipmentView() {
                       </div>
                     </div>
                   )}
-                  {eq.ram && eq.ram > 0 ? <InfoRow label="Оперативная память (ОЗУ)" value={`${eq.ram} ГБ`} /> : null}
+                  {eq.ram && eq.ram > 0 && <InfoRow label="Оперативная память (ОЗУ)" value={`${eq.ram} ГБ`} />}
                   {eq.storageType && (
                     <InfoRow 
                       label="Хранилище" 

@@ -102,6 +102,7 @@ function initDatabase() {
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       category_id TEXT NOT NULL,
+      has_specs INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
     );
@@ -361,6 +362,16 @@ function initDatabase() {
     }
     if (!columns.some(col => col.name === 'storage_size')) {
       db.exec('ALTER TABLE equipment ADD COLUMN storage_size INTEGER DEFAULT 0');
+    }
+  } catch (e) {
+    // Игнорируем ошибки миграции
+  }
+
+  // Миграция: добавляем has_specs в equipment_types если её нет
+  try {
+    const columns = db.prepare("PRAGMA table_info(equipment_types)").all();
+    if (!columns.some(col => col.name === 'has_specs')) {
+      db.exec('ALTER TABLE equipment_types ADD COLUMN has_specs INTEGER DEFAULT 0');
     }
   } catch (e) {
     // Игнорируем ошибки миграции

@@ -159,56 +159,64 @@ export default function EquipmentForm() {
           </div>
         </div>
 
-        <div>
-          <h3 className="text-md font-semibold text-gray-700 mb-3">Технические характеристики</h3>
-          <p className="text-xs text-gray-500 mb-3">Заполняется для ПК и ноутбуков</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Технические характеристики - показываем только для типов с hasSpecs */}
+        {(() => {
+          const selectedType = equipmentTypes.find(t => t.id === form.typeId);
+          if (!selectedType?.hasSpecs) return null;
+          
+          return (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Процессор (ЦП)</label>
-              <input 
-                value={form.cpu} 
-                onChange={e => setForm({...form, cpu: e.target.value})} 
-                placeholder="Например: Intel Core i5-12400"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
-              />
+              <h3 className="text-md font-semibold text-gray-700 mb-3">Технические характеристики</h3>
+              <p className="text-xs text-gray-500 mb-3">Заполняется для ПК и ноутбуков</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Процессор (ЦП)</label>
+                  <input 
+                    value={form.cpu} 
+                    onChange={e => setForm({...form, cpu: e.target.value})} 
+                    placeholder="Например: Intel Core i5-12400"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Оперативная память (ОЗУ), ГБ</label>
+                  <input 
+                    type="number"
+                    min="0"
+                    value={form.ram} 
+                    onChange={e => setForm({...form, ram: parseInt(e.target.value) || 0})} 
+                    placeholder="Например: 16"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Тип хранилища</label>
+                  <select 
+                    value={form.storageType} 
+                    onChange={e => setForm({...form, storageType: e.target.value as any})} 
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Не указано</option>
+                    <option value="SSD">SSD</option>
+                    <option value="HDD">HDD</option>
+                    <option value="M2">M.2 NVMe</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Объём хранилища, ГБ</label>
+                  <input 
+                    type="number"
+                    min="0"
+                    value={form.storageSize} 
+                    onChange={e => setForm({...form, storageSize: parseInt(e.target.value) || 0})} 
+                    placeholder="Например: 512"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                  />
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Оперативная память (ОЗУ), ГБ</label>
-              <input 
-                type="number"
-                min="0"
-                value={form.ram} 
-                onChange={e => setForm({...form, ram: parseInt(e.target.value) || 0})} 
-                placeholder="Например: 16"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Тип хранилища</label>
-              <select 
-                value={form.storageType} 
-                onChange={e => setForm({...form, storageType: e.target.value as any})} 
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Не указано</option>
-                <option value="SSD">SSD</option>
-                <option value="HDD">HDD</option>
-                <option value="M2">M.2 NVMe</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Объём хранилища, ГБ</label>
-              <input 
-                type="number"
-                min="0"
-                value={form.storageSize} 
-                onChange={e => setForm({...form, storageSize: parseInt(e.target.value) || 0})} 
-                placeholder="Например: 512"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
-              />
-            </div>
-          </div>
-        </div>
+          );
+        })()}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Заметки</label>

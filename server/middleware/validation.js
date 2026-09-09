@@ -53,7 +53,8 @@ const categorySchema = Joi.object({
 // Валидация для типа оборудования
 const equipmentTypeSchema = Joi.object({
   name: Joi.string().min(1).max(100).required(),
-  category_id: Joi.string().uuid().required()
+  category_id: Joi.string().uuid().required(),
+  has_specs: Joi.boolean().optional()
 });
 
 // Валидация для пользователя (сотрудника)

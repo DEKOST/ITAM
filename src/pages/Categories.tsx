@@ -9,7 +9,7 @@ export default function Categories() {
   const [editingCat, setEditingCat] = useState<string | null>(null);
   const [editingType, setEditingType] = useState<string | null>(null);
   const [catForm, setCatForm] = useState({ name: '', description: '' });
-  const [typeForm, setTypeForm] = useState({ name: '', categoryId: '' });
+  const [typeForm, setTypeForm] = useState({ name: '', categoryId: '', hasSpecs: false });
 
   const handleCatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,11 +26,11 @@ export default function Categories() {
   const handleTypeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingType) {
-      await updateEquipmentType(editingType, { name: typeForm.name, categoryId: typeForm.categoryId });
+      await updateEquipmentType(editingType, { name: typeForm.name, categoryId: typeForm.categoryId, hasSpecs: typeForm.hasSpecs });
     } else {
-      await addEquipmentType({ name: typeForm.name, categoryId: typeForm.categoryId });
+      await addEquipmentType({ name: typeForm.name, categoryId: typeForm.categoryId, hasSpecs: typeForm.hasSpecs });
     }
-    setTypeForm({ name: '', categoryId: '' });
+    setTypeForm({ name: '', categoryId: '', hasSpecs: false });
     setShowTypeForm(false);
     setEditingType(null);
   };
@@ -42,7 +42,7 @@ export default function Categories() {
   };
 
   const startEditType = (type: EquipmentType) => {
-    setTypeForm({ name: type.name, categoryId: type.categoryId });
+    setTypeForm({ name: type.name, categoryId: type.categoryId, hasSpecs: type.hasSpecs || false });
     setEditingType(type.id);
     setShowTypeForm(true);
   };
@@ -103,7 +103,7 @@ export default function Categories() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-700">Типы оборудования</h3>
-          <button onClick={() => { setShowTypeForm(!showTypeForm); setEditingType(null); setTypeForm({ name: '', categoryId: '' }); }} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">
+          <button onClick={() => { setShowTypeForm(!showTypeForm); setEditingType(null); setTypeForm({ name: '', categoryId: '', hasSpecs: false }); }} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">
             {showTypeForm ? 'Скрыть' : '+ Добавить тип'}
           </button>
         </div>
@@ -124,6 +124,18 @@ export default function Categories() {
                 </select>
               </div>
             </div>
+            <div className="mb-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={typeForm.hasSpecs} 
+                  onChange={e => setTypeForm({...typeForm, hasSpecs: e.target.checked})} 
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm font-medium text-gray-700">Имеет технические характеристики (ЦП, ОЗУ, хранилище)</span>
+              </label>
+              <p className="text-xs text-gray-500 mt-1 ml-6">Отметьте для ПК, ноутбуков и другого оборудования с процессором и памятью</p>
+            </div>
             <div className="flex gap-2">
               <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">{editingType ? 'Сохранить' : 'Добавить'}</button>
               <button type="button" onClick={() => { setShowTypeForm(false); setEditingType(null); }} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Отмена</button>
@@ -137,6 +149,7 @@ export default function Categories() {
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Тип</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Категория</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Тех. характеристики</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Действия</th>
               </tr>
             </thead>
@@ -145,6 +158,13 @@ export default function Categories() {
                 <tr key={type.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium text-gray-800">{type.name}</td>
                   <td className="px-4 py-3 text-gray-600">{categories.find(c => c.id === type.categoryId)?.name || '—'}</td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {type.hasSpecs ? (
+                      <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">✓ Да</span>
+                    ) : (
+                      <span className="text-xs text-gray-400">—</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
                       <button onClick={() => startEditType(type)} className="px-2 py-1 text-amber-600 hover:bg-amber-50 rounded text-xs">✏️</button>

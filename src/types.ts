@@ -10,6 +10,7 @@ export interface EquipmentType {
   id: string;
   name: string;
   categoryId: string;
+  hasSpecs?: boolean;
 }
 
 export interface User {

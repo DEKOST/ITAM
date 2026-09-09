@@ -11,6 +11,7 @@ import EquipmentView from './pages/EquipmentView';
 import EquipmentHistory from './pages/EquipmentHistory';
 import Categories from './pages/Categories';
 import Users from './pages/Users';
+import UserView from './pages/UserView';
 import Rooms from './pages/Rooms';
 import Subdivisions from './pages/Subdivisions';
 import MaintenanceTypes from './pages/MaintenanceTypes';
@@ -86,6 +87,7 @@ function AppRoutes() {
       <Route path="/equipment/:id/history" element={<ProtectedRoute><EquipmentHistory /></ProtectedRoute>} />
       <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
       <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
+      <Route path="/users/:id" element={<ProtectedRoute><UserView /></ProtectedRoute>} />
       <Route path="/rooms" element={<ProtectedRoute><Rooms /></ProtectedRoute>} />
       <Route path="/subdivisions" element={<ProtectedRoute><Subdivisions /></ProtectedRoute>} />
       <Route path="/maintenance-types" element={<ProtectedRoute><MaintenanceTypes /></ProtectedRoute>} />

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { User } from '../types';
 
@@ -121,20 +122,25 @@ export default function Users() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center text-gray-500">Сотрудники не найдены</div>
         ) : filtered.map(user => (
           <div key={user.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-            <div className="flex items-start justify-between">
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-800 truncate">{user.lastName} {user.firstName} {user.middleName}</h3>
-                <p className="text-xs text-gray-500 truncate">{user.position}</p>
+            <Link to={`/users/${user.id}`} className="block">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-800 truncate">{user.lastName} {user.firstName} {user.middleName}</h3>
+                  <p className="text-xs text-gray-500 truncate">{user.position}</p>
+                </div>
+                <div className="flex gap-1 ml-2">
+                  <button onClick={(e) => { e.preventDefault(); startEdit(user); }} className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg">✏️</button>
+                  <button onClick={(e) => { e.preventDefault(); if (confirm('Удалить сотрудника?')) deleteUser(user.id); }} className="p-2 text-red-600 hover:bg-red-50 rounded-lg">🗑️</button>
+                </div>
               </div>
-              <div className="flex gap-1 ml-2">
-                <button onClick={() => startEdit(user)} className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg">✏️</button>
-                <button onClick={async () => { if (confirm('Удалить сотрудника?')) await deleteUser(user.id); }} className="p-2 text-red-600 hover:bg-red-50 rounded-lg">🗑️</button>
+              <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-600 space-y-1">
+                {user.email && <p><span className="text-gray-400">Email:</span> {user.email}</p>}
+                <p><span className="text-gray-400">Подразделение:</span> {getSubdivisionName(user.subdivisionId)}</p>
               </div>
-            </div>
-            <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-600 space-y-1">
-              {user.email && <p><span className="text-gray-400">Email:</span> {user.email}</p>}
-              <p><span className="text-gray-400">Подразделение:</span> {getSubdivisionName(user.subdivisionId)}</p>
-            </div>
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                <span className="text-xs text-blue-600 font-medium">👁️ Просмотр оборудования →</span>
+              </div>
+            </Link>
           </div>
         ))}
       </div>
@@ -156,12 +162,17 @@ export default function Users() {
               <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500">Сотрудники не найдены</td></tr>
             ) : filtered.map(user => (
               <tr key={user.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium text-gray-800">{user.lastName} {user.firstName} {user.middleName}</td>
+                <td className="px-4 py-3 font-medium text-gray-800">
+                  <Link to={`/users/${user.id}`} className="text-blue-600 hover:text-blue-800 hover:underline">
+                    {user.lastName} {user.firstName} {user.middleName}
+                  </Link>
+                </td>
                 <td className="px-4 py-3 text-gray-600">{user.email}</td>
                 <td className="px-4 py-3 text-gray-600">{getSubdivisionName(user.subdivisionId)}</td>
                 <td className="px-4 py-3 text-gray-600">{user.position}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-1">
+                    <Link to={`/users/${user.id}`} className="px-3 py-1.5 text-blue-600 hover:bg-blue-50 rounded text-xs">👁️</Link>
                     <button onClick={() => startEdit(user)} className="px-3 py-1.5 text-amber-600 hover:bg-amber-50 rounded text-xs">✏️</button>
                     <button onClick={async () => { if (confirm('Удалить сотрудника?')) await deleteUser(user.id); }} className="px-3 py-1.5 text-red-600 hover:bg-red-50 rounded text-xs">🗑️</button>
                   </div>

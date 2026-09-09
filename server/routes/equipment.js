@@ -3,7 +3,7 @@ const router = express.Router();
 const { db } = require('../db');
 const { v4: uuidv4 } = require('uuid');
 const { writeLimiter } = require('../middleware/rateLimit');
-const { equipmentSchema, changeStatusSchema, moveSchema, validate } = require('../middleware/validation');
+const { equipmentSchema, equipmentUpdateSchema, changeStatusSchema, moveSchema, validate } = require('../middleware/validation');
 
 // Получить всё оборудование с связями
 router.get('/', (req, res) => {
@@ -132,7 +132,7 @@ router.post('/', writeLimiter, validate(equipmentSchema), (req, res) => {
 });
 
 // Обновить оборудование
-router.put('/:id', writeLimiter, validate(equipmentSchema), (req, res) => {
+router.put('/:id', writeLimiter, validate(equipmentUpdateSchema), (req, res) => {
   const existing = db.prepare('SELECT * FROM equipment WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ error: 'Оборудование не найдено' });
 

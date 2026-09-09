@@ -24,7 +24,7 @@ const updateUserSchema = Joi.object({
   isActive: Joi.boolean().optional()
 });
 
-// Валидация для оборудования
+// Валидация для создания оборудования
 const equipmentSchema = Joi.object({
   name: Joi.string().min(1).max(200).required(),
   serial_number: Joi.string().max(100).optional().allow(''),
@@ -43,6 +43,26 @@ const equipmentSchema = Joi.object({
   storage_type: Joi.string().valid('SSD', 'HDD', 'M2', '').optional().allow(''),
   storage_size: Joi.number().integer().min(0).optional()
 });
+
+// Валидация для обновления оборудования (все поля опциональны)
+const equipmentUpdateSchema = Joi.object({
+  name: Joi.string().min(1).max(200).optional(),
+  serial_number: Joi.string().max(100).optional().allow('', null),
+  inventory_number: Joi.string().max(100).optional().allow('', null),
+  type_id: Joi.string().uuid().optional(),
+  status: Joi.string().valid('in_use', 'in_reserve', 'written_off', 'in_repair').optional(),
+  user_id: Joi.string().uuid().optional().allow(null, ''),
+  room_id: Joi.string().uuid().optional().allow(null, ''),
+  purchase_date: Joi.string().isoDate().optional().allow('', null),
+  warranty_end: Joi.string().isoDate().optional().allow('', null),
+  last_maintenance_date: Joi.string().isoDate().optional().allow('', null),
+  next_maintenance_date: Joi.string().isoDate().optional().allow('', null),
+  notes: Joi.string().max(1000).optional().allow('', null),
+  cpu: Joi.string().max(100).optional().allow('', null),
+  ram: Joi.number().integer().min(0).optional().allow(null),
+  storage_type: Joi.string().valid('SSD', 'HDD', 'M2', '').optional().allow('', null),
+  storage_size: Joi.number().integer().min(0).optional().allow(null)
+}).min(1); // Минимум одно поле должно быть указано
 
 // Валидация для категории
 const categorySchema = Joi.object({
@@ -112,6 +132,7 @@ module.exports = {
   createUserSchema,
   updateUserSchema,
   equipmentSchema,
+  equipmentUpdateSchema,
   categorySchema,
   equipmentTypeSchema,
   userSchema,

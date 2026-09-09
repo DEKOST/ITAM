@@ -31,7 +31,7 @@ backupService.startScheduledBackups();
 // Очистка просроченных сессий при старте
 const cleanupExpiredSessions = () => {
   try {
-    const result = db.prepare('DELETE FROM sessions WHERE expires_at < datetime("now")').run();
+    const result = db.prepare(`DELETE FROM sessions WHERE expires_at < datetime('now')`).run();
     if (result.changes > 0) {
       console.log(`🧹 Очищено просроченных сессий: ${result.changes}`);
     }

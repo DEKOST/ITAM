@@ -45,10 +45,10 @@ router.post('/login', authLimiter, validate(loginSchema), (req, res) => {
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
   
   // Ограничение количества активных сессий на пользователя
-  const sessionCount = db.prepare('SELECT COUNT(*) as count FROM sessions WHERE user_id = ? AND expires_at > datetime("now")').get(user.id);
+  const sessionCount = db.prepare(`SELECT COUNT(*) as count FROM sessions WHERE user_id = ? AND expires_at > datetime('now')`).get(user.id);
   if (sessionCount.count >= MAX_SESSIONS_PER_USER) {
     // Удаляем самую старую сессию
-    db.prepare('DELETE FROM sessions WHERE id IN (SELECT id FROM sessions WHERE user_id = ? AND expires_at > datetime("now") ORDER BY created_at ASC LIMIT 1)').run(user.id);
+    db.prepare(`DELETE FROM sessions WHERE id IN (SELECT id FROM sessions WHERE user_id = ? AND expires_at > datetime('now') ORDER BY created_at ASC LIMIT 1)`).run(user.id);
   }
   
   // Сохраняем сессию

@@ -13,6 +13,9 @@ const app = express();
 const HTTP_PORT = process.env.PORT || 3001;
 const HTTPS_PORT = process.env.HTTPS_PORT || 3443;
 
+// Доверяем proxy (Apache/Nginx) для получения реальных IP клиентов
+app.set('trust proxy', true);
+
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -24,6 +27,40 @@ seedDemoData();
 
 // Запуск автоматических бэкапов
 backupService.startScheduledBackups();
+
+// Очистка просроченных сессий при старте
+const cleanupExpiredSessions = () => {
+  try {
+    const result = db.prepare('DELETE FROM sessions WHERE expires_at < datetime("now")').run();
+    if (result.changes > 0) {
+      console.log(`🧹 Очищено просроченных сессий: ${result.changes}`);
+    }
+  } catch (error) {
+    console.error('Ошибка очистки сессий:', error.message);
+  }
+};
+
+// Очистка старых логов авторизации (старше 90 дней)
+const cleanupOldAuthLogs = () => {
+  try {
+    const result = db.prepare('DELETE FROM auth_logs WHERE created_at < datetime("now", "-90 days")').run();
+    if (result.changes > 0) {
+      console.log(`🧹 Очищено старых записей журнала: ${result.changes}`);
+    }
+  } catch (error) {
+    console.error('Ошибка очистки логов:', error.message);
+  }
+};
+
+// Очистка при старте
+cleanupExpiredSessions();
+cleanupOldAuthLogs();
+
+// Периодическая очистка каждые 6 часов
+setInterval(() => {
+  cleanupExpiredSessions();
+  cleanupOldAuthLogs();
+}, 6 * 60 * 60 * 1000);
 
 // Публичные роуты (без авторизации)
 app.use('/api/auth', require('./routes/auth'));

@@ -6,11 +6,15 @@ const { v4: uuidv4 } = require('uuid');
 const { authMiddleware, adminMiddleware, generateToken, JWT_EXPIRES_IN } = require('../middleware/auth');
 const { authLimiter } = require('../middleware/rateLimit');
 const { loginSchema, createUserSchema, updateUserSchema, validate } = require('../middleware/validation');
+const { getClientIP } = require('../utils/clientIP');
+
+// Максимальное количество активных сессий на пользователя
+const MAX_SESSIONS_PER_USER = 5;
 
 // Логин
 router.post('/login', authLimiter, validate(loginSchema), (req, res) => {
   const { username, password } = req.body;
-  const ip = req.ip || req.connection.remoteAddress;
+  const ip = getClientIP(req);
   const userAgent = req.headers['user-agent'] || '';
 
   const user = db.prepare('SELECT * FROM auth_users WHERE username = ?').get(username);
@@ -39,11 +43,17 @@ router.post('/login', authLimiter, validate(loginSchema), (req, res) => {
   const token = generateToken(user);
   const sessionId = uuidv4();
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-
+  
+  // Ограничение количества активных сессий на пользователя
+  const sessionCount = db.prepare('SELECT COUNT(*) as count FROM sessions WHERE user_id = ? AND expires_at > datetime("now")').get(user.id);
+  if (sessionCount.count >= MAX_SESSIONS_PER_USER) {
+    // Удаляем самую старую сессию
+    db.prepare('DELETE FROM sessions WHERE id IN (SELECT id FROM sessions WHERE user_id = ? AND expires_at > datetime("now") ORDER BY created_at ASC LIMIT 1)').run(user.id);
+  }
+  
   // Сохраняем сессию
   db.prepare('INSERT INTO sessions (id, user_id, token, ip_address, user_agent, expires_at) VALUES (?, ?, ?, ?, ?, ?)')
     .run(sessionId, user.id, token, ip, userAgent, expiresAt);
-
   // Обновляем время последнего входа
   db.prepare("UPDATE auth_users SET last_login = datetime('now') WHERE id = ?").run(user.id);
 
@@ -80,7 +90,7 @@ router.post('/logout', authMiddleware, (req, res) => {
   db.prepare('DELETE FROM sessions WHERE token = ?').run(req.token);
   
   db.prepare('INSERT INTO auth_logs (id, user_id, username, action, ip_address, user_agent, success) VALUES (?, ?, ?, ?, ?, ?, ?)')
-    .run(uuidv4(), req.user.id, req.user.username, 'logout', req.ip, req.headers['user-agent'] || '', 1);
+    .run(uuidv4(), req.user.id, req.user.username, 'logout', getClientIP(req), req.headers['user-agent'] || '', 1);
   
   res.json({ success: true });
 });

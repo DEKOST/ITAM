@@ -4,15 +4,35 @@ import { QRCodeSVG } from 'qrcode.react';
 import { STATUS_LABELS } from '../types';
 
 export default function QRGenerator() {
-  const { equipment, equipmentTypes, rooms } = useData();
+  const { equipment, equipmentTypes, rooms, users } = useData();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [search, setSearch] = useState('');
+  const [filterUser, setFilterUser] = useState('');
+  const [filterUnassigned, setFilterUnassigned] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
-  const filtered = equipment.filter(eq =>
-    eq.name.toLowerCase().includes(search.toLowerCase()) ||
-    eq.inventoryNumber.toLowerCase().includes(search.toLowerCase())
-  );
+  const getUserName = (userId: string | null) => {
+    if (!userId) return '';
+    const user = users.find(u => u.id === userId);
+    return user ? `${user.lastName} ${user.firstName}` : '';
+  };
+
+  const filtered = equipment.filter(eq => {
+    // Поиск по тексту
+    const searchLower = search.toLowerCase();
+    const matchSearch = !search || 
+      eq.name.toLowerCase().includes(searchLower) ||
+      eq.serialNumber.toLowerCase().includes(searchLower) ||
+      getUserName(eq.userId).toLowerCase().includes(searchLower);
+    
+    // Фильтр по сотруднику
+    const matchUser = !filterUser || eq.userId === filterUser;
+    
+    // Фильтр непривязанного оборудования
+    const matchUnassigned = !filterUnassigned || !eq.userId;
+    
+    return matchSearch && matchUser && matchUnassigned;
+  });
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -70,17 +90,43 @@ export default function QRGenerator() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <input
               type="text"
-              placeholder="Поиск оборудования..."
+              placeholder="Поиск: название, серийник, сотрудник..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+            
+            <select
+              value={filterUser}
+              onChange={e => { setFilterUser(e.target.value); setFilterUnassigned(false); }}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Все сотрудники</option>
+              {users.map(u => (
+                <option key={u.id} value={u.id}>{u.lastName} {u.firstName}</option>
+              ))}
+            </select>
+            
+            <label className="flex items-center gap-2 mb-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filterUnassigned}
+                onChange={e => { setFilterUnassigned(e.target.checked); if (e.target.checked) setFilterUser(''); }}
+                className="rounded"
+              />
+              <span className="text-sm text-gray-700">Только без привязки</span>
+            </label>
+            
             <button onClick={selectAll} className="w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 mb-3">
               {selectedIds.length === filtered.length ? 'Снять выделение' : 'Выбрать все'}
             </button>
-            <div className="space-y-1 max-h-[500px] overflow-y-auto">
+            
+            <div className="text-xs text-gray-500 mb-2">Найдено: {filtered.length}</div>
+            
+            <div className="space-y-1 max-h-[400px] overflow-y-auto">
               {filtered.map(eq => {
                 const type = equipmentTypes.find(t => t.id === eq.typeId);
+                const userName = getUserName(eq.userId);
                 return (
                   <div
                     key={eq.id}
@@ -90,7 +136,11 @@ export default function QRGenerator() {
                     <input type="checkbox" checked={selectedIds.includes(eq.id)} readOnly className="rounded" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-800 truncate">{eq.name}</p>
-                      <p className="text-xs text-gray-500">{type?.name} • {eq.inventoryNumber}</p>
+                      <p className="text-xs text-gray-500">
+                        {type?.name}
+                        {eq.serialNumber && ` • ${eq.serialNumber}`}
+                      </p>
+                      {userName && <p className="text-xs text-gray-400">👤 {userName}</p>}
                     </div>
                   </div>
                 );
@@ -119,7 +169,7 @@ export default function QRGenerator() {
                       <QRCodeSVG value={eq.qrCode} size={150} level="M" />
                       <h4 className="font-semibold text-gray-800 text-sm mt-3">{eq.name}</h4>
                       <p className="text-xs text-gray-500">{type?.name || '—'}</p>
-                      <p className="text-xs text-gray-500 font-mono">ИН: {eq.inventoryNumber}</p>
+                      {eq.serialNumber && <p className="text-xs text-gray-500">S/N: {eq.serialNumber}</p>}
                       {room && <p className="text-xs text-gray-500">📍 {room.name}</p>}
                       <p className="text-xs text-gray-400 mt-1 font-mono">{eq.qrCode.substring(0, 8)}...</p>
                     </div>

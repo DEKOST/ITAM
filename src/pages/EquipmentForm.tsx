@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { EquipmentStatus, STATUS_LABELS } from '../types';
@@ -17,34 +17,23 @@ export default function EquipmentForm() {
   const isEdit = !!id;
   const existing = id ? equipment.find(e => e.id === id) : null;
 
-  const [form, setForm] = useState({
-    name: '', serialNumber: '', inventoryNumber: '', typeId: '',
-    status: 'in_use' as EquipmentStatus, userId: '', roomId: '',
-    purchaseDate: '', warrantyEnd: '', lastMaintenanceDate: '', nextMaintenanceDate: '', notes: ''
-  });
-  const [saving, setSaving] = useState(false);
-  
-  // Используем ref для отслеживания инициализации формы
-  const isInitialized = useRef(false);
-
-  useEffect(() => {
-    // Инициализируем форму только один раз при монтировании
-    if (isInitialized.current) return;
-    
+  // Инициализируем форму только один раз при монтировании
+  const [form, setForm] = useState(() => {
     if (existing) {
-      setForm({
+      return {
         name: existing.name, serialNumber: existing.serialNumber, inventoryNumber: existing.inventoryNumber,
         typeId: existing.typeId, status: existing.status, userId: existing.userId || '', roomId: existing.roomId || '',
         purchaseDate: existing.purchaseDate, warrantyEnd: existing.warrantyEnd,
         lastMaintenanceDate: existing.lastMaintenanceDate, nextMaintenanceDate: existing.nextMaintenanceDate, notes: existing.notes
-      });
-      isInitialized.current = true;
-    } else if (!isEdit) {
-      // Автоматически генерируем инвентарный номер для нового оборудования
-      setForm(prev => ({ ...prev, inventoryNumber: generateInventoryNumber() }));
-      isInitialized.current = true;
+      };
     }
-  }, [existing, isEdit]);
+    return {
+      name: '', serialNumber: '', inventoryNumber: generateInventoryNumber(), typeId: '',
+      status: 'in_use' as EquipmentStatus, userId: '', roomId: '',
+      purchaseDate: '', warrantyEnd: '', lastMaintenanceDate: '', nextMaintenanceDate: '', notes: ''
+    };
+  });
+  const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

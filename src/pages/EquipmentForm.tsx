@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { EquipmentStatus, STATUS_LABELS } from '../types';
@@ -23,8 +23,14 @@ export default function EquipmentForm() {
     purchaseDate: '', warrantyEnd: '', lastMaintenanceDate: '', nextMaintenanceDate: '', notes: ''
   });
   const [saving, setSaving] = useState(false);
+  
+  // Используем ref для отслеживания инициализации формы
+  const isInitialized = useRef(false);
 
   useEffect(() => {
+    // Инициализируем форму только один раз при монтировании
+    if (isInitialized.current) return;
+    
     if (existing) {
       setForm({
         name: existing.name, serialNumber: existing.serialNumber, inventoryNumber: existing.inventoryNumber,
@@ -32,11 +38,13 @@ export default function EquipmentForm() {
         purchaseDate: existing.purchaseDate, warrantyEnd: existing.warrantyEnd,
         lastMaintenanceDate: existing.lastMaintenanceDate, nextMaintenanceDate: existing.nextMaintenanceDate, notes: existing.notes
       });
-    } else {
+      isInitialized.current = true;
+    } else if (!isEdit) {
       // Автоматически генерируем инвентарный номер для нового оборудования
       setForm(prev => ({ ...prev, inventoryNumber: generateInventoryNumber() }));
+      isInitialized.current = true;
     }
-  }, [existing]);
+  }, [existing, isEdit]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

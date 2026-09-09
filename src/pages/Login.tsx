@@ -184,9 +184,15 @@ export default function Login() {
   );
 }
 
-// Утилиты для конвертации base64
+// Утилиты для конвертации base64/base64url
 function base64ToBuffer(base64: string): ArrayBuffer {
-  const binaryString = atob(base64);
+  // Конвертируем base64url в стандартный base64
+  let base64Standard = base64.replace(/-/g, '+').replace(/_/g, '/');
+  // Добавляем padding если нужно
+  const padLength = (4 - (base64Standard.length % 4)) % 4;
+  base64Standard += '='.repeat(padLength);
+  
+  const binaryString = atob(base64Standard);
   const bytes = new Uint8Array(binaryString.length);
   for (let i = 0; i < binaryString.length; i++) {
     bytes[i] = binaryString.charCodeAt(i);
@@ -200,5 +206,6 @@ function bufferToBase64(buffer: ArrayBuffer): string {
   for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
-  return btoa(binary);
+  // Конвертируем в base64url формат
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }

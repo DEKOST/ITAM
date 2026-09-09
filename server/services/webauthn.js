@@ -26,7 +26,7 @@ async function generateRegistration(userId) {
   const existingDevices = db.prepare('SELECT * FROM webauthn_credentials WHERE user_id = ?').all(userId);
   
   // Конвертируем userID из строки в ArrayBuffer (требование новой версии SimpleWebAuthn)
-  const userIDBuffer = Buffer.from(userId, 'utf-8');
+  const userIDBuffer = new Uint8Array(Buffer.from(userId, 'utf-8')).buffer;
   
   const options = await generateRegistrationOptions({
     rpName,

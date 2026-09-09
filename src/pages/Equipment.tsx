@@ -32,7 +32,15 @@ export default function Equipment() {
   };
   const getRoomName = (roomId: string | null) => {
     if (!roomId) return '—';
-    return rooms.find(r => r.id === roomId)?.name || '—';
+    const room = rooms.find(r => r.id === roomId);
+    if (!room) return '—';
+    
+    // Формируем более информативную строку
+    const parts = [room.name];
+    if (room.building) parts.push(room.building);
+    if (room.floor !== undefined && room.floor !== null) parts.push(`эт. ${room.floor}`);
+    
+    return parts.join(', ');
   };
 
   // Функция для подготовки данных к экспорту
@@ -176,11 +184,8 @@ export default function Equipment() {
                   <p className="font-medium truncate">{getRoomName(eq.roomId)}</p>
                 </div>
               </div>
-              <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                <span className="text-xs text-gray-400 font-mono">{eq.inventoryNumber}</span>
-                <div className="flex gap-2">
-                  <span className="text-blue-600 text-xs">Подробнее →</span>
-                </div>
+              <div className="flex items-center justify-end mt-3 pt-3 border-t border-gray-100">
+                <span className="text-blue-600 text-xs">Подробнее →</span>
               </div>
             </div>
           </Link>
@@ -198,13 +203,12 @@ export default function Equipment() {
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Статус</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Сотрудник</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Помещение</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Инв. номер</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Действия</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">Оборудование не найдено</td></tr>
+                <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-500">Оборудование не найдено</td></tr>
               ) : filtered.map(eq => (
                 <tr key={eq.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
@@ -222,7 +226,6 @@ export default function Equipment() {
                   </td>
                   <td className="px-4 py-3 text-gray-700">{getUserName(eq.userId)}</td>
                   <td className="px-4 py-3 text-gray-700">{getRoomName(eq.roomId)}</td>
-                  <td className="px-4 py-3 text-gray-700 font-mono text-xs">{eq.inventoryNumber}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
                       <Link to={`/equipment/${eq.id}`} className="px-2 py-1 text-blue-600 hover:bg-blue-50 rounded text-xs">👁️</Link>

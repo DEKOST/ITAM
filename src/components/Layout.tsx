@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from './ThemeToggle';
 
 interface NavItem {
   path: string;
@@ -100,7 +101,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     .filter(group => group.items.length > 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
@@ -195,28 +196,32 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Top bar */}
-        <header className="bg-white shadow-sm border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(true)} className="text-gray-600 hover:text-gray-900 lg:hidden">
+            <button onClick={() => setSidebarOpen(true)} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white lg:hidden">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className="text-lg font-semibold text-gray-800 hidden lg:block">ITAM Service</h1>
+            <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100 hidden lg:block">ITAM Service</h1>
           </div>
 
-          {/* User menu */}
-          <div className="relative">
-            <button 
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-            >
+          <div className="flex items-center gap-4">
+            {/* Theme toggle */}
+            <ThemeToggle />
+
+            {/* User menu */}
+            <div className="relative">
+              <button 
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
               <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
                 {user?.fullName?.charAt(0) || user?.username?.charAt(0) || '?'}
               </div>
               <div className="hidden sm:block text-left">
-                <p className="text-sm font-medium text-gray-800">{user?.fullName || user?.username}</p>
-                <p className="text-xs text-gray-500">{user?.role === 'admin' ? 'Администратор' : 'Пользователь'}</p>
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{user?.fullName || user?.username}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{user?.role === 'admin' ? 'Администратор' : 'Пользователь'}</p>
               </div>
               <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -226,20 +231,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {userMenuOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-                  <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-800">{user?.fullName}</p>
-                    <p className="text-xs text-gray-500">{user?.email}</p>
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                  <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{user?.fullName}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
                   </div>
                   <button 
                     onClick={logout}
-                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                    className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
                   >
                     <span>🚪</span> Выйти
                   </button>
                 </div>
               </>
             )}
+            </div>
           </div>
         </header>
 

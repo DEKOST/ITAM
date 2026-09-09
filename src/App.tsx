@@ -2,6 +2,7 @@ import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -116,10 +117,12 @@ function AppContent() {
 
 export default function App() {
   return (
-    <HashRouter>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </HashRouter>
+    <ThemeProvider>
+      <HashRouter>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </HashRouter>
+    </ThemeProvider>
   );
 }

@@ -36,12 +36,12 @@ export default function Login() {
           <p className="text-blue-200 mt-2">Система учёта IT оборудования</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-6">Вход в систему</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-6">Вход в систему</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Логин</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Логин</label>
               <input
                 type="text"
                 value={username}
@@ -49,25 +49,25 @@ export default function Login() {
                 placeholder="Введите логин"
                 required
                 autoFocus
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Пароль</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Пароль</label>
               <input
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="Введите пароль"
                 required
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
               </div>
             )}
 
@@ -80,11 +80,11 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-gray-100">
-            <p className="text-xs text-gray-500 text-center">
-              По умолчанию: <code className="bg-gray-100 px-1.5 py-0.5 rounded">admin</code> / <code className="bg-gray-100 px-1.5 py-0.5 rounded">admin123</code>
+          <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+            <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+              По умолчанию: <code className="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">admin</code> / <code className="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">admin123</code>
             </p>
-            <p className="text-xs text-amber-600 text-center mt-2">
+            <p className="text-xs text-amber-600 dark:text-amber-400 text-center mt-2">
               ⚠️ Для обеспечения безопасности создайте нового пользователя с правами администратора и заблокируйте автоматически созданного администратора
             </p>
           </div>

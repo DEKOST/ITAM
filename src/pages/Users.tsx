@@ -4,12 +4,14 @@ import { useData } from '../context/DataContext';
 import { User } from '../types';
 
 export default function Users() {
-  const { users, subdivisions, addUser, updateUser, deleteUser } = useData();
+  const { users, subdivisions, addUser, updateUser, deleteUser, addSubdivision } = useData();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState({ firstName: '', lastName: '', middleName: '', email: '', subdivisionId: '', position: '' });
   const [search, setSearch] = useState('');
   const [filterSubdivision, setFilterSubdivision] = useState('');
+  const [showSubdivisionModal, setShowSubdivisionModal] = useState(false);
+  const [newSubdivisionName, setNewSubdivisionName] = useState('');
 
   const filtered = users.filter(user => {
     const fullName = `${user.lastName} ${user.firstName} ${user.middleName || ''}`.toLowerCase();
@@ -51,6 +53,25 @@ export default function Users() {
     setShowForm(true);
   };
 
+  const handleCreateSubdivision = async () => {
+    if (!newSubdivisionName.trim()) {
+      alert('Введите название подразделения');
+      return;
+    }
+    try {
+      const newSubdivision = await addSubdivision({
+        name: newSubdivisionName.trim(),
+        description: '',
+        parentId: null
+      });
+      setForm({ ...form, subdivisionId: newSubdivision.id });
+      setShowSubdivisionModal(false);
+      setNewSubdivisionName('');
+    } catch (error: any) {
+      alert('Ошибка создания подразделения: ' + error.message);
+    }
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3">
@@ -82,10 +103,20 @@ export default function Users() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Подразделение</label>
-              <select value={form.subdivisionId} onChange={e => setForm({...form, subdivisionId: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">Не указано</option>
-                {subdivisions.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
+              <div className="flex gap-2">
+                <select value={form.subdivisionId} onChange={e => setForm({...form, subdivisionId: e.target.value})} className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="">Не указано</option>
+                  {subdivisions.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+                <button 
+                  type="button"
+                  onClick={() => setShowSubdivisionModal(true)}
+                  className="px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+                  title="Создать новое подразделение"
+                >
+                  +
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Должность</label>
@@ -183,6 +214,32 @@ export default function Users() {
         </table>
       </div>
       <p className="text-sm text-gray-500 mt-3">Найдено: {filtered.length} из {users.length}</p>
+
+      {/* Модальное окно создания подразделения */}
+      {showSubdivisionModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Новое подразделение</h3>
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Название подразделения *</label>
+                <input
+                  type="text"
+                  value={newSubdivisionName}
+                  onChange={e => setNewSubdivisionName(e.target.value)}
+                  placeholder="Введите название"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={handleCreateSubdivision} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">Создать</button>
+              <button onClick={() => { setShowSubdivisionModal(false); setNewSubdivisionName(''); }} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Отмена</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

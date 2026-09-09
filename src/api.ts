@@ -121,13 +121,7 @@ export const createBackup = () => fetchAPI('/backups', { method: 'POST' });
 export const restoreBackup = (filename: string) => fetchAPI('/backups/restore', { method: 'POST', body: JSON.stringify({ filename }) });
 export const deleteBackup = (filename: string) => fetchAPI(`/backups/${filename}`, { method: 'DELETE' });
 
-// WebAuthn
-export const webAuthnRegisterBegin = () => fetchAPI('/webauthn/register/begin', { method: 'POST' });
-export const webAuthnRegisterComplete = (data: any) => fetchAPI('/webauthn/register/complete', { method: 'POST', body: JSON.stringify(data) });
-export const webAuthnAuthBegin = (username: string) => fetchAPI('/webauthn/auth/begin', { method: 'POST', body: JSON.stringify({ username }) });
-export const webAuthnAuthComplete = (data: any) => fetchAPI('/webauthn/auth/complete', { method: 'POST', body: JSON.stringify(data) });
-export const getWebAuthnDevices = () => fetchAPI('/webauthn/devices');
-export const deleteWebAuthnDevice = (id: string) => fetchAPI(`/webauthn/devices/${id}`, { method: 'DELETE' });
+
 
 // Maintenance Types
 export const getMaintenanceTypes = () => fetchAPI('/maintenance-types');

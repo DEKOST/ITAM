@@ -27,7 +27,6 @@ backupService.startScheduledBackups();
 
 // Публичные роуты (без авторизации)
 app.use('/api/auth', require('./routes/auth'));
-app.use('/api/webauthn', require('./routes/webauthn'));
 
 // Защищённые роуты (требуют авторизации)
 app.use('/api/equipment', authMiddleware, require('./routes/equipment'));

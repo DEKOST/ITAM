@@ -12,7 +12,7 @@ const navItems = [
   { path: '/rooms', label: 'Помещения', icon: '🏢', roles: ['admin', 'user'] },
   { path: '/qr-generator', label: 'QR коды', icon: '📱', roles: ['admin', 'user'] },
   { path: '/qr-scan', label: 'Сканер QR', icon: '📷', roles: ['admin', 'user'] },
-  { path: '/biometric', label: 'Биометрия', icon: '🔑', roles: ['admin', 'user'] },
+
   { path: '/certificates', label: 'SSL Сертификаты', icon: '🔒', roles: ['admin'] },
   { path: '/auth-users', label: 'Пользователи системы', icon: '🛡️', roles: ['admin'] },
   { path: '/backups', label: 'Резервные копии', icon: '💾', roles: ['admin'] },

@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { Link } from 'react-router-dom';
 import { STATUS_LABELS, STATUS_COLORS } from '../types';
+import { evaluateCPU, getCPUBadgeColor, getCPUBadgeText } from '../utils/cpuDatabase';
 
 export default function ReplacementRecommendations() {
   const { equipment, equipmentTypes, users, rooms } = useData();
@@ -27,58 +28,69 @@ export default function ReplacementRecommendations() {
   }, [equipment, equipmentTypes]);
 
   // Функция для расчёта "возраста" оборудования в баллах
-  const calculateAgeScore = (eq: any): number => {
+  const calculateAgeScore = (eq: any): { score: number; cpuInfo: ReturnType<typeof evaluateCPU> } => {
     let score = 0;
     
-    // Возраст по дате покупки
+    // Оценка процессора
+    const cpuInfo = evaluateCPU(eq.cpu);
+    if (cpuInfo) {
+      score += cpuInfo.score;
+    } else {
+      score += 15; // Если процессор не указан, добавляем средние баллы
+    }
+    
+    // Возраст по дате покупки (если указана)
     if (eq.purchaseDate) {
       const purchaseDate = new Date(eq.purchaseDate);
       const now = new Date();
       const yearsDiff = (now.getTime() - purchaseDate.getTime()) / (1000 * 60 * 60 * 24 * 365);
       
-      if (yearsDiff > 5) score += 50;
-      else if (yearsDiff > 4) score += 40;
-      else if (yearsDiff > 3) score += 30;
-      else if (yearsDiff > 2) score += 15;
+      if (yearsDiff > 5) score += 30;
+      else if (yearsDiff > 4) score += 25;
+      else if (yearsDiff > 3) score += 20;
+      else if (yearsDiff > 2) score += 10;
       else if (yearsDiff > 1) score += 5;
-    } else {
-      score += 20; // Если дата не указана, считаем что старое
     }
+    // Если дата не указана, не добавляем баллы - полагаемся на процессор
 
     // Оперативная память
     if (eq.ram) {
-      if (eq.ram < 4) score += 40;
-      else if (eq.ram < 8) score += 25;
-      else if (eq.ram < 16) score += 10;
-    } else {
-      score += 15; // Если не указано, вероятно старое
-    }
-
-    // Тип хранилища
-    if (eq.storageType) {
-      if (eq.storageType === 'HDD') score += 20;
-      else if (eq.storageType === 'SSD') score += 5;
-      // M2 не добавляем баллов - это современное
+      if (eq.ram < 4) score += 30;
+      else if (eq.ram < 8) score += 20;
+      else if (eq.ram < 16) score += 8;
     } else {
       score += 10; // Если не указано
     }
 
-    // Объём хранилища
-    if (eq.storageSize) {
-      if (eq.storageSize < 256) score += 15;
-      else if (eq.storageSize < 512) score += 5;
+    // Тип хранилища
+    if (eq.storageType) {
+      if (eq.storageType === 'HDD') score += 15;
+      else if (eq.storageType === 'SSD') score += 3;
+      // M2 не добавляем баллов - это современное
+    } else {
+      score += 8; // Если не указано
     }
 
-    return score;
+    // Объём хранилища
+    if (eq.storageSize) {
+      if (eq.storageSize < 256) score += 10;
+      else if (eq.storageSize < 512) score += 3;
+    }
+
+    return { score, cpuInfo };
   };
 
   // Сортируем оборудование по "устареванию" (от самого старого к новому)
   const sortedComputers = useMemo(() => {
     return computers
-      .map(eq => ({
-        ...eq,
-        ageScore: calculateAgeScore(eq)
-      }))
+      .map(eq => {
+        const { score, cpuInfo } = calculateAgeScore(eq);
+        return {
+          ...eq,
+          ageScore: score,
+          cpuInfo: cpuInfo
+        };
+      })
       .sort((a, b) => b.ageScore - a.ageScore);
   }, [computers]);
 
@@ -194,7 +206,14 @@ export default function ReplacementRecommendations() {
                     <div className="mt-3 pt-3 border-t border-gray-200 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                       <div>
                         <span className="text-gray-500">ЦП:</span>
-                        <p className="font-medium text-gray-700">{eq.cpu || '—'}</p>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <p className="font-medium text-gray-700">{eq.cpu || '—'}</p>
+                          {eq.cpuInfo && (
+                            <span className={`text-xs px-1.5 py-0.5 rounded ${getCPUBadgeColor(eq.cpuInfo.tier)}`}>
+                              {getCPUBadgeText(eq.cpuInfo.tier)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div>
                         <span className="text-gray-500">ОЗУ:</span>
@@ -228,9 +247,10 @@ export default function ReplacementRecommendations() {
       <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
         <h4 className="text-sm font-semibold text-blue-800 mb-2">ℹ️ Методика расчёта</h4>
         <ul className="text-sm text-blue-700 space-y-1">
-          <li>• <strong>Возраст:</strong> &gt;5 лет = 50 баллов, 4 года = 40, 3 года = 30, 2 года = 15, 1 год = 5</li>
-          <li>• <strong>ОЗУ:</strong> &lt;4 ГБ = 40 баллов, &lt;8 ГБ = 25, &lt;16 ГБ = 10</li>
-          <li>• <strong>Хранилище:</strong> HDD = 20 баллов, SSD = 5, объём &lt;256 ГБ = 15</li>
+          <li>• <strong>Процессор:</strong> Intel Core 1-3 поколение = 40-45 баллов, 4-6 поколение = 32-38, 7-9 поколение = 22-28, 10-12 поколение = 10-18, 13+ поколение = 0-5. AMD Ryzen 1-2 = 25-30, 3-4 = 15-20, 5+ = 0-10. Pentium/Celeron старые = 40-48, новые = 25-35</li>
+          <li>• <strong>Возраст:</strong> &gt;5 лет = 30 баллов, 4 года = 25, 3 года = 20, 2 года = 10, 1 год = 5 (если дата указана)</li>
+          <li>• <strong>ОЗУ:</strong> &lt;4 ГБ = 30 баллов, &lt;8 ГБ = 20, &lt;16 ГБ = 8</li>
+          <li>• <strong>Хранилище:</strong> HDD = 15 баллов, SSD = 3, объём &lt;256 ГБ = 10</li>
           <li>• <strong>Уровни:</strong> 🔴 &gt;60 = критическая замена, 🟠 40-60 = рекомендуется, 🟡 20-40 = планировать</li>
         </ul>
       </div>

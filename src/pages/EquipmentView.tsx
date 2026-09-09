@@ -4,6 +4,7 @@ import { useData } from '../context/DataContext';
 import { STATUS_LABELS, STATUS_COLORS, EquipmentStatus } from '../types';
 import { QRCodeSVG } from 'qrcode.react';
 import * as api from '../api';
+import { evaluateCPU, getCPUBadgeColor, getCPUBadgeText } from '../utils/cpuDatabase';
 
 interface NextMaintenance {
   maintenance_type_id: string;
@@ -162,21 +163,36 @@ export default function EquipmentView() {
           </div>
 
           {/* Технические характеристики */}
-          {(eq.cpu || (eq.ram && eq.ram > 0) || eq.storageType || (eq.storageSize && eq.storageSize > 0)) && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4">💻 Технические характеристики</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {eq.cpu && <InfoRow label="Процессор (ЦП)" value={eq.cpu} />}
-                {eq.ram && eq.ram > 0 ? <InfoRow label="Оперативная память (ОЗУ)" value={`${eq.ram} ГБ`} /> : null}
-                {eq.storageType && (
-                  <InfoRow 
-                    label="Хранилище" 
-                    value={`${eq.storageType}${eq.storageSize && eq.storageSize > 0 ? ` ${eq.storageSize} ГБ` : ''}`} 
-                  />
-                )}
+          {(eq.cpu || (eq.ram && eq.ram > 0) || eq.storageType || (eq.storageSize && eq.storageSize > 0)) && (() => {
+            const cpuInfo = eq.cpu ? evaluateCPU(eq.cpu) : null;
+            return (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-semibold text-gray-700 mb-4">💻 Технические характеристики</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {eq.cpu && (
+                    <div>
+                      <p className="text-sm text-gray-500">Процессор (ЦП)</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-gray-800">{eq.cpu}</p>
+                        {cpuInfo && (
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${getCPUBadgeColor(cpuInfo.tier)}`}>
+                            {getCPUBadgeText(cpuInfo.tier)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {eq.ram && eq.ram > 0 ? <InfoRow label="Оперативная память (ОЗУ)" value={`${eq.ram} ГБ`} /> : null}
+                  {eq.storageType && (
+                    <InfoRow 
+                      label="Хранилище" 
+                      value={`${eq.storageType}${eq.storageSize && eq.storageSize > 0 ? ` ${eq.storageSize} ГБ` : ''}`} 
+                    />
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Информация об обслуживании */}
           {nextMaintenances.length > 0 && (

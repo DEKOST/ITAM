@@ -113,7 +113,7 @@ router.get('/qr/:code', (req, res) => {
 
 // Создать оборудование
 router.post('/', writeLimiter, validate(equipmentSchema), (req, res) => {
-  const { name, serial_number, inventory_number, type_id, status, user_id, room_id, purchase_date, warranty_end, last_maintenance_date, next_maintenance_date, notes } = req.body;
+  const { name, serial_number, inventory_number, type_id, status, user_id, room_id, purchase_date, warranty_end, last_maintenance_date, next_maintenance_date, notes, cpu, ram, storage_type, storage_size } = req.body;
 
   // Проверка существования типа
   const typeExists = db.prepare('SELECT id FROM equipment_types WHERE id = ?').get(type_id);
@@ -123,9 +123,9 @@ router.post('/', writeLimiter, validate(equipmentSchema), (req, res) => {
   const qr_code = id; // QR код = ID оборудования
 
   db.prepare(`
-    INSERT INTO equipment (id, name, serial_number, inventory_number, type_id, status, user_id, room_id, purchase_date, warranty_end, last_maintenance_date, next_maintenance_date, notes, qr_code)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, name, serial_number || '', inventory_number || '', type_id, status || 'in_use', user_id || null, room_id || null, purchase_date || '', warranty_end || '', last_maintenance_date || '', next_maintenance_date || '', notes || '', qr_code);
+    INSERT INTO equipment (id, name, serial_number, inventory_number, type_id, status, user_id, room_id, purchase_date, warranty_end, last_maintenance_date, next_maintenance_date, notes, qr_code, cpu, ram, storage_type, storage_size)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, name, serial_number || '', inventory_number || '', type_id, status || 'in_use', user_id || null, room_id || null, purchase_date || '', warranty_end || '', last_maintenance_date || '', next_maintenance_date || '', notes || '', qr_code, cpu || '', ram || 0, storage_type || '', storage_size || 0);
 
   const item = db.prepare('SELECT * FROM equipment WHERE id = ?').get(id);
   res.status(201).json(item);
@@ -136,7 +136,7 @@ router.put('/:id', writeLimiter, validate(equipmentSchema), (req, res) => {
   const existing = db.prepare('SELECT * FROM equipment WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ error: 'Оборудование не найдено' });
 
-  const { name, serial_number, inventory_number, type_id, status, user_id, room_id, purchase_date, warranty_end, last_maintenance_date, next_maintenance_date, notes } = req.body;
+  const { name, serial_number, inventory_number, type_id, status, user_id, room_id, purchase_date, warranty_end, last_maintenance_date, next_maintenance_date, notes, cpu, ram, storage_type, storage_size } = req.body;
   const changedBy = req.user ? req.user.id : null;
 
   // Если статус изменился - логируем
@@ -182,7 +182,8 @@ router.put('/:id', writeLimiter, validate(equipmentSchema), (req, res) => {
     UPDATE equipment SET 
       name = ?, serial_number = ?, inventory_number = ?, type_id = ?, status = ?, 
       user_id = ?, room_id = ?, purchase_date = ?, warranty_end = ?, 
-      last_maintenance_date = ?, next_maintenance_date = ?, notes = ?
+      last_maintenance_date = ?, next_maintenance_date = ?, notes = ?,
+      cpu = ?, ram = ?, storage_type = ?, storage_size = ?
     WHERE id = ?
   `).run(
     name || existing.name,
@@ -197,6 +198,10 @@ router.put('/:id', writeLimiter, validate(equipmentSchema), (req, res) => {
     last_maintenance_date !== undefined ? last_maintenance_date : existing.last_maintenance_date,
     next_maintenance_date !== undefined ? next_maintenance_date : existing.next_maintenance_date,
     notes !== undefined ? notes : existing.notes,
+    cpu !== undefined ? cpu : existing.cpu,
+    ram !== undefined ? ram : existing.ram,
+    storage_type !== undefined ? storage_type : existing.storage_type,
+    storage_size !== undefined ? storage_size : existing.storage_size,
     req.params.id
   );
 

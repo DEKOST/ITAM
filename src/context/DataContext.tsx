@@ -188,7 +188,11 @@ export function DataProvider({ children, isAuthenticated: authIsAuthenticated }:
       warranty_end: item.warrantyEnd || '',
       last_maintenance_date: item.lastMaintenanceDate || '',
       next_maintenance_date: item.nextMaintenanceDate || '',
-      notes: item.notes || ''
+      notes: item.notes || '',
+      cpu: item.cpu || '',
+      ram: item.ram || 0,
+      storage_type: item.storageType || '',
+      storage_size: item.storageSize || 0
     };
     const data = await api.createEquipment(apiData);
     await refreshEquipment();
@@ -211,6 +215,10 @@ export function DataProvider({ children, isAuthenticated: authIsAuthenticated }:
     if (data.lastMaintenanceDate !== undefined) apiData.last_maintenance_date = data.lastMaintenanceDate;
     if (data.nextMaintenanceDate !== undefined) apiData.next_maintenance_date = data.nextMaintenanceDate;
     if (data.notes !== undefined) apiData.notes = data.notes;
+    if (data.cpu !== undefined) apiData.cpu = data.cpu;
+    if (data.ram !== undefined) apiData.ram = data.ram;
+    if (data.storageType !== undefined) apiData.storage_type = data.storageType;
+    if (data.storageSize !== undefined) apiData.storage_size = data.storageSize;
     
     const result = await api.updateEquipment(id, apiData);
     await refreshEquipment();
@@ -422,6 +430,10 @@ function mapEquipmentFromAPI(data: any): Equipment {
     notes: data.notes || '',
     qrCode: data.qr_code,
     createdAt: data.created_at || '',
+    cpu: data.cpu || '',
+    ram: data.ram || 0,
+    storageType: data.storage_type || '',
+    storageSize: data.storage_size || 0,
   };
 }
 

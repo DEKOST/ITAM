@@ -29,6 +29,7 @@ const navGroups: NavGroup[] = [
     roles: ['admin', 'user'],
     items: [
       { path: '/equipment', label: 'Оборудование', icon: '💻', roles: ['admin', 'user'] },
+      { path: '/replacement-recommendations', label: 'Рекомендации по замене', icon: '🔄', roles: ['admin', 'user'] },
       { path: '/categories', label: 'Категории и типы', icon: '🏷️', roles: ['admin', 'user'] },
       { path: '/maintenance-types', label: 'Типы обслуживания', icon: '🔧', roles: ['admin', 'user'] },
       { path: '/users', label: 'Сотрудники', icon: '👥', roles: ['admin', 'user'] },

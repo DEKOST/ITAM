@@ -156,6 +156,10 @@ function initDatabase() {
       notes TEXT DEFAULT '',
       qr_code TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      cpu TEXT DEFAULT '',
+      ram INTEGER DEFAULT 0,
+      storage_type TEXT DEFAULT '',
+      storage_size INTEGER DEFAULT 0,
       FOREIGN KEY (type_id) REFERENCES equipment_types(id),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
       FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE SET NULL
@@ -338,6 +342,25 @@ function initDatabase() {
           insertLink.run(link.id, link.category_id);
         }
       }
+    }
+  } catch (e) {
+    // Игнорируем ошибки миграции
+  }
+
+  // Миграция: добавляем технические характеристики в equipment если их нет
+  try {
+    const columns = db.prepare("PRAGMA table_info(equipment)").all();
+    if (!columns.some(col => col.name === 'cpu')) {
+      db.exec('ALTER TABLE equipment ADD COLUMN cpu TEXT DEFAULT ""');
+    }
+    if (!columns.some(col => col.name === 'ram')) {
+      db.exec('ALTER TABLE equipment ADD COLUMN ram INTEGER DEFAULT 0');
+    }
+    if (!columns.some(col => col.name === 'storage_type')) {
+      db.exec('ALTER TABLE equipment ADD COLUMN storage_type TEXT DEFAULT ""');
+    }
+    if (!columns.some(col => col.name === 'storage_size')) {
+      db.exec('ALTER TABLE equipment ADD COLUMN storage_size INTEGER DEFAULT 0');
     }
   } catch (e) {
     // Игнорируем ошибки миграции

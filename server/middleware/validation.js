@@ -37,7 +37,11 @@ const equipmentSchema = Joi.object({
   warranty_end: Joi.string().isoDate().optional().allow(''),
   last_maintenance_date: Joi.string().isoDate().optional().allow(''),
   next_maintenance_date: Joi.string().isoDate().optional().allow(''),
-  notes: Joi.string().max(1000).optional().allow('')
+  notes: Joi.string().max(1000).optional().allow(''),
+  cpu: Joi.string().max(100).optional().allow(''),
+  ram: Joi.number().integer().min(0).optional(),
+  storage_type: Joi.string().valid('SSD', 'HDD', 'M2', '').optional().allow(''),
+  storage_size: Joi.number().integer().min(0).optional()
 });
 
 // Валидация для категории

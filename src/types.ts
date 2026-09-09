@@ -53,6 +53,11 @@ export interface Equipment {
   notes: string;
   qrCode: string;
   createdAt: string;
+  // Технические характеристики (для ПК/Ноутбуков)
+  cpu?: string;
+  ram?: number; // в ГБ
+  storageType?: 'SSD' | 'HDD' | 'M2' | '';
+  storageSize?: number; // в ГБ
 }
 
 export interface MaintenanceLog {

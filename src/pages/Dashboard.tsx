@@ -3,6 +3,7 @@ import { useData } from '../context/DataContext';
 import { STATUS_LABELS, STATUS_COLORS } from '../types';
 import { Link } from 'react-router-dom';
 import * as api from '../api';
+import { matchesWithLayout } from '../utils/layoutConverter';
 
 export default function Dashboard() {
   const { equipment, categories, equipmentTypes, users, rooms } = useData();
@@ -13,18 +14,18 @@ export default function Dashboard() {
     api.getEquipmentStats().then(setStats).catch(() => {});
   }, [equipment.length]);
 
-  // Поиск по оборудованию и сотрудникам
+  // Поиск по оборудованию и сотрудникам (с поддержкой конвертации раскладки)
   const searchResults = searchQuery.trim().length > 0 ? {
     equipment: equipment.filter(eq => 
-      eq.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      eq.serialNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      eq.inventoryNumber.toLowerCase().includes(searchQuery.toLowerCase())
+      matchesWithLayout(eq.name, searchQuery) ||
+      matchesWithLayout(eq.serialNumber, searchQuery) ||
+      matchesWithLayout(eq.inventoryNumber, searchQuery)
     ).slice(0, 5),
     users: users.filter(user => {
-      const fullName = `${user.lastName} ${user.firstName} ${user.middleName || ''}`.toLowerCase();
-      return fullName.includes(searchQuery.toLowerCase()) ||
-             user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-             user.position.toLowerCase().includes(searchQuery.toLowerCase());
+      const fullName = `${user.lastName} ${user.firstName} ${user.middleName || ''}`;
+      return matchesWithLayout(fullName, searchQuery) ||
+             matchesWithLayout(user.email, searchQuery) ||
+             matchesWithLayout(user.position, searchQuery);
     }).slice(0, 5)
   } : null;
 

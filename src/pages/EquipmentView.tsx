@@ -162,16 +162,16 @@ export default function EquipmentView() {
           </div>
 
           {/* Технические характеристики */}
-          {(eq.cpu || eq.ram || eq.storageType || eq.storageSize) && (
+          {(eq.cpu || (eq.ram && eq.ram > 0) || eq.storageType || (eq.storageSize && eq.storageSize > 0)) && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <h3 className="text-lg font-semibold text-gray-700 mb-4">💻 Технические характеристики</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {eq.cpu && <InfoRow label="Процессор (ЦП)" value={eq.cpu} />}
-                {eq.ram ? <InfoRow label="Оперативная память (ОЗУ)" value={`${eq.ram} ГБ`} /> : null}
+                {eq.ram && eq.ram > 0 ? <InfoRow label="Оперативная память (ОЗУ)" value={`${eq.ram} ГБ`} /> : null}
                 {eq.storageType && (
                   <InfoRow 
                     label="Хранилище" 
-                    value={`${eq.storageType}${eq.storageSize ? ` ${eq.storageSize} ГБ` : ''}`} 
+                    value={`${eq.storageType}${eq.storageSize && eq.storageSize > 0 ? ` ${eq.storageSize} ГБ` : ''}`} 
                   />
                 )}
               </div>

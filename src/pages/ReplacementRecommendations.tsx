@@ -6,13 +6,23 @@ import { STATUS_LABELS, STATUS_COLORS } from '../types';
 export default function ReplacementRecommendations() {
   const { equipment, equipmentTypes, users, rooms } = useData();
 
-  // Фильтруем только ПК и ноутбуки
+  // Фильтруем только ПК и ноутбуки (исключаем ИБП)
   const computers = useMemo(() => {
     return equipment.filter(eq => {
       const type = equipmentTypes.find(t => t.id === eq.typeId);
-      return type && (type.name.toLowerCase().includes('пк') || 
-                     type.name.toLowerCase().includes('компьютер') || 
-                     type.name.toLowerCase().includes('ноутбук'));
+      if (!type) return false;
+      
+      const typeName = type.name.toLowerCase();
+      
+      // Исключаем ИБП
+      if (typeName.includes('ибп') || typeName.includes('ups')) {
+        return false;
+      }
+      
+      // Включаем только ПК и ноутбуки
+      return typeName.includes('пк') || 
+             typeName.includes('компьютер') || 
+             typeName.includes('ноутбук');
     });
   }, [equipment, equipmentTypes]);
 

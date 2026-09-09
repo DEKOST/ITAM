@@ -1,31 +1,52 @@
 # 🖥️ ITAM Service - Система учёта IT оборудования
 
-Полноценная система учёта IT-оборудования с генерацией QR-кодов, мобильным сканированием, авторизацией и поддержкой SSL/TLS.
+Полноценная система учёта IT-оборудования с генерацией QR-кодов, мобильным сканированием, авторизацией, поддержкой SSL/TLS и расширенными функциями управления.
 
 ## ✨ Возможности
 
 ### Основное
-- 📊 **Дашборд** - общая статистика и быстрый доступ
-- 💻 **Учёт оборудования** - полный CRUD, статусы, фильтрация
-- 🏷️ **Категории и типы** - гибкая классификация
-- 👥 **Сотрудники** - учёт ответственных лиц
-- 🏢 **Помещения** - учёт мест размещения
-- 📱 **QR-коды** - генерация и печать наклеек
-- 📷 **Сканер QR** - мобильное сканирование камерой
-- 🔄 **Журналы** - история изменений статусов и перемещений
+- 📊 **Дашборд** - общая статистика, глобальный поиск с поддержкой раскладки клавиатуры
+- 💻 **Учёт оборудования** - полный CRUD, статусы, фильтрация, автодополнение полей
+- 🏷️ **Категории и типы** - гибкая классификация с флагом технических характеристик
+- 👥 **Сотрудники** - учёт ответственных лиц с просмотром привязанного оборудования
+- 🏛️ **Подразделения** - иерархическая структура организации
+- 🏢 **Помещения** - учёт мест размещения с быстрым созданием из формы оборудования
+- 📱 **QR-коды** - генерация и печать наклеек с улучшенным поиском
+- 📷 **Сканер QR** - мобильное сканирование камерой с действиями на месте
+- 🔄 **Журналы** - полная история изменений с информацией о пользователе
+
+### Система обслуживания
+- 🔧 **Типы обслуживания** - настройка периодичности (дни/месяцы/годы)
+- 📅 **Автоматический расчёт** - следующие даты обслуживания
+- ⚠️ **Уведомления** - просроченные обслуживания на дашборде
+- 📋 **Журнал обслуживания** - история всех работ с оборудованием
+
+### Технические характеристики (для ПК/ноутбуков)
+- 💾 **Процессор** - модель с оценкой устаревания
+- 🧠 **Оперативная память** - объём ОЗУ
+- 💿 **Хранилище** - тип (SSD/HDD/M.2) и объём
+- 🔄 **Рекомендации по замене** - автоматический анализ устаревания оборудования
+
+### Экспорт и отчёты
+- 📄 **Экспорт в CSV** - для импорта в другие системы
+- 📊 **Экспорт в Excel** - для работы с таблицами
+- 🖨️ **Печать отчётов** - форматированные отчёты по оборудованию и истории
 
 ### Безопасность
 - 🔐 **Авторизация** - JWT токены, роли (admin/user)
 - 👥 **Управление пользователями** - создание, блокировка, журнал входов
 - 🔒 **SSL/TLS сертификаты** - загрузка, генерация самоподписанных, активация
-- 📋 **Журнал авторизации** - отслеживание всех входов/выходов
+- 📋 **Журнал авторизации** - отслеживание всех входов/выходов с реальными IP
+- 🛡️ **Rate limiting** - защита от brute-force атак
+- ✅ **Валидация данных** - проверка всех входных данных
+- 🔑 **Управление сессиями** - автоматическая очистка, ограничение на пользователя
 
 ## 🛠️ Технологии
 
 ### Frontend
 - React 18 + TypeScript
 - Vite
-- Tailwind CSS
+- Tailwind CSS 4
 - React Router
 - qrcode.react (генерация QR)
 - html5-qrcode (сканирование)
@@ -34,30 +55,42 @@
 - Node.js + Express
 - SQLite (better-sqlite3)
 - JWT (jsonwebtoken) + bcryptjs
+- express-rate-limit (ограничение запросов)
+- joi (валидация данных)
+- node-cron (планировщик задач)
 - multer (загрузка файлов)
 - HTTPS поддержка
 
-## 🚀 Установка и запуск
+### Дополнительные возможности
+- Автодополнение полей (названия, серийные номера)
+- Глобальный поиск с поддержкой раскладки клавиатуры
+- Адаптивный дизайн для мобильных устройств
+- Экспорт данных в CSV/Excel
+- Печать отчётов
 
-### 1. Установите зависимости фронтенда
+## 🚀 Быстрый старт
+
+### Локальная разработка
+
+1. **Установите зависимости фронтенда**
 ```bash
 npm install
 ```
 
-### 2. Установите зависимости сервера
+2. **Установите зависимости сервера**
 ```bash
 cd server
 npm install
 cd ..
 ```
 
-### 3. Запустите сервер
+3. **Запустите сервер**
 ```bash
 cd server
 npm start
 ```
 
-### 4. Соберите фронтенд
+4. **Соберите фронтенд**
 ```bash
 npm run build
 ```
@@ -75,6 +108,262 @@ start.bat
 ```bash
 chmod +x start.sh
 ./start.sh
+```
+
+## 🌐 Развёртывание на сервере
+
+### Требования
+- Node.js 18+ (рекомендуется LTS версия)
+- Apache 2.4+ или Nginx
+- Доменное имя (например, `itam.domain.ru`)
+- SSL сертификат (Let's Encrypt или wildcard)
+
+### 1. Подготовка сервера
+
+```bash
+# Установите Node.js (Ubuntu/Debian)
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Проверьте версию
+node --version  # Должна быть 18+
+npm --version
+
+# Установите PM2 для управления процессами
+sudo npm install -g pm2
+```
+
+### 2. Загрузка проекта на сервер
+
+```bash
+# Скопируйте проект на сервер
+scp -r ./itam-service user@server:/opt/
+
+# Или используйте git
+ssh user@server "cd /opt && git clone <your-repo-url> itam-service"
+```
+
+### 3. Установка зависимостей
+
+```bash
+cd /opt/itam-service
+
+# Установите зависимости фронтенда
+npm install
+
+# Соберите фронтенд
+npm run build
+
+# Установите зависимости сервера
+cd server
+npm install
+```
+
+### 4. Настройка Apache
+
+```bash
+# Установите Apache
+sudo apt install apache2
+
+# Включите необходимые модули
+sudo a2enmod proxy
+sudo a2enmod proxy_http
+sudo a2enmod ssl
+sudo a2enmod rewrite
+sudo a2enmod remoteip
+
+# Создайте конфигурацию виртуального хоста
+sudo nano /etc/apache2/sites-available/itam.conf
+```
+
+**Содержимое `itam.conf`:**
+
+```apache
+<VirtualHost *:80>
+    ServerName itam.domain.ru
+    
+    # Редирект на HTTPS
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName itam.domain.ru
+    
+    # SSL сертификаты
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/itam.domain.ru/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/itam.domain.ru/privkey.pem
+    
+    # SSL настройки
+    SSLProtocol all -SSLv2 -SSLv3 -TLSv1 -TLSv1.1
+    SSLCipherSuite HIGH:!aNULL:!MD5:!3DES
+    SSLHonorCipherOrder on
+    
+    # Передача реального IP клиента
+    RemoteIPHeader X-Forwarded-For
+    RemoteIPTrustedProxy 127.0.0.1
+    
+    # Логи
+    ErrorLog ${APACHE_LOG_DIR}/itam_error.log
+    CustomLog ${APACHE_LOG_DIR}/itam_access.log combined
+    
+    # Reverse proxy к Node.js
+    ProxyPreserveHost On
+    ProxyPass / http://127.0.0.1:3001/
+    ProxyPassReverse / http://127.0.0.1:3001/
+</VirtualHost>
+```
+
+**Активируйте сайт:**
+
+```bash
+sudo a2ensite itam.conf
+sudo apache2ctl configtest  # Проверка конфигурации
+sudo systemctl reload apache2
+```
+
+### 5. Получение SSL сертификата (Let's Encrypt)
+
+```bash
+# Установите Certbot
+sudo apt install certbot python3-certbot-apache
+
+# Получите сертификат
+sudo certbot --apache -d itam.domain.ru
+
+# Проверьте автообновление
+sudo certbot renew --dry-run
+```
+
+**Или используйте wildcard сертификат:**
+
+```bash
+# Если у вас есть wildcard сертификат *.domain.ru
+# Скопируйте его в нужную директорию
+sudo cp /path/to/wildcard/fullchain.pem /etc/letsencrypt/live/itam.domain.ru/
+sudo cp /path/to/wildcard/privkey.pem /etc/letsencrypt/live/itam.domain.ru/
+```
+
+### 6. Запуск приложения через PM2
+
+```bash
+cd /opt/itam-service/server
+
+# Запустите приложение
+pm2 start server.js --name itam-service
+
+# Сохраните конфигурацию
+pm2 save
+
+# Настройте автозапуск
+pm2 startup
+# Скопируйте и выполните команду, которую выведет PM2
+```
+
+**Полезные команды PM2:**
+
+```bash
+pm2 status              # Статус всех приложений
+pm2 logs itam-service   # Логи в реальном времени
+pm2 restart itam-service  # Перезапуск
+pm2 stop itam-service     # Остановка
+pm2 monit                 # Мониторинг
+```
+
+### 7. Настройка Firewall
+
+```bash
+# Ubuntu/Debian (UFW)
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw allow 22/tcp  # SSH
+sudo ufw enable
+
+# CentOS/RHEL (firewalld)
+sudo firewall-cmd --permanent --add-service=http
+sudo firewall-cmd --permanent --add-service=https
+sudo firewall-cmd --reload
+```
+
+### 8. Настройка DNS
+
+Добавьте A-запись в DNS:
+
+```
+Тип: A
+Имя: itam
+Значение: <IP-вашего-сервера>
+TTL: 3600
+```
+
+Проверьте через 5-15 минут:
+
+```bash
+ping itam.domain.ru
+```
+
+### 9. Проверка работы
+
+Откройте браузер: **https://itam.domain.ru**
+
+Должно появиться:
+- ✅ Замок в адресной строке (HTTPS)
+- ✅ Страница входа ITAM Service
+- ✅ Вход работает (admin / admin123)
+
+## 🔄 Обновление системы
+
+```bash
+cd /opt/itam-service
+
+# Получите обновления
+git pull
+
+# Переустановите зависимости (если нужно)
+npm install
+cd server && npm install && cd ..
+
+# Пересоберите фронтенд
+npm run build
+
+# Перезапустите сервер
+cd server
+pm2 restart itam-service
+```
+
+## 💾 Резервное копирование
+
+### Автоматическое резервное копирование
+
+Система автоматически создаёт резервные копии базы данных ежедневно в 3:00.
+
+### Ручное создание бэкапа
+
+```bash
+cd /opt/itam-service/server
+
+# Создайте копию БД
+cp itam.db itam.backup-$(date +%Y%m%d).db
+
+# Или используйте встроенную функцию через веб-интерфейс
+# ⚙️ Система → Резервные копии → Создать бэкап
+```
+
+### Восстановление из бэкапа
+
+```bash
+cd /opt/itam-service/server
+
+# Остановите сервер
+pm2 stop itam-service
+
+# Восстановите БД
+cp itam.backup-20240101.db itam.db
+
+# Запустите сервер
+pm2 start itam-service
 ```
 
 ## 🔐 Авторизация
@@ -179,42 +468,67 @@ server {
 
 ```
 itam-service/
-├── server/              # Backend
-│   ├── server.js       # Главный сервер (HTTP + HTTPS)
-│   ├── db.js           # База данных SQLite
+├── server/                    # Backend
+│   ├── server.js             # Главный сервер (HTTP + HTTPS)
+│   ├── db.js                 # База данных SQLite
 │   ├── middleware/
-│   │   └── auth.js     # JWT авторизация
+│   │   ├── auth.js          # JWT авторизация
+│   │   ├── rateLimit.js     # Rate limiting
+│   │   └── validation.js    # Валидация данных
 │   ├── routes/
-│   │   ├── auth.js         # Авторизация
-│   │   ├── equipment.js    # Оборудование
-│   │   ├── categories.js   # Категории
-│   │   ├── types.js        # Типы
-│   │   ├── users.js        # Сотрудники
-│   │   ├── rooms.js        # Помещения
-│   │   └── certificates.js # SSL сертификаты
-│   ├── certs/          # Папка для сертификатов
-│   └── itam.db         # База данных (создаётся автоматически)
-├── src/                # Frontend
-│   ├── api.ts          # API клиент
+│   │   ├── auth.js              # Авторизация
+│   │   ├── equipment.js         # Оборудование
+│   │   ├── categories.js        # Категории
+│   │   ├── types.js             # Типы
+│   │   ├── users.js             # Сотрудники
+│   │   ├── rooms.js             # Помещения
+│   │   ├── subdivisions.js      # Подразделения
+│   │   ├── certificates.js      # SSL сертификаты
+│   │   ├── backups.js           # Резервные копии
+│   │   ├── maintenance.js       # Обслуживание
+│   │   ├── maintenanceTypes.js  # Типы обслуживания
+│   │   └── history.js           # История изменений
+│   ├── services/
+│   │   └── backup.js        # Сервис резервного копирования
+│   ├── utils/
+│   │   └── clientIP.js      # Утилита для получения IP
+│   ├── certs/               # Папка для сертификатов
+│   ├── backups/             # Папка для бэкапов
+│   └── itam.db              # База данных (создаётся автоматически)
+├── src/                     # Frontend
+│   ├── api.ts               # API клиент
 │   ├── context/
-│   │   ├── AuthContext.tsx    # Авторизация
-│   │   └── DataContext.tsx    # Данные
+│   │   ├── AuthContext.tsx  # Авторизация
+│   │   └── DataContext.tsx  # Данные
 │   ├── pages/
-│   │   ├── Login.tsx         # Страница входа
-│   │   ├── Dashboard.tsx
-│   │   ├── Equipment.tsx
-│   │   ├── EquipmentForm.tsx
-│   │   ├── EquipmentView.tsx
-│   │   ├── Categories.tsx
-│   │   ├── Users.tsx
-│   │   ├── Rooms.tsx
-│   │   ├── QRGenerator.tsx
-│   │   ├── QRScan.tsx
-│   │   ├── Certificates.tsx  # Управление сертификатами
-│   │   └── AuthUsers.tsx     # Управление пользователями
-│   └── components/
-│       └── Layout.tsx
-└── package.json
+│   │   ├── Login.tsx                    # Страница входа
+│   │   ├── Dashboard.tsx                # Дашборд
+│   │   ├── Equipment.tsx                # Список оборудования
+│   │   ├── EquipmentForm.tsx            # Форма оборудования
+│   │   ├── EquipmentView.tsx            # Просмотр оборудования
+│   │   ├── EquipmentHistory.tsx         # История изменений
+│   │   ├── Categories.tsx               # Категории и типы
+│   │   ├── Users.tsx                    # Сотрудники
+│   │   ├── UserView.tsx                 # Просмотр сотрудника
+│   │   ├── Rooms.tsx                    # Помещения
+│   │   ├── Subdivisions.tsx             # Подразделения
+│   │   ├── MaintenanceTypes.tsx         # Типы обслуживания
+│   │   ├── ReplacementRecommendations.tsx # Рекомендации по замене
+│   │   ├── QRGenerator.tsx              # Генерация QR
+│   │   ├── QRScan.tsx                   # Сканер QR
+│   │   ├── Certificates.tsx             # Управление сертификатами
+│   │   ├── AuthUsers.tsx                # Управление пользователями
+│   │   └── Backups.tsx                  # Резервные копии
+│   ├── components/
+│   │   ├── Layout.tsx                   # Основной layout
+│   │   └── AutocompleteInput.tsx        # Компонент автодополнения
+│   ├── utils/
+│   │   ├── export.ts                    # Экспорт данных
+│   │   ├── cpuDatabase.ts               # База процессоров
+│   │   └── layoutConverter.ts           # Конвертер раскладки
+│   └── types.ts                         # TypeScript типы
+├── package.json
+└── README.md
 ```
 
 ## 🔌 API Endpoints
@@ -230,6 +544,54 @@ itam-service/
 - `DELETE /api/auth/users/:id` - удалить (admin)
 - `GET /api/auth/logs` - журнал входов (admin)
 
+### Оборудование
+- `GET /api/equipment` - список (с фильтрами: ?status=&type_id=&search=)
+- `GET /api/equipment/:id` - детали
+- `GET /api/equipment/qr/:code` - поиск по QR
+- `GET /api/equipment/:id/history` - история изменений
+- `POST /api/equipment` - создать
+- `PUT /api/equipment/:id` - обновить
+- `PATCH /api/equipment/:id/status` - сменить статус
+- `PATCH /api/equipment/:id/move` - переместить
+- `PATCH /api/equipment/:id/name` - изменить название
+- `DELETE /api/equipment/:id` - удалить
+
+### Категории и типы
+- `GET /api/categories` - список категорий
+- `POST /api/categories` - создать категорию
+- `PUT /api/categories/:id` - обновить категорию
+- `DELETE /api/categories/:id` - удалить категорию
+- `GET /api/types` - список типов
+- `POST /api/types` - создать тип
+- `PUT /api/types/:id` - обновить тип
+- `DELETE /api/types/:id` - удалить тип
+
+### Сотрудники и подразделения
+- `GET /api/users` - список сотрудников
+- `GET /api/users/:id` - детали сотрудника с оборудованием
+- `POST /api/users` - создать сотрудника
+- `PUT /api/users/:id` - обновить сотрудника
+- `DELETE /api/users/:id` - удалить сотрудника
+- `GET /api/subdivisions` - список подразделений
+- `POST /api/subdivisions` - создать подразделение
+- `PUT /api/subdivisions/:id` - обновить подразделение
+- `DELETE /api/subdivisions/:id` - удалить подразделение
+
+### Помещения
+- `GET /api/rooms` - список помещений
+- `POST /api/rooms` - создать помещение
+- `PUT /api/rooms/:id` - обновить помещение
+- `DELETE /api/rooms/:id` - удалить помещение
+
+### Обслуживание
+- `GET /api/maintenance-types` - список типов обслуживания
+- `POST /api/maintenance-types` - создать тип обслуживания
+- `PUT /api/maintenance-types/:id` - обновить тип обслуживания
+- `DELETE /api/maintenance-types/:id` - удалить тип обслуживания
+- `GET /api/equipment/:id/maintenance` - история обслуживания оборудования
+- `POST /api/equipment/:id/maintenance` - добавить запись обслуживания
+- `GET /api/equipment/:id/next-maintenance` - информация о следующем обслуживании
+
 ### SSL Сертификаты (admin)
 - `GET /api/certificates` - список
 - `POST /api/certificates` - загрузить (multipart)
@@ -238,59 +600,92 @@ itam-service/
 - `POST /api/certificates/:id/deactivate` - деактивировать
 - `DELETE /api/certificates/:id` - удалить
 
-### Оборудование
-- `GET /api/equipment` - список
-- `GET /api/equipment/:id` - детали
-- `GET /api/equipment/qr/:code` - поиск по QR
-- `POST /api/equipment` - создать
-- `PUT /api/equipment/:id` - обновить
-- `PATCH /api/equipment/:id/status` - сменить статус
-- `PATCH /api/equipment/:id/move` - переместить
-- `DELETE /api/equipment/:id` - удалить
+### Резервные копии (admin)
+- `GET /api/backups` - список бэкапов
+- `POST /api/backups` - создать бэкап
+- `POST /api/backups/restore` - восстановить из бэкапа
+- `DELETE /api/backups/:filename` - удалить бэкап
 
-### Остальные ресурсы
-- `/api/categories` - категории
-- `/api/types` - типы
-- `/api/users` - сотрудники
-- `/api/rooms` - помещения
-- `/api/stats` - статистика
+### Статистика
+- `GET /api/stats` - общая статистика
 
 ## 🔐 Безопасность
 
+### Реализованные меры безопасности:
+- ✅ **JWT авторизация** - токены с временем жизни 24 часа
+- ✅ **Rate limiting** - защита от brute-force атак (5 попыток входа за 15 минут)
+- ✅ **Валидация данных** - проверка всех входных данных с помощью Joi
+- ✅ **Управление сессиями** - автоматическая очистка просроченных сессий
+- ✅ **Ограничение сессий** - максимум 5 активных сессий на пользователя
+- ✅ **Журнал авторизации** - отслеживание всех входов/выходов с реальными IP
+- ✅ **Хеширование паролей** - bcrypt с солью
+- ✅ **HTTPS поддержка** - SSL/TLS сертификаты
+- ✅ **CORS** - настройка кросс-доменных запросов
+- ✅ **SQL injection protection** - параметризованные запросы
+
 ### Рекомендации для продакшн:
-1. ✅ Смените пароль администратора
-2. ✅ Используйте HTTPS с валидным сертификатом
-3. ✅ Настройте `JWT_SECRET` в переменных окружения
+1. ✅ Смените пароль администратора сразу после первого входа
+2. ✅ Используйте HTTPS с валидным сертификатом (Let's Encrypt)
+3. ✅ Настройте `JWT_SECRET` в переменных окружения (минимум 32 символа)
 4. ✅ Ограничьте доступ по IP через firewall
-5. ✅ Настройте резервное копирование БД
-6. ✅ Используйте Nginx reverse proxy
-7. ✅ Включите rate limiting
+5. ✅ Настройте регулярное резервное копирование БД
+6. ✅ Используйте Apache/Nginx reverse proxy
+7. ✅ Включите rate limiting (уже включено по умолчанию)
 8. ✅ Настройте CORS для вашего домена
+9. ✅ Регулярно обновляйте зависимости: `npm audit fix`
+10. ✅ Мониторьте логи на подозрительную активность
 
 ### Переменные окружения:
 ```bash
 PORT=3001                    # HTTP порт
 HTTPS_PORT=3443              # HTTPS порт
-JWT_SECRET=your-secret-key   # Секрет для JWT
+JWT_SECRET=your-secret-key   # Секрет для JWT (минимум 32 символа)
+NODE_ENV=production          # Режим работы
+```
+
+### Создание секретного ключа:
+```bash
+# Генерация случайного ключа
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# Или используйте онлайн-генератор
+# https://randomkeygen.com/
 ```
 
 ## 📊 База данных
 
 SQLite база данных создаётся автоматически в `server/itam.db`.
 
-### Таблицы:
+### Основные таблицы:
 - `auth_users` - пользователи авторизации
-- `sessions` - активные сессии
-- `auth_logs` - журнал авторизации
+- `sessions` - активные сессии (с автоматической очисткой)
+- `auth_logs` - журнал авторизации (с реальными IP)
+- `login_logs` - журнал входов
 - `ssl_certificates` - SSL сертификаты
+
+### Структура организации:
 - `categories` - категории оборудования
-- `equipment_types` - типы оборудования
+- `equipment_types` - типы оборудования (с флагом has_specs)
+- `subdivisions` - подразделения (иерархическая структура)
 - `users` - сотрудники
 - `rooms` - помещения
-- `equipment` - оборудование
+
+### Оборудование:
+- `equipment` - оборудование (с техническими характеристиками)
+- `maintenance_types` - типы обслуживания (с периодичностью)
 - `maintenance_logs` - журнал обслуживания
+- `maintenance_type_categories` - связь типов обслуживания с категориями
+
+### Журналы изменений:
 - `move_logs` - журнал перемещений
 - `status_logs` - журнал изменений статусов
+- `name_logs` - журнал изменений названий
+- `equipment_field_changes` - журнал изменений полей оборудования
+
+### Автоматическое обслуживание БД:
+- Очистка просроченных сессий при старте и каждые 6 часов
+- Удаление старых логов авторизации (старше 90 дней)
+- Ограничение активных сессий на пользователя (максимум 5)
 
 ### Резервное копирование:
 ```bash
@@ -299,6 +694,9 @@ cp server/itam.db server/itam.backup.db
 
 # Автоматическое копирование (cron)
 0 2 * * * cp /path/to/server/itam.db /path/to/backups/itam-$(date +\%Y\%m\%d).db
+
+# Или используйте встроенную функцию через веб-интерфейс
+# ⚙️ Система → Резервные копии
 ```
 
 ## 📝 Статусы оборудования
@@ -314,16 +712,57 @@ cp server/itam.db server/itam.backup.db
 - Проверьте, что сервер запущен: `cd server && npm start`
 - Убедитесь, что порт 3001 не занят
 - Проверьте CORS настройки в `src/api.ts`
+- Проверьте логи: `pm2 logs itam-service`
 
 ### Камера не работает для QR-сканера
 - Камера работает только по HTTPS или localhost
 - Используйте ngrok для тестирования: `ngrok http 3001`
 - Проверьте разрешения браузера
+- Убедитесь, что сайт открыт по HTTPS
 
 ### Сертификат не применяется
 - Перезапустите сервер после активации
 - Проверьте, что файлы сертификата существуют
-- Проверьте логи сервера
+- Проверьте логи сервера: `pm2 logs itam-service`
+- Проверьте права доступа к файлам сертификатов
+
+### IP-адреса в журнале показывают 127.0.0.1
+- Убедитесь, что в `server.js` установлено `app.set('trust proxy', true)`
+- Проверьте конфигурацию Apache: `RemoteIPHeader X-Forwarded-For`
+- Включите модуль: `sudo a2enmod remoteip`
+- Перезапустите Apache: `sudo systemctl restart apache2`
+
+### Ошибка "SqliteError: no such column"
+- Обычно возникает после обновления структуры БД
+- Удалите старую БД: `rm server/itam.db`
+- Перезапустите сервер для создания новой БД
+- **Внимание:** это удалит все данные!
+
+### Ошибка валидации "400 Bad Request"
+- Проверьте формат данных в запросе
+- Убедитесь, что все обязательные поля заполнены
+- Проверьте типы данных (UUID, даты, числа)
+- Проверьте логи сервера для деталей
+
+### Поля формы очищаются при вводе
+- Проблема с polling-механизмом обновления данных
+- Убедитесь, что используется функциональная инициализация `useState`
+- Проверьте зависимости в `useEffect`
+
+### Сессии не удаляются после перезапуска
+- Проверьте, что работает автоматическая очистка
+- Вручную очистите: `DELETE FROM sessions WHERE expires_at < datetime('now')`
+- Проверьте логи на наличие ошибок
+
+### Оборудование не отображается в рекомендациях по замене
+- Убедитесь, что тип оборудования имеет флаг `has_specs = true`
+- Проверьте, что заполнены технические характеристики
+- Убедитесь, что это ПК или ноутбук (не ИБП, монитор и т.д.)
+
+### Экспорт не работает
+- Проверьте настройки блокировки всплывающих окон в браузере
+- Разрешите всплывающие окна для вашего домена
+- Проверьте консоль браузера на наличие ошибок
 
 ## 📄 Лицензия
 
@@ -340,8 +779,35 @@ cd server && npm run dev
 npm run dev
 ```
 
+## 📝 Changelog
+
+### Версия 3.0 (2026)
+- ✨ Добавлена система обслуживания с типами и автоматическим расчётом
+- ✨ Технические характеристики для ПК/ноутбуков (ЦП, ОЗУ, хранилище)
+- ✨ Система рекомендаций по замене оборудования с оценкой процессоров
+- ✨ Экспорт данных в CSV/Excel и печать отчётов
+- ✨ Автодополнение полей (названия, серийные номера)
+- ✨ Улучшенный поиск QR-кодов с фильтрами
+- ✨ Подразделения с иерархической структурой
+- ✨ Расширенные журналы истории с информацией о пользователе
+- ✨ Rate limiting и валидация данных
+- ✨ Управление сессиями с автоматической очисткой
+- ✨ Глобальный поиск с поддержкой раскладки клавиатуры
+- 🐛 Исправлены IP-адреса в журнале авторизации
+- 🐛 Исправлена проблема с очисткой полей формы при polling
+- 🐛 Исправлены SQL-запросы с кавычками
+- 🔧 Улучшена мобильная адаптация
+
+### Версия 2.0 (2024)
+- ✨ Система авторизации с JWT
+- ✨ SSL/TLS сертификаты
+- ✨ Резервное копирование БД
+- ✨ QR-коды и сканирование
+- ✨ Полное CRUD для оборудования
+
 ---
 
-**Версия:** 2.0  
-**Дата:** 2024  
-**Автор:** ITAM Service Team
+**Версия:** 3.0  
+**Дата:** 2026  
+**Автор:** ITAM Service Team  
+**Лицензия:** MIT

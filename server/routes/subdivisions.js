@@ -47,7 +47,7 @@ router.put('/:id', writeLimiter, validate(subdivisionSchema), (req, res) => {
   db.prepare('UPDATE subdivisions SET name = ?, description = ?, parent_id = ? WHERE id = ?').run(
     name || existing.name,
     description !== undefined ? description : existing.description,
-    parent_id !== undefined ? parent_id : existing.parent_id,
+    parent_id !== undefined ? (parent_id || null) : existing.parent_id,
     req.params.id
   );
   const item = db.prepare('SELECT * FROM subdivisions WHERE id = ?').get(req.params.id);

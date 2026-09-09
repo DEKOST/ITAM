@@ -71,7 +71,7 @@ const userSchema = Joi.object({
 const subdivisionSchema = Joi.object({
   name: Joi.string().min(1).max(100).required(),
   description: Joi.string().max(500).optional().allow(''),
-  parent_id: Joi.string().uuid().optional().allow(null)
+  parent_id: Joi.string().uuid().optional().allow(null, '')
 });
 
 // Валидация для помещения

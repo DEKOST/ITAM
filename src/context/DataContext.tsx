@@ -381,7 +381,7 @@ export function DataProvider({ children, isAuthenticated: authIsAuthenticated }:
     const apiData: any = {};
     if (data.name !== undefined) apiData.name = data.name;
     if (data.description !== undefined) apiData.description = data.description;
-    if (data.parentId !== undefined) apiData.parent_id = data.parentId;
+    if (data.parentId !== undefined) apiData.parent_id = data.parentId || null;
     await api.updateSubdivision(id, apiData);
     await refreshSubdivisions();
     notifyDataChange();

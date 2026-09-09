@@ -25,10 +25,13 @@ async function generateRegistration(userId) {
   // Проверяем существующие устройства
   const existingDevices = db.prepare('SELECT * FROM webauthn_credentials WHERE user_id = ?').all(userId);
   
+  // Конвертируем userID из строки в ArrayBuffer (требование новой версии SimpleWebAuthn)
+  const userIDBuffer = Buffer.from(userId, 'utf-8');
+  
   const options = await generateRegistrationOptions({
     rpName,
     rpID,
-    userID: userId,
+    userID: userIDBuffer,
     userName: user.username,
     displayName: user.full_name || user.username,
     attestationType: 'none',
@@ -45,10 +48,9 @@ async function generateRegistration(userId) {
 
   // Сохраняем challenge
   db.prepare('UPDATE auth_users SET webauthn_challenge = ? WHERE id = ?').run(options.challenge, userId);
-
+  
   return options;
 }
-
 // Верификация регистрации
 async function verifyRegistration(userId, body) {
   const user = db.prepare('SELECT * FROM auth_users WHERE id = ?').get(userId);

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { STATUS_LABELS, STATUS_COLORS } from '../types';
 import { Link } from 'react-router-dom';
+import { exportToCSV, exportToExcel, printReport } from '../utils/export';
 
 export default function Equipment() {
   const { equipment, equipmentTypes, categories, users, rooms, deleteEquipment } = useData();
@@ -34,13 +35,96 @@ export default function Equipment() {
     return rooms.find(r => r.id === roomId)?.name || '—';
   };
 
+  // Функция для подготовки данных к экспорту
+  const prepareExportData = () => {
+    return filtered.map(eq => ({
+      name: eq.name,
+      inventoryNumber: eq.inventoryNumber,
+      serialNumber: eq.serialNumber,
+      typeName: getTypeName(eq.typeId),
+      categoryName: getCategoryName(eq.typeId),
+      status: STATUS_LABELS[eq.status],
+      userName: getUserName(eq.userId),
+      roomName: getRoomName(eq.roomId),
+      purchaseDate: eq.purchaseDate || '—',
+      warrantyEnd: eq.warrantyEnd || '—',
+      notes: eq.notes || ''
+    }));
+  };
+
+  // Заголовки для экспорта
+  const exportHeaders = {
+    name: 'Название',
+    inventoryNumber: 'Инв. номер',
+    serialNumber: 'Серийный номер',
+    typeName: 'Тип',
+    categoryName: 'Категория',
+    status: 'Статус',
+    userName: 'Сотрудник',
+    roomName: 'Помещение',
+    purchaseDate: 'Дата покупки',
+    warrantyEnd: 'Гарантия до',
+    notes: 'Заметки'
+  };
+
+  // Экспорт в CSV
+  const handleExportCSV = () => {
+    const data = prepareExportData();
+    exportToCSV(data, `equipment_${new Date().toISOString().split('T')[0]}`, exportHeaders);
+  };
+
+  // Экспорт в Excel
+  const handleExportExcel = () => {
+    const data = prepareExportData();
+    exportToExcel(data, `equipment_${new Date().toISOString().split('T')[0]}`, exportHeaders);
+  };
+
+  // Печать отчёта
+  const handlePrintReport = () => {
+    const data = prepareExportData();
+    
+    let tableHTML = '<table><thead><tr>';
+    Object.values(exportHeaders).forEach(header => {
+      tableHTML += `<th>${header}</th>`;
+    });
+    tableHTML += '</tr></thead><tbody>';
+    
+    data.forEach(row => {
+      tableHTML += '<tr>';
+      Object.keys(exportHeaders).forEach(key => {
+        tableHTML += `<td>${row[key as keyof typeof row]}</td>`;
+      });
+      tableHTML += '</tr>';
+    });
+    
+    tableHTML += '</tbody></table>';
+    
+    const reportContent = `
+      <p><strong>Всего записей:</strong> ${data.length}</p>
+      ${tableHTML}
+    `;
+    
+    printReport('Отчёт по оборудованию', reportContent);
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Оборудование</h2>
-        <Link to="/equipment/new" className="px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors text-center">
-          + Добавить
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={handleExportCSV} className="px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
+            📄 CSV
+          </button>
+          <button onClick={handleExportExcel} className="px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">
+            📊 Excel
+          </button>
+          <button onClick={handlePrintReport} className="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors">
+            🖨️ Печать
+          </button>
+          <Link to="/equipment/new" className="px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors text-center">
+            + Добавить
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}

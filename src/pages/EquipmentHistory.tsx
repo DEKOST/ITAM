@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import * as api from '../api';
+import { exportToCSV, exportToExcel, printReport } from '../utils/export';
 
 interface HistoryEntry {
   id: string;
@@ -102,6 +103,92 @@ export default function EquipmentHistory() {
     return labels[field] || field;
   };
 
+  // Функция для форматирования записи истории в читаемый вид
+  const formatHistoryEntry = (entry: HistoryEntry) => {
+    let details = '';
+    
+    if (entry.type === 'status_change' && entry.details) {
+      details = `Статус: ${getStatusLabel(entry.details.from_status)} → ${getStatusLabel(entry.details.to_status)}`;
+      if (entry.details.changed_by_name || entry.details.changed_by) {
+        details += ` (${entry.details.changed_by_name || entry.details.changed_by})`;
+      }
+    } else if (entry.type === 'move' && entry.details) {
+      details = `Сотрудник: ${getUserName(entry.details.from_user_id)} → ${getUserName(entry.details.to_user_id)}`;
+      details += `, Помещение: ${getRoomName(entry.details.from_room_id)} → ${getRoomName(entry.details.to_room_id)}`;
+      if (entry.details.changed_by_name || entry.details.changed_by) {
+        details += ` (${entry.details.changed_by_name || entry.details.changed_by})`;
+      }
+    } else if (entry.type === 'maintenance' && entry.details) {
+      details = `Тип: ${entry.details.type || 'Не указан'}`;
+      if (entry.details.description) {
+        details += `, Описание: ${entry.details.description}`;
+      }
+    } else if (entry.type === 'name_change' && entry.details) {
+      details = `Название: ${entry.details.from_name} → ${entry.details.to_name}`;
+      if (entry.details.changed_by_name || entry.details.changed_by) {
+        details += ` (${entry.details.changed_by_name || entry.details.changed_by})`;
+      }
+    } else if (entry.type === 'edit' && entry.details) {
+      details = `Пользователь: ${entry.details.changed_by_name || entry.details.changed_by || 'Неизвестно'}`;
+      if (entry.details.changes) {
+        const changes = entry.details.changes.map((c: any) => 
+          `${getFieldLabel(c.field)}: ${c.old_value || '—'} → ${c.new_value || '—'}`
+        ).join('; ');
+        details += `, Изменения: ${changes}`;
+      }
+    } else if (entry.type === 'created') {
+      details = 'Оборудование добавлено в систему';
+    }
+    
+    return {
+      date: new Date(entry.date).toLocaleString('ru-RU'),
+      type: entry.description,
+      details: details
+    };
+  };
+
+  // Экспорт в CSV
+  const handleExportCSV = () => {
+    const data = history.map(formatHistoryEntry);
+    exportToCSV(data, `history_${eq?.name}_${new Date().toISOString().split('T')[0]}`, {
+      date: 'Дата и время',
+      type: 'Тип изменения',
+      details: 'Детали'
+    });
+  };
+
+  // Экспорт в Excel
+  const handleExportExcel = () => {
+    const data = history.map(formatHistoryEntry);
+    exportToExcel(data, `history_${eq?.name}_${new Date().toISOString().split('T')[0]}`, {
+      date: 'Дата и время',
+      type: 'Тип изменения',
+      details: 'Детали'
+    });
+  };
+
+  // Печать отчёта
+  const handlePrintReport = () => {
+    const data = history.map(formatHistoryEntry);
+    
+    let tableHTML = '<table><thead><tr><th>Дата и время</th><th>Тип изменения</th><th>Детали</th></tr></thead><tbody>';
+    
+    data.forEach(row => {
+      tableHTML += `<tr><td>${row.date}</td><td>${row.type}</td><td>${row.details}</td></tr>`;
+    });
+    
+    tableHTML += '</tbody></table>';
+    
+    const reportContent = `
+      <p><strong>Оборудование:</strong> ${eq?.name || '—'}</p>
+      <p><strong>Инвентарный номер:</strong> ${eq?.inventoryNumber || '—'}</p>
+      <p><strong>Всего записей:</strong> ${data.length}</p>
+      ${tableHTML}
+    `;
+    
+    printReport(`История изменений: ${eq?.name}`, reportContent);
+  };
+
   if (!eq) {
     return <div className="text-center py-12"><p className="text-gray-500">Оборудование не найдено</p></div>;
   }
@@ -112,14 +199,25 @@ export default function EquipmentHistory() {
 
   return (
     <div className="max-w-4xl">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">История изменений</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">История изменений</h2>
           <p className="text-sm text-gray-500 mt-1">{eq.name} • {eq.inventoryNumber}</p>
         </div>
-        <button onClick={() => navigate(`/equipment/${id}`)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">
-          ← Назад
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={handleExportCSV} className="px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
+            📄 CSV
+          </button>
+          <button onClick={handleExportExcel} className="px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">
+            📊 Excel
+          </button>
+          <button onClick={handlePrintReport} className="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors">
+            🖨️ Печать
+          </button>
+          <button onClick={() => navigate(`/equipment/${id}`)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">
+            ← Назад
+          </button>
+        </div>
       </div>
 
       {history.length === 0 ? (

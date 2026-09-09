@@ -2,31 +2,101 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const navItems = [
-  { path: '/', label: 'Дашборд', icon: '📊', roles: ['admin', 'user'] },
-  { path: '/equipment', label: 'Оборудование', icon: '💻', roles: ['admin', 'user'] },
-  { path: '/categories', label: 'Категории и типы', icon: '🏷️', roles: ['admin', 'user'] },
-  { path: '/maintenance-types', label: 'Типы обслуживания', icon: '🔧', roles: ['admin', 'user'] },
-  { path: '/users', label: 'Сотрудники', icon: '👥', roles: ['admin', 'user'] },
-  { path: '/subdivisions', label: 'Подразделения', icon: '🏛️', roles: ['admin', 'user'] },
-  { path: '/rooms', label: 'Помещения', icon: '🏢', roles: ['admin', 'user'] },
-  { path: '/qr-generator', label: 'QR коды', icon: '📱', roles: ['admin', 'user'] },
-  { path: '/qr-scan', label: 'Сканер QR', icon: '📷', roles: ['admin', 'user'] },
+interface NavItem {
+  path: string;
+  label: string;
+  icon: string;
+  roles: string[];
+}
 
-  { path: '/certificates', label: 'SSL Сертификаты', icon: '🔒', roles: ['admin'] },
-  { path: '/auth-users', label: 'Пользователи системы', icon: '🛡️', roles: ['admin'] },
-  { path: '/backups', label: 'Резервные копии', icon: '💾', roles: ['admin'] },
+interface NavGroup {
+  label: string;
+  icon: string;
+  roles: string[];
+  items: NavItem[];
+}
+
+// Одиночные пункты меню
+const singleItems: NavItem[] = [
+  { path: '/', label: 'Дашборд', icon: '📊', roles: ['admin', 'user'] },
+];
+
+// Группы меню
+const navGroups: NavGroup[] = [
+  {
+    label: 'Структура',
+    icon: '📁',
+    roles: ['admin', 'user'],
+    items: [
+      { path: '/equipment', label: 'Оборудование', icon: '💻', roles: ['admin', 'user'] },
+      { path: '/categories', label: 'Категории и типы', icon: '🏷️', roles: ['admin', 'user'] },
+      { path: '/maintenance-types', label: 'Типы обслуживания', icon: '🔧', roles: ['admin', 'user'] },
+      { path: '/users', label: 'Сотрудники', icon: '👥', roles: ['admin', 'user'] },
+      { path: '/subdivisions', label: 'Подразделения', icon: '🏛️', roles: ['admin', 'user'] },
+      { path: '/rooms', label: 'Помещения', icon: '🏢', roles: ['admin', 'user'] },
+    ]
+  },
+  {
+    label: 'QR-коды',
+    icon: '📱',
+    roles: ['admin', 'user'],
+    items: [
+      { path: '/qr-generator', label: 'Генерация QR', icon: '🖨️', roles: ['admin', 'user'] },
+      { path: '/qr-scan', label: 'Сканер QR', icon: '📷', roles: ['admin', 'user'] },
+    ]
+  },
+  {
+    label: 'Система',
+    icon: '⚙️',
+    roles: ['admin'],
+    items: [
+      { path: '/certificates', label: 'SSL Сертификаты', icon: '🔒', roles: ['admin'] },
+      { path: '/auth-users', label: 'Пользователи системы', icon: '🛡️', roles: ['admin'] },
+      { path: '/backups', label: 'Резервные копии', icon: '💾', roles: ['admin'] },
+    ]
+  },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
+    // Восстанавливаем состояние из localStorage
+    try {
+      const saved = localStorage.getItem('itam_menu_state');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
 
-  const filteredNavItems = navItems.filter(item => 
+  const toggleGroup = (label: string) => {
+    setExpandedGroups(prev => {
+      const newState = { ...prev, [label]: !prev[label] };
+      localStorage.setItem('itam_menu_state', JSON.stringify(newState));
+      return newState;
+    });
+  };
+
+  // Проверяем, активна ли группа (есть ли активный пункт в ней)
+  const isGroupActive = (group: NavGroup) => {
+    return group.items.some(item => location.pathname === item.path);
+  };
+
+  // Фильтруем элементы по роли пользователя
+  const filteredSingleItems = singleItems.filter(item => 
     user && item.roles.includes(user.role)
   );
+
+  const filteredGroups = navGroups
+    .filter(group => user && group.roles.includes(user.role))
+    .map(group => ({
+      ...group,
+      items: group.items.filter(item => user && item.roles.includes(user.role))
+    }))
+    .filter(group => group.items.length > 0);
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -44,7 +114,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <p className="text-xs text-slate-400 mt-1">Учёт IT оборудования</p>
         </div>
         <nav className="p-2 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 140px)' }}>
-          {filteredNavItems.map(item => (
+          {/* Одиночные пункты */}
+          {filteredSingleItems.map(item => (
             <Link
               key={item.path}
               to={item.path}
@@ -59,6 +130,64 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <span className="text-sm font-medium">{item.label}</span>
             </Link>
           ))}
+
+          {/* Разделитель */}
+          {filteredSingleItems.length > 0 && filteredGroups.length > 0 && (
+            <div className="border-t border-slate-700 my-2"></div>
+          )}
+
+          {/* Группы меню */}
+          {filteredGroups.map(group => {
+            const isExpanded = expandedGroups[group.label] ?? isGroupActive(group);
+            
+            return (
+              <div key={group.label} className="mb-1">
+                {/* Заголовок группы */}
+                <button
+                  onClick={() => toggleGroup(group.label)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
+                    isGroupActive(group)
+                      ? 'bg-slate-800 text-white'
+                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg">{group.icon}</span>
+                    <span className="text-sm font-medium">{group.label}</span>
+                  </div>
+                  <svg 
+                    className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
+                {/* Подпункты */}
+                <div className={`overflow-hidden transition-all duration-200 ${isExpanded ? 'max-h-96' : 'max-h-0'}`}>
+                  <div className="pl-4 py-1">
+                    {group.items.map(item => (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        onClick={() => setSidebarOpen(false)}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
+                          location.pathname === item.path
+                            ? 'bg-blue-600 text-white'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                        }`}
+                      >
+                        <span className="text-base">{item.icon}</span>
+                        <span>{item.label}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </nav>
       </aside>
 

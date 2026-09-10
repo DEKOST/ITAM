@@ -21,8 +21,11 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(apiLimiter); // Глобальный rate limiter
 
-// Раздача статических файлов (загруженные фотографии)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Раздача статических файлов (загруженные фотографии) с кэшированием
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  maxAge: '1d', // Кэшировать на 1 день
+  immutable: true // Файлы не изменяются
+}));
 
 // Инициализация БД
 initDatabase();

@@ -173,6 +173,7 @@ function initDatabase() {
       filename TEXT NOT NULL,
       original_name TEXT NOT NULL,
       file_path TEXT NOT NULL,
+      thumbnail_path TEXT,
       file_size INTEGER DEFAULT 0,
       mime_type TEXT DEFAULT '',
       is_primary INTEGER DEFAULT 0,
@@ -404,6 +405,7 @@ function initDatabase() {
           filename TEXT NOT NULL,
           original_name TEXT NOT NULL,
           file_path TEXT NOT NULL,
+          thumbnail_path TEXT,
           file_size INTEGER DEFAULT 0,
           mime_type TEXT DEFAULT '',
           is_primary INTEGER DEFAULT 0,
@@ -413,6 +415,12 @@ function initDatabase() {
           FOREIGN KEY (uploaded_by) REFERENCES auth_users(id) ON DELETE SET NULL
         )
       `);
+    } else {
+      // Миграция: добавляем thumbnail_path если её нет
+      const columns = db.prepare("PRAGMA table_info(equipment_photos)").all();
+      if (!columns.some(col => col.name === 'thumbnail_path')) {
+        db.exec('ALTER TABLE equipment_photos ADD COLUMN thumbnail_path TEXT');
+      }
     }
   } catch (e) {
     // Игнорируем ошибки миграции

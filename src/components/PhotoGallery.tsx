@@ -7,6 +7,7 @@ interface Photo {
   filename: string;
   original_name: string;
   file_path: string;
+  thumbnail_path?: string;
   file_size: number;
   mime_type: string;
   is_primary: number;
@@ -146,9 +147,10 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
               onClick={() => openPhoto(photo)}
             >
               <img
-                src={photo.file_path}
+                src={photo.thumbnail_path || photo.file_path}
                 alt={photo.original_name}
                 className="w-full h-full object-cover"
+                loading="lazy"
               />
             </div>
             

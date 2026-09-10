@@ -22,8 +22,23 @@ export default function Equipment() {
   useEffect(() => {
     const loadPrimaryPhotos = async () => {
       try {
+        // Проверяем кэш в localStorage
+        const cachedPhotos = localStorage.getItem('primaryPhotos');
+        const cacheTimestamp = localStorage.getItem('primaryPhotosTimestamp');
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : Infinity;
+        
+        // Используем кэш если он не старше 1 часа
+        if (cachedPhotos && cacheAge < 3600000) {
+          setPrimaryPhotos(JSON.parse(cachedPhotos));
+          return;
+        }
+        
         const photos = await getAllPrimaryPhotos();
         setPrimaryPhotos(photos);
+        
+        // Сохраняем в кэш
+        localStorage.setItem('primaryPhotos', JSON.stringify(photos));
+        localStorage.setItem('primaryPhotosTimestamp', Date.now().toString());
       } catch (error) {
         // Игнорируем ошибки
       }

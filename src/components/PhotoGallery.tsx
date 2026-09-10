@@ -112,7 +112,7 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
               </div>
             )}
 
-            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+            <div className="absolute inset-0 backdrop-blur-0 group-hover:backdrop-blur-sm bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
               <div className="flex gap-2">
                 {photo.is_primary !== 1 && (
                   <button
@@ -120,7 +120,7 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
                       e.stopPropagation();
                       handleSetPrimary(photo.id);
                     }}
-                    className="p-2 bg-white rounded-full hover:bg-blue-50 transition-colors"
+                    className="p-2 bg-white rounded-full hover:bg-blue-50 transition-colors shadow-lg"
                     title="Сделать основной"
                   >
                     <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,7 +134,7 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
                     handleDelete(photo.id);
                   }}
                   disabled={deleting === photo.id}
-                  className="p-2 bg-white rounded-full hover:bg-red-50 transition-colors disabled:opacity-50"
+                  className="p-2 bg-white rounded-full hover:bg-red-50 transition-colors disabled:opacity-50 shadow-lg"
                   title="Удалить"
                 >
                   <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,25 +155,29 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
       {/* Модальное окно для просмотра фото */}
       {selectedPhoto && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/95 z-[9999] flex items-center justify-center p-4 overflow-auto"
           onClick={() => setSelectedPhoto(null)}
         >
-          <div className="relative max-w-5xl max-h-full">
+          <div className="relative w-full h-full flex items-center justify-center">
             <img
               src={selectedPhoto.file_path}
               alt={selectedPhoto.original_name}
-              className="max-w-full max-h-full object-contain"
+              className="max-w-full max-h-full w-auto h-auto object-contain"
+              onClick={(e) => e.stopPropagation()}
             />
             <button
-              onClick={() => setSelectedPhoto(null)}
-              className="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-200 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedPhoto(null);
+              }}
+              className="fixed top-6 right-6 p-3 bg-white rounded-full hover:bg-gray-200 transition-colors shadow-xl z-[10000]"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <div className="absolute bottom-4 left-4 right-4 bg-black bg-opacity-50 text-white p-4 rounded">
-              <p className="font-medium">{selectedPhoto.original_name}</p>
+            <div className="fixed bottom-6 left-6 right-6 bg-black/70 backdrop-blur-sm text-white p-4 rounded-lg shadow-xl z-[10000]" onClick={(e) => e.stopPropagation()}>
+              <p className="font-medium text-lg">{selectedPhoto.original_name}</p>
               <p className="text-sm text-gray-300">{formatFileSize(selectedPhoto.file_size)}</p>
             </div>
           </div>

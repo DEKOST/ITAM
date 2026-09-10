@@ -50,6 +50,27 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
     setSelectedPhoto(photo);
   };
 
+  // Обработка клавиш для навигации между фотографиями
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedPhoto) return;
+      
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToPrevious();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        goToNext();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setSelectedPhoto(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedPhoto, currentIndex]);
+
   const handleSetPrimary = async (photoId: string) => {
     try {
       const response = await fetch(`/api/equipment/${equipmentId}/photos/${photoId}/primary`, {
@@ -195,15 +216,8 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
           className="fixed inset-0 bg-black/95 z-[9999] flex flex-col"
           onClick={() => setSelectedPhoto(null)}
         >
-          {/* Верхняя панель с кнопкой закрытия */}
-          <div className="flex justify-between items-center p-4 bg-black/50">
-            <div className="text-white">
-              <p className="font-medium text-sm sm:text-base">{selectedPhoto.original_name}</p>
-              <p className="text-xs text-gray-300">
-                {formatFileSize(selectedPhoto.file_size)}
-                {photos.length > 1 && ` • ${currentIndex + 1} из ${photos.length}`}
-              </p>
-            </div>
+          {/* Кнопка закрытия в правом верхнем углу */}
+          <div className="absolute top-4 right-4 z-20">
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -218,8 +232,18 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
             </button>
           </div>
           
-          {/* Область с изображением и навигацией */}
-          <div className="flex-1 flex items-center justify-center p-4 overflow-auto relative">
+          {/* Область с изображением */}
+          <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
+            <img
+              src={selectedPhoto.file_path}
+              alt={selectedPhoto.original_name}
+              className="max-w-full max-h-full w-auto h-auto object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+          
+          {/* Нижняя панель с навигацией и кнопкой закрытия */}
+          <div className="p-4 bg-black/50 flex items-center justify-center gap-4">
             {/* Кнопка "Предыдущее фото" */}
             {photos.length > 1 && currentIndex > 0 && (
               <button
@@ -227,7 +251,7 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
                   e.stopPropagation();
                   goToPrevious();
                 }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/90 rounded-full shadow-xl hover:bg-white transition-colors z-10"
+                className="p-3 bg-white/90 rounded-full shadow-xl hover:bg-white transition-colors"
                 aria-label="Предыдущее фото"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,12 +260,12 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
               </button>
             )}
             
-            <img
-              src={selectedPhoto.file_path}
-              alt={selectedPhoto.original_name}
-              className="max-w-full max-h-full w-auto h-auto object-contain"
-              onClick={(e) => e.stopPropagation()}
-            />
+            {/* Счетчик фотографий */}
+            {photos.length > 1 && (
+              <div className="text-white text-sm font-medium">
+                {currentIndex + 1} из {photos.length}
+              </div>
+            )}
             
             {/* Кнопка "Следующее фото" */}
             {photos.length > 1 && currentIndex < photos.length - 1 && (
@@ -250,7 +274,7 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
                   e.stopPropagation();
                   goToNext();
                 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/90 rounded-full shadow-xl hover:bg-white transition-colors z-10"
+                className="p-3 bg-white/90 rounded-full shadow-xl hover:bg-white transition-colors"
                 aria-label="Следующее фото"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -258,16 +282,14 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
                 </svg>
               </button>
             )}
-          </div>
-          
-          {/* Нижняя панель с кнопкой закрытия для мобильных */}
-          <div className="p-4 bg-black/50 sm:hidden">
+            
+            {/* Кнопка закрытия для мобильных */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedPhoto(null);
               }}
-              className="w-full py-3 bg-white text-gray-900 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+              className="sm:hidden px-6 py-2 bg-white text-gray-900 rounded-lg font-medium hover:bg-gray-200 transition-colors ml-4"
             >
               Закрыть
             </button>

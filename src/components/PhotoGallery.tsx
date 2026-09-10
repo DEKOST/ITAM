@@ -143,7 +143,7 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
           <div key={photo.id} className="relative group">
             <div 
               className="aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
-              onClick={() => setSelectedPhoto(photo)}
+              onClick={() => openPhoto(photo)}
             >
               <img
                 src={photo.file_path}
@@ -158,8 +158,8 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
               </div>
             )}
 
-            {/* Кнопки управления (всегда видны для всех устройств) */}
-            <div className="absolute bottom-2 right-2 flex gap-2">
+            {/* Кнопки управления под фотографией */}
+            <div className="mt-2 flex gap-2 justify-center">
               {photo.is_primary !== 1 && (
                 <button
                   onClick={(e) => {
@@ -201,11 +201,6 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
                 </svg>
               </button>
             </div>
-
-            <div className="mt-2 text-xs text-gray-500">
-              <p className="truncate">{photo.original_name}</p>
-              <p>{formatFileSize(photo.file_size)}</p>
-            </div>
           </div>
         ))}
       </div>
@@ -242,57 +237,62 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
             />
           </div>
           
-          {/* Нижняя панель с навигацией и кнопкой закрытия */}
-          <div className="p-4 bg-black/50 flex items-center justify-center gap-4">
-            {/* Кнопка "Предыдущее фото" */}
-            {photos.length > 1 && currentIndex > 0 && (
+          {/* Нижняя панель с информацией, навигацией и кнопкой закрытия */}
+          <div className="p-4 bg-black/50">
+            {/* Информация о файле */}
+            <div className="text-center text-white mb-3">
+              <p className="font-medium text-sm sm:text-base">{selectedPhoto.original_name}</p>
+              <p className="text-xs text-gray-300">
+                {formatFileSize(selectedPhoto.file_size)}
+                {photos.length > 1 && ` • ${currentIndex + 1} из ${photos.length}`}
+              </p>
+            </div>
+            
+            {/* Навигация */}
+            <div className="flex items-center justify-center gap-4">
+              {/* Кнопка "Предыдущее фото" */}
+              {photos.length > 1 && currentIndex > 0 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    goToPrevious();
+                  }}
+                  className="p-3 bg-white/90 rounded-full shadow-xl hover:bg-white transition-colors"
+                  aria-label="Предыдущее фото"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+              )}
+              
+              {/* Кнопка "Следующее фото" */}
+              {photos.length > 1 && currentIndex < photos.length - 1 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    goToNext();
+                  }}
+                  className="p-3 bg-white/90 rounded-full shadow-xl hover:bg-white transition-colors"
+                  aria-label="Следующее фото"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )}
+              
+              {/* Кнопка закрытия для мобильных */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  goToPrevious();
+                  setSelectedPhoto(null);
                 }}
-                className="p-3 bg-white/90 rounded-full shadow-xl hover:bg-white transition-colors"
-                aria-label="Предыдущее фото"
+                className="sm:hidden px-6 py-2 bg-white text-gray-900 rounded-lg font-medium hover:bg-gray-200 transition-colors"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
+                Закрыть
               </button>
-            )}
-            
-            {/* Счетчик фотографий */}
-            {photos.length > 1 && (
-              <div className="text-white text-sm font-medium">
-                {currentIndex + 1} из {photos.length}
-              </div>
-            )}
-            
-            {/* Кнопка "Следующее фото" */}
-            {photos.length > 1 && currentIndex < photos.length - 1 && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  goToNext();
-                }}
-                className="p-3 bg-white/90 rounded-full shadow-xl hover:bg-white transition-colors"
-                aria-label="Следующее фото"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            )}
-            
-            {/* Кнопка закрытия для мобильных */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedPhoto(null);
-              }}
-              className="sm:hidden px-6 py-2 bg-white text-gray-900 rounded-lg font-medium hover:bg-gray-200 transition-colors ml-4"
-            >
-              Закрыть
-            </button>
+            </div>
           </div>
         </div>
       )}

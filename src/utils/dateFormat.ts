@@ -12,12 +12,13 @@ export function formatDateTime(date: string | Date | number | null | undefined):
     // Проверяем валидность даты
     if (isNaN(d.getTime())) return '—';
     
-    const hours = String(d.getHours()).padStart(2, '0');
-    const minutes = String(d.getMinutes()).padStart(2, '0');
-    const seconds = String(d.getSeconds()).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
+    // Используем UTC методы для единообразного отображения
+    const hours = String(d.getUTCHours()).padStart(2, '0');
+    const minutes = String(d.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(d.getUTCSeconds()).padStart(2, '0');
+    const day = String(d.getUTCDate()).padStart(2, '0');
+    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const year = d.getUTCFullYear();
     
     return `${hours}:${minutes}:${seconds} ${day}.${month}.${year}`;
   } catch (error) {
@@ -38,9 +39,10 @@ export function formatDate(date: string | Date | number | null | undefined): str
     
     if (isNaN(d.getTime())) return '—';
     
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
+    // Используем UTC методы для единообразного отображения
+    const day = String(d.getUTCDate()).padStart(2, '0');
+    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const year = d.getUTCFullYear();
     
     return `${day}.${month}.${year}`;
   } catch (error) {
@@ -61,9 +63,10 @@ export function formatTime(date: string | Date | number | null | undefined): str
     
     if (isNaN(d.getTime())) return '—';
     
-    const hours = String(d.getHours()).padStart(2, '0');
-    const minutes = String(d.getMinutes()).padStart(2, '0');
-    const seconds = String(d.getSeconds()).padStart(2, '0');
+    // Используем UTC методы для единообразного отображения
+    const hours = String(d.getUTCHours()).padStart(2, '0');
+    const minutes = String(d.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(d.getUTCSeconds()).padStart(2, '0');
     
     return `${hours}:${minutes}:${seconds}`;
   } catch (error) {

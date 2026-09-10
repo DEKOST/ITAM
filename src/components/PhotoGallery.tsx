@@ -24,6 +24,31 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
   const { token } = useAuth();
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+
+  // Функции навигации между фотографиями
+  const goToPrevious = () => {
+    if (currentIndex > 0) {
+      const newIndex = currentIndex - 1;
+      setCurrentIndex(newIndex);
+      setSelectedPhoto(photos[newIndex]);
+    }
+  };
+
+  const goToNext = () => {
+    if (currentIndex < photos.length - 1) {
+      const newIndex = currentIndex + 1;
+      setCurrentIndex(newIndex);
+      setSelectedPhoto(photos[newIndex]);
+    }
+  };
+
+  // Обновляем индекс при открытии фото
+  const openPhoto = (photo: Photo) => {
+    const index = photos.findIndex(p => p.id === photo.id);
+    setCurrentIndex(index);
+    setSelectedPhoto(photo);
+  };
 
   const handleSetPrimary = async (photoId: string) => {
     try {
@@ -112,48 +137,15 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
               </div>
             )}
 
-            {/* Overlay с кнопками для десктопа (при наведении) */}
-            <div className="absolute inset-0 backdrop-blur-0 group-hover:backdrop-blur-sm bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto sm:flex hidden">
-              <div className="flex gap-2 pointer-events-auto">
-                {photo.is_primary !== 1 && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSetPrimary(photo.id);
-                    }}
-                    className="p-2 bg-white rounded-full hover:bg-blue-50 transition-colors shadow-lg"
-                    title="Сделать основной"
-                  >
-                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                    </svg>
-                  </button>
-                )}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(photo.id);
-                  }}
-                  disabled={deleting === photo.id}
-                  className="p-2 bg-white rounded-full hover:bg-red-50 transition-colors disabled:opacity-50 shadow-lg"
-                  title="Удалить"
-                >
-                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            
-            {/* Кнопки для мобильных устройств (всегда видны) */}
-            <div className="absolute bottom-2 right-2 flex gap-2 sm:hidden">
+            {/* Кнопки управления (всегда видны для всех устройств) */}
+            <div className="absolute bottom-2 right-2 flex gap-2">
               {photo.is_primary !== 1 && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleSetPrimary(photo.id);
                   }}
-                  className="p-2 bg-white/90 rounded-full shadow-lg"
+                  className="p-2 bg-white/90 rounded-full shadow-lg hover:bg-white transition-colors"
                   title="Сделать основной"
                 >
                   <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,7 +159,7 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
                   handleDelete(photo.id);
                 }}
                 disabled={deleting === photo.id}
-                className="p-2 bg-white/90 rounded-full shadow-lg disabled:opacity-50"
+                className="p-2 bg-white/90 rounded-full shadow-lg hover:bg-white transition-colors disabled:opacity-50"
                 title="Удалить"
               >
                 <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,9 +169,9 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setSelectedPhoto(photo);
+                  openPhoto(photo);
                 }}
-                className="p-2 bg-white/90 rounded-full shadow-lg"
+                className="p-2 bg-white/90 rounded-full shadow-lg hover:bg-white transition-colors"
                 title="Просмотр"
               >
                 <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,21 +180,6 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
                 </svg>
               </button>
             </div>
-            
-            {/* Кнопка просмотра для десктопа */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedPhoto(photo);
-              }}
-              className="absolute bottom-2 right-2 p-2 bg-white/90 rounded-full shadow-lg hidden sm:block"
-              title="Просмотр"
-            >
-              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </button>
 
             <div className="mt-2 text-xs text-gray-500">
               <p className="truncate">{photo.original_name}</p>
@@ -219,10 +196,13 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
           onClick={() => setSelectedPhoto(null)}
         >
           {/* Верхняя панель с кнопкой закрытия */}
-          <div className="flex justify-between items-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="flex justify-between items-center p-4 bg-black/50">
             <div className="text-white">
               <p className="font-medium text-sm sm:text-base">{selectedPhoto.original_name}</p>
-              <p className="text-xs text-gray-300">{formatFileSize(selectedPhoto.file_size)}</p>
+              <p className="text-xs text-gray-300">
+                {formatFileSize(selectedPhoto.file_size)}
+                {photos.length > 1 && ` • ${currentIndex + 1} из ${photos.length}`}
+              </p>
             </div>
             <button
               onClick={(e) => {
@@ -238,18 +218,50 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
             </button>
           </div>
           
-          {/* Область с изображением */}
-          <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
+          {/* Область с изображением и навигацией */}
+          <div className="flex-1 flex items-center justify-center p-4 overflow-auto relative">
+            {/* Кнопка "Предыдущее фото" */}
+            {photos.length > 1 && currentIndex > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToPrevious();
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/90 rounded-full shadow-xl hover:bg-white transition-colors z-10"
+                aria-label="Предыдущее фото"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+            
             <img
               src={selectedPhoto.file_path}
               alt={selectedPhoto.original_name}
               className="max-w-full max-h-full w-auto h-auto object-contain"
               onClick={(e) => e.stopPropagation()}
             />
+            
+            {/* Кнопка "Следующее фото" */}
+            {photos.length > 1 && currentIndex < photos.length - 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToNext();
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/90 rounded-full shadow-xl hover:bg-white transition-colors z-10"
+                aria-label="Следующее фото"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
           </div>
           
           {/* Нижняя панель с кнопкой закрытия для мобильных */}
-          <div className="p-4 bg-black/50 backdrop-blur-sm sm:hidden">
+          <div className="p-4 bg-black/50 sm:hidden">
             <button
               onClick={(e) => {
                 e.stopPropagation();

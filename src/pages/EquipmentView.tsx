@@ -5,6 +5,7 @@ import { STATUS_LABELS, STATUS_COLORS, EquipmentStatus } from '../types';
 import { QRCodeSVG } from 'qrcode.react';
 import * as api from '../api';
 import { evaluateCPU, getCPUBadgeColor, getCPUBadgeText } from '../utils/cpuDatabase';
+import { formatDateTime } from '../utils/dateFormat';
 
 interface NextMaintenance {
   maintenance_type_id: string;
@@ -61,7 +62,7 @@ export default function EquipmentView() {
   const subdivision = user?.subdivisionId ? subdivisions.find(s => s.id === user.subdivisionId) : null;
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('ru-RU');
+    return formatDateTime(date);
   };
 
   const getDaysUntilText = (days: number | null) => {

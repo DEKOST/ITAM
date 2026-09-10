@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as api from '../api';
+import { formatDateTime } from '../utils/dateFormat';
 
 interface Certificate {
   id: string;
@@ -235,11 +236,11 @@ export default function Certificates() {
                     </div>
                     <div>
                       <p className="text-gray-500">Действителен с</p>
-                      <p className="font-medium text-gray-800">{cert.valid_from ? new Date(cert.valid_from).toLocaleDateString('ru') : '—'}</p>
+                      <p className="font-medium text-gray-800">{formatDateTime(cert.valid_from)}</p>
                     </div>
                     <div>
                       <p className="text-gray-500">Действителен до</p>
-                      <p className="font-medium text-gray-800">{cert.valid_to ? new Date(cert.valid_to).toLocaleDateString('ru') : '—'}</p>
+                      <p className="font-medium text-gray-800">{formatDateTime(cert.valid_to)}</p>
                     </div>
                   </div>
                 </div>

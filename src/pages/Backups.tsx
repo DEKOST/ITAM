@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import * as api from '../api';
+import { formatDateTime } from '../utils/dateFormat';
 
 interface Backup {
   filename: string;
@@ -108,7 +109,7 @@ export default function Backups() {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-gray-600">{backup.sizeFormatted}</td>
-                <td className="px-4 py-3 text-gray-600">{new Date(backup.created).toLocaleString('ru-RU')}</td>
+                <td className="px-4 py-3 text-gray-600">{formatDateTime(backup.created)}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-1">
                     <button

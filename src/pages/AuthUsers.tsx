@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import * as api from '../api';
 import { useAuth } from '../context/AuthContext';
+import { formatDateTime } from '../utils/dateFormat';
 
 interface AuthUser {
   id: string;
@@ -166,7 +167,7 @@ export default function AuthUsers() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-gray-600 text-xs">
-                    {user.last_login ? new Date(user.last_login).toLocaleString('ru') : '—'}
+                    {formatDateTime(user.last_login)}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
@@ -201,7 +202,7 @@ export default function AuthUsers() {
                 <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500">Нет записей</td></tr>
               ) : logs.map(log => (
                 <tr key={log.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-600 text-xs">{new Date(log.created_at).toLocaleString('ru')}</td>
+                  <td className="px-4 py-3 text-gray-600 text-xs">{formatDateTime(log.created_at)}</td>
                   <td className="px-4 py-3 text-gray-800">{log.username || log.user_username || '—'}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${log.action === 'login' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>

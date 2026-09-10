@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import * as api from '../api';
 import { exportToCSV, exportToExcel, printReport } from '../utils/export';
+import { formatDateTime } from '../utils/dateFormat';
 
 interface HistoryEntry {
   id: string;
@@ -141,7 +142,7 @@ export default function EquipmentHistory() {
     }
     
     return {
-      date: new Date(entry.date).toLocaleString('ru-RU'),
+      date: formatDateTime(entry.date),
       type: entry.description,
       details: details
     };
@@ -235,7 +236,7 @@ export default function EquipmentHistory() {
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-semibold text-gray-800">{entry.description}</h4>
                     <span className="text-xs text-gray-500">
-                      {new Date(entry.date).toLocaleString('ru-RU')}
+                      {formatDateTime(entry.date)}
                     </span>
                   </div>
                   

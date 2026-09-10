@@ -4,6 +4,7 @@ import { useData } from '../context/DataContext';
 import { STATUS_LABELS, STATUS_COLORS, EquipmentStatus, Equipment } from '../types';
 import { Link } from 'react-router-dom';
 import * as api from '../api';
+import { formatDateTime } from '../utils/dateFormat';
 
 interface NextMaintenance {
   maintenance_type_id: string;
@@ -197,7 +198,7 @@ export default function QRScan() {
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('ru-RU');
+    return formatDateTime(date);
   };
 
   const getDaysUntilText = (days: number | null) => {

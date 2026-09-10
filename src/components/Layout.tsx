@@ -241,6 +241,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{user?.fullName}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
                   </div>
+                  <Link
+                    to="/settings"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                  >
+                    <span>⚙️</span> Настройки
+                  </Link>
                   <button 
                     onClick={logout}
                     className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"

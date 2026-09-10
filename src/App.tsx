@@ -23,6 +23,7 @@ import Certificates from './pages/Certificates';
 import AuthUsers from './pages/AuthUsers';
 import Backups from './pages/Backups';
 import EquipmentTemplates from './pages/EquipmentTemplates';
+import Settings from './pages/Settings';
 
 function ProtectedRoute({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
   const { isAuthenticated, isAdmin, loading } = useAuth();
@@ -101,6 +102,7 @@ function AppRoutes() {
       <Route path="/auth-users" element={<ProtectedRoute adminOnly><AuthUsers /></ProtectedRoute>} />
       <Route path="/backups" element={<ProtectedRoute adminOnly><Backups /></ProtectedRoute>} />
       <Route path="/equipment-templates" element={<ProtectedRoute><EquipmentTemplates /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -21,6 +21,9 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(apiLimiter); // Глобальный rate limiter
 
+// Раздача статических файлов (загруженные фотографии)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Инициализация БД
 initDatabase();
 seedDemoData();
@@ -77,6 +80,7 @@ app.use('/api', authMiddleware, require('./routes/maintenance'));
 app.use('/api/certificates', authMiddleware, require('./routes/certificates'));
 app.use('/api/backups', authMiddleware, require('./routes/backups'));
 app.use('/api', authMiddleware, require('./routes/history'));
+app.use('/api', authMiddleware, require('./routes/photos'));
 
 // Статистика
 app.get('/api/stats', authMiddleware, (req, res) => {

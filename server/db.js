@@ -166,6 +166,22 @@ function initDatabase() {
       FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE SET NULL
     );
 
+    -- Фотографии оборудования
+    CREATE TABLE IF NOT EXISTS equipment_photos (
+      id TEXT PRIMARY KEY,
+      equipment_id TEXT NOT NULL,
+      filename TEXT NOT NULL,
+      original_name TEXT NOT NULL,
+      file_path TEXT NOT NULL,
+      file_size INTEGER DEFAULT 0,
+      mime_type TEXT DEFAULT '',
+      is_primary INTEGER DEFAULT 0,
+      uploaded_by TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (equipment_id) REFERENCES equipment(id) ON DELETE CASCADE,
+      FOREIGN KEY (uploaded_by) REFERENCES auth_users(id) ON DELETE SET NULL
+    );
+
     -- Журнал обслуживания
     CREATE TABLE IF NOT EXISTS maintenance_logs (
       id TEXT PRIMARY KEY,
@@ -372,6 +388,31 @@ function initDatabase() {
     const columns = db.prepare("PRAGMA table_info(equipment_types)").all();
     if (!columns.some(col => col.name === 'has_specs')) {
       db.exec('ALTER TABLE equipment_types ADD COLUMN has_specs INTEGER DEFAULT 0');
+    }
+  } catch (e) {
+    // Игнорируем ошибки миграции
+  }
+
+  // Миграция: создаём таблицу equipment_photos если её нет
+  try {
+    const tableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='equipment_photos'").get();
+    if (!tableExists) {
+      db.exec(`
+        CREATE TABLE equipment_photos (
+          id TEXT PRIMARY KEY,
+          equipment_id TEXT NOT NULL,
+          filename TEXT NOT NULL,
+          original_name TEXT NOT NULL,
+          file_path TEXT NOT NULL,
+          file_size INTEGER DEFAULT 0,
+          mime_type TEXT DEFAULT '',
+          is_primary INTEGER DEFAULT 0,
+          uploaded_by TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (equipment_id) REFERENCES equipment(id) ON DELETE CASCADE,
+          FOREIGN KEY (uploaded_by) REFERENCES auth_users(id) ON DELETE SET NULL
+        )
+      `);
     }
   } catch (e) {
     // Игнорируем ошибки миграции

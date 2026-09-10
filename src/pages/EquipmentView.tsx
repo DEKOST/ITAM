@@ -6,6 +6,8 @@ import { QRCodeSVG } from 'qrcode.react';
 import * as api from '../api';
 import { evaluateCPU, getCPUBadgeColor, getCPUBadgeText } from '../utils/cpuDatabase';
 import { formatDateTime } from '../utils/dateFormat';
+import PhotoUpload from '../components/PhotoUpload';
+import PhotoGallery from '../components/PhotoGallery';
 
 interface NextMaintenance {
   maintenance_type_id: string;
@@ -44,6 +46,29 @@ export default function EquipmentView() {
     description: '',
     notes: ''
   });
+  const [photos, setPhotos] = useState<any[]>([]);
+
+  // Загрузка фотографий
+  const loadPhotos = async () => {
+    if (!id) return;
+    try {
+      const response = await fetch(`/api/equipment/${id}/photos`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('itam_token')}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setPhotos(data);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки фотографий:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadPhotos();
+  }, [id]);
 
   useEffect(() => {
     if (id) {
@@ -248,6 +273,15 @@ export default function EquipmentView() {
               <p className="text-gray-600 text-sm">{eq.notes}</p>
             </div>
           )}
+
+          {/* Фотографии */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-700">📷 Фотографии ({photos.length})</h3>
+              <PhotoUpload equipmentId={eq.id} onUploadComplete={loadPhotos} />
+            </div>
+            <PhotoGallery equipmentId={eq.id} photos={photos} onPhotosChange={loadPhotos} />
+          </div>
         </div>
 
         {/* QR Code */}

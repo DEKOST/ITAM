@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { STATUS_LABELS, STATUS_COLORS, EquipmentStatus } from '../types';
 import { Link } from 'react-router-dom';
@@ -15,6 +15,38 @@ export default function Equipment() {
   const [bulkStatus, setBulkStatus] = useState<EquipmentStatus>('in_use');
   const [bulkUserId, setBulkUserId] = useState('');
   const [bulkRoomId, setBulkRoomId] = useState('');
+  const [primaryPhotos, setPrimaryPhotos] = useState<Record<string, string>>({});
+
+  // Загрузка основных фотографий для оборудования
+  useEffect(() => {
+    const loadPrimaryPhotos = async () => {
+      const photos: Record<string, string> = {};
+      
+      for (const eq of equipment) {
+        try {
+          const response = await fetch(`/api/equipment/${eq.id}/photos`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('itam_token')}`
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            const primaryPhoto = data.find((p: any) => p.is_primary === 1);
+            if (primaryPhoto) {
+              photos[eq.id] = primaryPhoto.file_path;
+            }
+          }
+        } catch (error) {
+          // Игнорируем ошибки
+        }
+      }
+      
+      setPrimaryPhotos(photos);
+    };
+
+    loadPrimaryPhotos();
+  }, [equipment]);
 
   const filtered = equipment.filter(eq => {
     const matchSearch = eq.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -273,14 +305,27 @@ export default function Equipment() {
                 className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <Link to={`/equipment/${eq.id}`} className="flex-1 min-w-0">
-                <div className="flex items-start justify-between mb-2">
+                <div className="flex items-start gap-3">
+                  {primaryPhotos[eq.id] && (
+                    <div className="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                      <img 
+                        src={primaryPhotos[eq.id]} 
+                        alt={eq.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-800 truncate">{eq.name}</h3>
-                    <p className="text-xs text-gray-500 truncate">{getTypeName(eq.typeId)} • {getCategoryName(eq.typeId)}</p>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-800 truncate">{eq.name}</h3>
+                        <p className="text-xs text-gray-500 truncate">{getTypeName(eq.typeId)} • {getCategoryName(eq.typeId)}</p>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ml-2 flex-shrink-0 ${STATUS_COLORS[eq.status]}`}>
+                        {STATUS_LABELS[eq.status]}
+                      </span>
+                    </div>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ml-2 flex-shrink-0 ${STATUS_COLORS[eq.status]}`}>
-                    {STATUS_LABELS[eq.status]}
-                  </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mt-3 pt-3 border-t border-gray-100">
                   <div>
@@ -315,6 +360,7 @@ export default function Equipment() {
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                 </th>
+                <th className="text-left px-4 py-3 w-16 font-medium text-gray-600">Фото</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Название</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Тип</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Статус</th>
@@ -325,7 +371,7 @@ export default function Equipment() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">Оборудование не найдено</td></tr>
+                <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-500">Оборудование не найдено</td></tr>
               ) : filtered.map(eq => (
                 <tr key={eq.id} className={`hover:bg-gray-50 ${selectedIds.includes(eq.id) ? 'bg-blue-50' : ''}`}>
                   <td className="px-4 py-3">
@@ -335,6 +381,23 @@ export default function Equipment() {
                       onChange={() => toggleSelect(eq.id)}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
+                  </td>
+                  <td className="px-4 py-3">
+                    {primaryPhotos[eq.id] ? (
+                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
+                        <img 
+                          src={primaryPhotos[eq.id]} 
+                          alt={eq.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
+                        <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <div className="font-medium text-gray-800">{eq.name}</div>

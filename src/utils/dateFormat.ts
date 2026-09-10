@@ -6,6 +6,23 @@ function getUserTimezone(): string {
 }
 
 /**
+ * Конвертирует строку даты из SQLite в UTC Date объект
+ * SQLite хранит даты в формате "YYYY-MM-DD HH:MM:SS" без часового пояса
+ * Мы интерпретируем их как UTC время
+ */
+function parseSQLiteDate(dateStr: string): Date {
+  // Если строка уже в ISO формате с "Z" или timezone, используем как есть
+  if (dateStr.includes('Z') || dateStr.includes('+') || dateStr.includes('T')) {
+    return new Date(dateStr);
+  }
+  
+  // Иначе добавляем "Z" чтобы указать что это UTC
+  // Преобразуем "2026-09-10 02:35:34" в "2026-09-10T02:35:34.000Z"
+  const isoString = dateStr.replace(' ', 'T') + '.000Z';
+  return new Date(isoString);
+}
+
+/**
  * Форматирует дату в формат "ЧЧ:ММ:СС ДД.ММ.ГГГГ"
  * @param date - Дата в любом формате (ISO строка, Date объект, timestamp)
  * @returns Отформатированная строка в часовом поясе пользователя
@@ -14,7 +31,8 @@ export function formatDateTime(date: string | Date | number | null | undefined):
   if (!date) return '—';
   
   try {
-    const d = new Date(date);
+    // Конвертируем строку из SQLite в UTC Date объект
+    const d = typeof date === 'string' ? parseSQLiteDate(date) : new Date(date);
     
     // Проверяем валидность даты
     if (isNaN(d.getTime())) return '—';
@@ -59,7 +77,8 @@ export function formatDate(date: string | Date | number | null | undefined): str
   if (!date) return '—';
   
   try {
-    const d = new Date(date);
+    // Конвертируем строку из SQLite в UTC Date объект
+    const d = typeof date === 'string' ? parseSQLiteDate(date) : new Date(date);
     
     if (isNaN(d.getTime())) return '—';
     
@@ -96,7 +115,8 @@ export function formatTime(date: string | Date | number | null | undefined): str
   if (!date) return '—';
   
   try {
-    const d = new Date(date);
+    // Конвертируем строку из SQLite в UTC Date объект
+    const d = typeof date === 'string' ? parseSQLiteDate(date) : new Date(date);
     
     if (isNaN(d.getTime())) return '—';
     

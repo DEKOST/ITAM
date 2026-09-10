@@ -112,7 +112,8 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
               </div>
             )}
 
-            <div className="absolute inset-0 backdrop-blur-0 group-hover:backdrop-blur-sm bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto">
+            {/* Overlay с кнопками для десктопа (при наведении) */}
+            <div className="absolute inset-0 backdrop-blur-0 group-hover:backdrop-blur-sm bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto sm:flex hidden">
               <div className="flex gap-2 pointer-events-auto">
                 {photo.is_primary !== 1 && (
                   <button
@@ -144,13 +145,57 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
               </div>
             </div>
             
-            {/* Кнопка просмотра для мобильных устройств */}
+            {/* Кнопки для мобильных устройств (всегда видны) */}
+            <div className="absolute bottom-2 right-2 flex gap-2 sm:hidden">
+              {photo.is_primary !== 1 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSetPrimary(photo.id);
+                  }}
+                  className="p-2 bg-white/90 rounded-full shadow-lg"
+                  title="Сделать основной"
+                >
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                </button>
+              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(photo.id);
+                }}
+                disabled={deleting === photo.id}
+                className="p-2 bg-white/90 rounded-full shadow-lg disabled:opacity-50"
+                title="Удалить"
+              >
+                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedPhoto(photo);
+                }}
+                className="p-2 bg-white/90 rounded-full shadow-lg"
+                title="Просмотр"
+              >
+                <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Кнопка просмотра для десктопа */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedPhoto(photo);
               }}
-              className="absolute bottom-2 right-2 p-2 bg-white/90 rounded-full shadow-lg sm:hidden"
+              className="absolute bottom-2 right-2 p-2 bg-white/90 rounded-full shadow-lg hidden sm:block"
               title="Просмотр"
             >
               <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">

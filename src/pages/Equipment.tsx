@@ -3,6 +3,7 @@ import { useData } from '../context/DataContext';
 import { STATUS_LABELS, STATUS_COLORS, EquipmentStatus } from '../types';
 import { Link } from 'react-router-dom';
 import { exportToCSV, exportToExcel, printReport } from '../utils/export';
+import { getAllPrimaryPhotos } from '../api';
 
 export default function Equipment() {
   const { equipment, equipmentTypes, categories, users, rooms, deleteEquipment, updateEquipment } = useData();
@@ -17,32 +18,15 @@ export default function Equipment() {
   const [bulkRoomId, setBulkRoomId] = useState('');
   const [primaryPhotos, setPrimaryPhotos] = useState<Record<string, string>>({});
 
-  // Загрузка основных фотографий для оборудования
+  // Загрузка основных фотографий для всего оборудования одним запросом
   useEffect(() => {
     const loadPrimaryPhotos = async () => {
-      const photos: Record<string, string> = {};
-      
-      for (const eq of equipment) {
-        try {
-          const response = await fetch(`/api/equipment/${eq.id}/photos`, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('itam_token')}`
-            }
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            const primaryPhoto = data.find((p: any) => p.is_primary === 1);
-            if (primaryPhoto) {
-              photos[eq.id] = primaryPhoto.file_path;
-            }
-          }
-        } catch (error) {
-          // Игнорируем ошибки
-        }
+      try {
+        const photos = await getAllPrimaryPhotos();
+        setPrimaryPhotos(photos);
+      } catch (error) {
+        // Игнорируем ошибки
       }
-      
-      setPrimaryPhotos(photos);
     };
 
     loadPrimaryPhotos();

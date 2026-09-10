@@ -45,6 +45,27 @@ const upload = multer({
 // Все маршруты требуют авторизации
 router.use(authMiddleware);
 
+// Получить основные фотографии для всего оборудования (один запрос)
+router.get('/photos/primary', (req, res) => {
+  try {
+    const photos = db.prepare(`
+      SELECT equipment_id, file_path
+      FROM equipment_photos
+      WHERE is_primary = 1
+    `).all();
+
+    // Преобразуем в объект { equipment_id: file_path }
+    const result = {};
+    photos.forEach(photo => {
+      result[photo.equipment_id] = photo.file_path;
+    });
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Получить список фотографий оборудования
 router.get('/equipment/:id/photos', (req, res) => {
   try {

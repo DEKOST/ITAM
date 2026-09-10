@@ -136,3 +136,22 @@ export const getEquipmentMaintenance = (id: string) => fetchAPI(`/equipment/${id
 export const getLastMaintenance = (id: string, typeId: string) => fetchAPI(`/equipment/${id}/maintenance/last/${typeId}`);
 export const addMaintenance = (id: string, data: any) => fetchAPI(`/equipment/${id}/maintenance`, { method: 'POST', body: JSON.stringify(data) });
 export const getNextMaintenance = (id: string) => fetchAPI(`/equipment/${id}/next-maintenance`);
+
+// Photos
+export const getAllPrimaryPhotos = () => fetchAPI('/photos/primary');
+export const getEquipmentPhotos = (equipmentId: string) => fetchAPI(`/equipment/${equipmentId}/photos`);
+export const uploadEquipmentPhoto = (equipmentId: string, formData: FormData) => {
+  const token = localStorage.getItem('itam_token');
+  return fetch(`${API_BASE}/equipment/${equipmentId}/photos`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    body: formData
+  }).then(r => {
+    if (!r.ok) throw new Error('Ошибка загрузки');
+    return r.json();
+  });
+};
+export const deleteEquipmentPhoto = (equipmentId: string, photoId: string) => fetchAPI(`/equipment/${equipmentId}/photos/${photoId}`, { method: 'DELETE' });
+export const setPrimaryPhoto = (equipmentId: string, photoId: string) => fetchAPI(`/equipment/${equipmentId}/photos/${photoId}/primary`, { method: 'PATCH' });

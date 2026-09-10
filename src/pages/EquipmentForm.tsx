@@ -11,6 +11,30 @@ function generateInventoryNumber(): string {
   return `INV-${timestamp}${random}`;
 }
 
+// Конвертация ISO даты в формат YYYY-MM-DD для input type="date"
+function isoToDateInput(isoDate: string): string {
+  if (!isoDate) return '';
+  try {
+    const date = new Date(isoDate);
+    if (isNaN(date.getTime())) return '';
+    return date.toISOString().split('T')[0];
+  } catch {
+    return '';
+  }
+}
+
+// Конвертация даты из input type="date" (YYYY-MM-DD) в ISO формат
+function dateInputToISO(dateStr: string): string {
+  if (!dateStr) return '';
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
+    return date.toISOString();
+  } catch {
+    return '';
+  }
+}
+
 export default function EquipmentForm() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -28,8 +52,8 @@ export default function EquipmentForm() {
       return {
         name: existing.name, serialNumber: existing.serialNumber, inventoryNumber: existing.inventoryNumber,
         typeId: existing.typeId, status: existing.status, userId: existing.userId || '', roomId: existing.roomId || '',
-        purchaseDate: existing.purchaseDate, warrantyEnd: existing.warrantyEnd,
-        lastMaintenanceDate: existing.lastMaintenanceDate, nextMaintenanceDate: existing.nextMaintenanceDate, notes: existing.notes,
+        purchaseDate: isoToDateInput(existing.purchaseDate), warrantyEnd: isoToDateInput(existing.warrantyEnd),
+        lastMaintenanceDate: isoToDateInput(existing.lastMaintenanceDate), nextMaintenanceDate: isoToDateInput(existing.nextMaintenanceDate), notes: existing.notes,
         cpu: existing.cpu || '', ram: existing.ram || 0, storageType: existing.storageType || '', storageSize: existing.storageSize || 0
       };
     }
@@ -59,10 +83,10 @@ export default function EquipmentForm() {
         status: form.status,
         userId: form.userId || null,
         roomId: form.roomId || null,
-        purchaseDate: form.purchaseDate,
-        warrantyEnd: form.warrantyEnd,
-        lastMaintenanceDate: form.lastMaintenanceDate,
-        nextMaintenanceDate: form.nextMaintenanceDate,
+        purchaseDate: dateInputToISO(form.purchaseDate),
+        warrantyEnd: dateInputToISO(form.warrantyEnd),
+        lastMaintenanceDate: dateInputToISO(form.lastMaintenanceDate),
+        nextMaintenanceDate: dateInputToISO(form.nextMaintenanceDate),
         notes: form.notes,
         cpu: form.cpu,
         ram: form.ram,

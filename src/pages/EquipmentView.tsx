@@ -152,7 +152,7 @@ export default function EquipmentView() {
                   {STATUS_LABELS[eq.status]}
                 </span>
               </div>
-              <InfoRow label="Дата добавления" value={eq.createdAt} />
+              <InfoRow label="Дата добавления" value={formatDateTime(eq.createdAt)} />
             </div>
           </div>
 
@@ -167,10 +167,10 @@ export default function EquipmentView() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-semibold text-gray-700 mb-4">Даты и обслуживание</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <InfoRow label="Дата покупки" value={eq.purchaseDate || '—'} />
-              <InfoRow label="Гарантия до" value={eq.warrantyEnd || '—'} />
-              <InfoRow label="Последнее ТО" value={eq.lastMaintenanceDate || '—'} />
-              <InfoRow label="Следующее ТО" value={eq.nextMaintenanceDate || '—'} />
+              <InfoRow label="Дата покупки" value={formatDateTime(eq.purchaseDate)} />
+              <InfoRow label="Гарантия до" value={formatDateTime(eq.warrantyEnd)} />
+              <InfoRow label="Последнее ТО" value={formatDateTime(eq.lastMaintenanceDate)} />
+              <InfoRow label="Следующее ТО" value={formatDateTime(eq.nextMaintenanceDate)} />
             </div>
           </div>
 

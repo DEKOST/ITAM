@@ -45,6 +45,7 @@ async function generateThumbnailsForExistingPhotos() {
         
         // Создаем миниатюру
         await sharp(filePath)
+          .rotate() // Автоматически применяем EXIF ориентацию
           .resize(300, 300, {
             fit: 'cover',
             position: 'center'
@@ -75,7 +76,86 @@ async function generateThumbnailsForExistingPhotos() {
   }
 }
 
+// Пересоздание всех миниатюр с правильной EXIF ориентацией
+async function regenerateAllThumbnails() {
+  try {
+    console.log('🔄 Проверка необходимости пересоздания миниатюр...');
+    
+    // Получаем все фотографии с миниатюрами
+    const photosWithThumbnails = db.prepare(`
+      SELECT id, file_path, thumbnail_path, original_name 
+      FROM equipment_photos 
+      WHERE thumbnail_path IS NOT NULL
+    `).all();
+    
+    if (photosWithThumbnails.length === 0) {
+      console.log('ℹ️ Нет фотографий с миниатюрами для пересоздания');
+      return;
+    }
+    
+    console.log(`📸 Найдено ${photosWithThumbnails.length} фотографий с миниатюрами`);
+    
+    let successCount = 0;
+    let errorCount = 0;
+    let skippedCount = 0;
+    
+    for (const photo of photosWithThumbnails) {
+      try {
+        const filePath = path.join(__dirname, '..', photo.file_path);
+        const thumbnailPath = path.join(__dirname, '..', photo.thumbnail_path);
+        
+        // Проверяем существование файлов
+        if (!fs.existsSync(filePath) || !fs.existsSync(thumbnailPath)) {
+          console.warn(`⚠️ Файл не найден для: ${photo.original_name}`);
+          errorCount++;
+          continue;
+        }
+        
+        // Получаем метаданные оригинала
+        const metadata = await sharp(filePath).metadata();
+        
+        // Проверяем наличие EXIF ориентации
+        if (metadata.orientation && metadata.orientation !== 1) {
+          console.log(`🔄 Пересоздание миниатюры с EXIF ориентацией для: ${photo.original_name}`);
+          
+          // Удаляем старую миниатюру
+          fs.unlinkSync(thumbnailPath);
+          
+          // Создаем новую миниатюру с правильной ориентацией
+          await sharp(filePath)
+            .rotate() // Применяем EXIF ориентацию
+            .resize(300, 300, {
+              fit: 'cover',
+              position: 'center'
+            })
+            .jpeg({ quality: 85 })
+            .toFile(thumbnailPath);
+          
+          successCount++;
+        } else {
+          skippedCount++;
+        }
+        
+      } catch (error) {
+        console.error(`❌ Ошибка пересоздания миниатюры для ${photo.original_name}:`, error.message);
+        errorCount++;
+      }
+    }
+    
+    console.log(`\n📊 Результат пересоздания:`);
+    console.log(`   ✅ Пересоздано: ${successCount}`);
+    console.log(`   ⏭️ Пропущено (без EXIF): ${skippedCount}`);
+    console.log(`   ❌ Ошибок: ${errorCount}`);
+    
+  } catch (error) {
+    console.error('❌ Ошибка при пересоздании миниатюр:', error);
+  }
+}
+
 // Запускаем создание миниатюр при старте сервера
 generateThumbnailsForExistingPhotos();
 
-module.exports = { generateThumbnailsForExistingPhotos };
+// Запускаем пересоздание миниатюр с правильной ориентацией
+regenerateAllThumbnails();
+
+module.exports = { generateThumbnailsForExistingPhotos, regenerateAllThumbnails };

@@ -48,6 +48,7 @@ function createFileName(equipmentName, originalExt) {
 async function createThumbnail(inputPath, outputPath, size = 300) {
   try {
     await sharp(inputPath)
+      .rotate() // Автоматически применяем EXIF ориентацию
       .resize(size, size, {
         fit: 'cover',
         position: 'center'
@@ -68,7 +69,8 @@ async function compressImage(inputPath, outputPath) {
     const metadata = await sharp(inputPath).metadata();
     
     // Определяем формат и применяем оптимальные настройки
-    let processor = sharp(inputPath);
+    let processor = sharp(inputPath)
+      .rotate(); // Автоматически применяем EXIF ориентацию
     
     if (metadata.format === 'jpeg' || metadata.format === 'jpg') {
       processor = processor.jpeg({ 

@@ -1,0 +1,253 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Light theme (default) */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-tertiary: #6b7280;
+  --border-color: #e5e7eb;
+  --border-hover: #d1d5db;
+  --accent-color: #3b82f6;
+  --accent-hover: #2563eb;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+}
+
+/* Dark theme */
+.dark {
+  --bg-primary: #1f2937;
+  --bg-secondary: #111827;
+  --bg-tertiary: #0f172a;
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-tertiary: #9ca3af;
+  --border-color: #374151;
+  --border-hover: #4b5563;
+  --accent-color: #3b82f6;
+  --accent-hover: #2563eb;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+}
+
+/* Base styles */
+body {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-hover);
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Dark theme overrides */
+.dark .bg-white {
+  background-color: #1f2937 !important;
+}
+
+.dark .bg-gray-50 {
+  background-color: #111827 !important;
+}
+
+.dark .bg-gray-100 {
+  background-color: #1f2937 !important;
+}
+
+.dark .text-gray-800 {
+  color: #f9fafb !important;
+}
+
+.dark .text-gray-700 {
+  color: #e5e7eb !important;
+}
+
+.dark .text-gray-600 {
+  color: #d1d5db !important;
+}
+
+.dark .text-gray-500 {
+  color: #9ca3af !important;
+}
+
+.dark .text-gray-400 {
+  color: #6b7280 !important;
+}
+
+.dark .border-gray-200 {
+  border-color: #374151 !important;
+}
+
+.dark .border-gray-100 {
+  border-color: #1f2937 !important;
+}
+
+.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #374151 !important;
+}
+
+.dark .shadow-sm {
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3) !important;
+}
+
+/* Form elements in dark mode */
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #374151 !important;
+  color: #f9fafb !important;
+  border-color: #4b5563 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  background-color: #374151 !important;
+  border-color: #3b82f6 !important;
+}
+
+/* Hover states */
+.dark .hover\:bg-gray-50:hover {
+  background-color: #374151 !important;
+}
+
+.dark .hover\:bg-gray-100:hover {
+  background-color: #1f2937 !important;
+}
+
+/* Table styles */
+.dark thead {
+  background-color: #111827 !important;
+}
+
+.dark tbody tr:hover {
+  background-color: #374151 !important;
+}
+
+/* Modal backgrounds */
+.dark .bg-black\/50 {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Status badges - keep their colors but adjust for dark mode */
+.dark .bg-green-100 {
+  background-color: #065f46 !important;
+  color: #d1fae5 !important;
+}
+
+.dark .bg-blue-100 {
+  background-color: #1e40af !important;
+  color: #dbeafe !important;
+}
+
+.dark .bg-red-100 {
+  background-color: #991b1b !important;
+  color: #fee2e2 !important;
+}
+
+.dark .bg-yellow-100 {
+  background-color: #92400e !important;
+  color: #fef3c7 !important;
+}
+
+.dark .bg-purple-100 {
+  background-color: #6b21a8 !important;
+  color: #f3e8ff !important;
+}
+
+/* Info boxes */
+.dark .bg-blue-50 {
+  background-color: #1e3a8a !important;
+  border-color: #3b82f6 !important;
+}
+
+.dark .bg-green-50 {
+  background-color: #064e3b !important;
+  border-color: #10b981 !important;
+}
+
+.dark .bg-red-50 {
+  background-color: #7f1d1d !important;
+  border-color: #ef4444 !important;
+}
+
+.dark .bg-yellow-50 {
+  background-color: #78350f !important;
+  border-color: #f59e0b !important;
+}
+
+.dark .bg-purple-50 {
+  background-color: #581c87 !important;
+  border-color: #a855f7 !important;
+}
+
+/* Text colors in info boxes */
+.dark .text-blue-800 {
+  color: #dbeafe !important;
+}
+
+.dark .text-blue-700 {
+  color: #bfdbfe !important;
+}
+
+.dark .text-green-800 {
+  color: #d1fae5 !important;
+}
+
+.dark .text-green-700 {
+  color: #a7f3d0 !important;
+}
+
+.dark .text-red-800 {
+  color: #fee2e2 !important;
+}
+
+.dark .text-red-700 {
+  color: #fecaca !important;
+}
+
+.dark .text-yellow-800 {
+  color: #fef3c7 !important;
+}
+
+.dark .text-yellow-700 {
+  color: #fde68a !important;
+}
+
+.dark .text-purple-800 {
+  color: #f3e8ff !important;
+}
+
+.dark .text-purple-700 {
+  color: #e9d5ff !important;
+}

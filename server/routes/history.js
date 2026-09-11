@@ -1,0 +1,187 @@
+const express = require('express');
+const router = express.Router();
+const { db } = require('../db');
+
+// Получение полной истории оборудования
+router.get('/equipment/:id/history', (req, res) => {
+  const equipmentId = req.params.id;
+  
+  // Проверяем существование оборудования
+  const equipment = db.prepare('SELECT * FROM equipment WHERE id = ?').get(equipmentId);
+  if (!equipment) {
+    return res.status(404).json({ error: 'Оборудование не найдено' });
+  }
+  
+  const history = [];
+  
+  // 1. История создания (из самого оборудования)
+  history.push({
+    id: `created-${equipment.id}`,
+    date: equipment.created_at,
+    type: 'created',
+    description: 'Оборудование добавлено в систему',
+    details: {
+      name: equipment.name,
+      inventory_number: equipment.inventory_number
+    }
+  });
+  
+  // 2. История изменений статуса
+  const statusLogs = db.prepare(`
+    SELECT sl.*, au.username as changed_by_username, au.full_name as changed_by_name
+    FROM status_logs sl
+    LEFT JOIN auth_users au ON sl.changed_by = au.id
+    WHERE sl.equipment_id = ? 
+    ORDER BY sl.date DESC
+  `).all(equipmentId);
+  
+  statusLogs.forEach(log => {
+    history.push({
+      id: log.id,
+      date: log.date,
+      type: 'status_change',
+      description: 'Изменение статуса',
+      details: {
+        from_status: log.from_status,
+        to_status: log.to_status,
+        changed_by: log.changed_by_username || 'Неизвестно',
+        changed_by_name: log.changed_by_name || '',
+        comment: log.comment
+      }
+    });
+  });
+  
+  // 3. История перемещений
+  const moveLogs = db.prepare(`
+    SELECT ml.*, au.username as changed_by_username, au.full_name as changed_by_name
+    FROM move_logs ml
+    LEFT JOIN auth_users au ON ml.changed_by = au.id
+    WHERE ml.equipment_id = ? 
+    ORDER BY ml.date DESC
+  `).all(equipmentId);
+  
+  moveLogs.forEach(log => {
+    history.push({
+      id: log.id,
+      date: log.date,
+      type: 'move',
+      description: 'Перемещение оборудования',
+      details: {
+        from_user_id: log.from_user_id,
+        to_user_id: log.to_user_id,
+        from_room_id: log.from_room_id,
+        to_room_id: log.to_room_id,
+        changed_by: log.changed_by_username || 'Неизвестно',
+        changed_by_name: log.changed_by_name || '',
+        comment: log.comment
+      }
+    });
+  });
+  
+  // 4. История обслуживания
+  const maintenanceLogs = db.prepare(`
+    SELECT 
+      ml.*,
+      mt.name as maintenance_type_name
+    FROM maintenance_logs ml
+    LEFT JOIN maintenance_types mt ON ml.maintenance_type_id = mt.id
+    WHERE ml.equipment_id = ? 
+    ORDER BY ml.created_at DESC
+  `).all(equipmentId);
+  
+  maintenanceLogs.forEach(log => {
+    history.push({
+      id: log.id,
+      date: log.created_at,
+      type: 'maintenance',
+      description: 'Техническое обслуживание',
+      details: {
+        type: log.maintenance_type_name || 'Не указан',
+        description: log.description,
+        cost: log.cost,
+        performed_by: log.performed_by
+      }
+    });
+  });
+  
+  // 5. История изменений названия
+  const nameLogs = db.prepare(`
+    SELECT nl.*, au.username as changed_by_username, au.full_name as changed_by_name
+    FROM name_logs nl
+    LEFT JOIN auth_users au ON nl.changed_by = au.id
+    WHERE nl.equipment_id = ? 
+    ORDER BY nl.date DESC
+  `).all(equipmentId);
+  
+  nameLogs.forEach(log => {
+    history.push({
+      id: log.id,
+      date: log.date,
+      type: 'name_change',
+      description: 'Изменение названия',
+      details: {
+        from_name: log.from_name,
+        to_name: log.to_name,
+        changed_by: log.changed_by_username || 'Неизвестно',
+        changed_by_name: log.changed_by_name || '',
+        comment: log.comment
+      }
+    });
+  });
+
+  // 6. История изменений полей (редактирование)
+  const fieldChanges = db.prepare(`
+    SELECT efc.*, au.username as changed_by_username, au.full_name as changed_by_name
+    FROM equipment_field_changes efc
+    LEFT JOIN auth_users au ON efc.changed_by = au.id
+    WHERE efc.equipment_id = ? 
+    ORDER BY efc.changed_at DESC
+  `).all(equipmentId);
+
+  // Группируем изменения по времени (в пределах 1 минуты считаем одним редактированием)
+  const groupedChanges = {};
+  fieldChanges.forEach(change => {
+    const timestamp = new Date(change.changed_at).getTime();
+    const groupKey = Math.floor(timestamp / 60000); // Группируем по минутам
+    
+    if (!groupedChanges[groupKey]) {
+      groupedChanges[groupKey] = {
+        id: `edit-${groupKey}`,
+        date: change.changed_at,
+        type: 'edit',
+        description: 'Редактирование оборудования',
+        changed_by: change.changed_by_username || 'Неизвестно',
+        changed_by_name: change.changed_by_name || '',
+        changes: []
+      };
+    }
+    
+    groupedChanges[groupKey].changes.push({
+      field: change.field_name,
+      old_value: change.old_value,
+      new_value: change.new_value
+    });
+  });
+
+  // Добавляем сгруппированные изменения в историю
+  Object.values(groupedChanges).forEach(group => {
+    history.push({
+      id: group.id,
+      date: group.date,
+      type: 'edit',
+      description: 'Редактирование оборудования',
+      details: {
+        changed_by: group.changed_by,
+        changed_by_name: group.changed_by_name,
+        changes: group.changes
+      }
+    });
+  });
+  
+  // Сортируем все записи по дате (новые сначала)
+  history.sort((a, b) => new Date(b.date) - new Date(a.date));
+  
+  res.json(history);
+});
+
+module.exports = router;

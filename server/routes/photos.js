@@ -179,10 +179,18 @@ router.delete('/equipment/:id/photos/:photoId', (req, res) => {
       return res.status(404).json({ error: 'Фотография не найдена' });
     }
 
-    // Удаляем файл с диска
+    // Удаляем оригинальный файл с диска
     const filePath = path.join(__dirname, '..', photo.file_path);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
+    }
+
+    // Удаляем миниатюру с диска если она есть
+    if (photo.thumbnail_path) {
+      const thumbnailPath = path.join(__dirname, '..', photo.thumbnail_path);
+      if (fs.existsSync(thumbnailPath)) {
+        fs.unlinkSync(thumbnailPath);
+      }
     }
 
     // Удаляем запись из БД

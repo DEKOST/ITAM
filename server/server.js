@@ -34,6 +34,9 @@ seedDemoData();
 // Запуск автоматических бэкапов
 backupService.startScheduledBackups();
 
+// Генерация миниатюр для существующих фотографий
+require('./services/thumbnailGenerator');
+
 // Очистка просроченных сессий при старте
 const cleanupExpiredSessions = () => {
   try {

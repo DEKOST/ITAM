@@ -60,6 +60,10 @@ export default function EquipmentView() {
       if (response.ok) {
         const data = await response.json();
         setPhotos(data);
+        
+        // Очищаем кэш миниатюр при изменении фотографий
+        localStorage.removeItem('primaryPhotos');
+        localStorage.removeItem('primaryPhotosTimestamp');
       }
     } catch (error) {
       console.error('Ошибка загрузки фотографий:', error);

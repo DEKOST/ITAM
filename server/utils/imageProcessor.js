@@ -104,12 +104,26 @@ async function processImage(originalPath, equipmentName) {
   const baseName = path.basename(originalPath, ext);
   
   // Создаем имя файла на основе названия оборудования
-  const newName = createFileName(equipmentName, ext);
-  const newPath = path.join(dir, newName);
+  let newName = createFileName(equipmentName, ext);
+  let newPath = path.join(dir, newName);
+  
+  // Если файл с таким именем уже существует, добавляем UUID
+  if (fs.existsSync(newPath)) {
+    const uniqueName = `${baseName}_${Date.now()}${ext}`;
+    newName = uniqueName;
+    newPath = path.join(dir, newName);
+  }
   
   // Создаем миниатюру
-  const thumbnailName = createFileName(equipmentName, '.jpg');
-  const thumbnailPath = path.join(dir, 'thumb_' + thumbnailName);
+  let thumbnailName = createFileName(equipmentName, '.jpg');
+  let thumbnailPath = path.join(dir, 'thumb_' + thumbnailName);
+  
+  // Если миниатюра с таким именем уже существует, добавляем UUID
+  if (fs.existsSync(thumbnailPath)) {
+    const uniqueThumbName = `thumb_${baseName}_${Date.now()}.jpg`;
+    thumbnailName = uniqueThumbName;
+    thumbnailPath = path.join(dir, thumbnailName);
+  }
   
   try {
     // Сжимаем оригинал
@@ -127,7 +141,7 @@ async function processImage(originalPath, equipmentName) {
       originalPath: newPath,
       thumbnailPath: thumbnailPath,
       originalName: newName,
-      thumbnailName: 'thumb_' + thumbnailName
+      thumbnailName: thumbnailName
     };
   } catch (error) {
     console.error('Ошибка обработки изображения:', error);

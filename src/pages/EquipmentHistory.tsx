@@ -109,8 +109,12 @@ export default function EquipmentHistory() {
     // Поля с датами
     const dateFields = ['purchase_date', 'warranty_end', 'last_maintenance_date', 'next_maintenance_date'];
     
+    console.log('formatFieldValue:', { field, value, isDateField: dateFields.includes(field) });
+    
     if (dateFields.includes(field) && value) {
-      return formatDateTime(value);
+      const formatted = formatDateTime(value);
+      console.log('Formatted date:', { value, formatted });
+      return formatted;
     }
     
     // Если значение пустое

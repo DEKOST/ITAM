@@ -38,13 +38,21 @@ function dateInputToISO(dateStr: string): string {
 export default function EquipmentForm() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { equipment, equipmentTypes, categories, users, rooms, addEquipment, updateEquipment, addRoom } = useData();
+  const { equipment, equipmentTypes, categories, users, rooms, subdivisions, addEquipment, updateEquipment, addRoom, addUser, addSubdivision } = useData();
   const isEdit = !!id;
   const existing = id ? equipment.find(e => e.id === id) : null;
   
   // Состояние для модального окна создания помещения
   const [showRoomModal, setShowRoomModal] = useState(false);
   const [newRoomForm, setNewRoomForm] = useState({ name: '', building: '', floor: 1, description: '' });
+  
+  // Состояние для модального окна создания сотрудника
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [newUserForm, setNewUserForm] = useState({ firstName: '', lastName: '', middleName: '', email: '', subdivisionId: '', position: '' });
+  
+  // Состояние для модального окна создания подразделения
+  const [showSubdivisionModal, setShowSubdivisionModal] = useState(false);
+  const [newSubdivisionForm, setNewSubdivisionForm] = useState({ name: '', description: '', parentId: '' });
 
   // Инициализируем форму только один раз при монтировании
   const [form, setForm] = useState(() => {
@@ -121,6 +129,36 @@ export default function EquipmentForm() {
     }
   };
 
+  const handleCreateUser = async () => {
+    if (!newUserForm.firstName.trim() || !newUserForm.lastName.trim()) {
+      alert('Введите имя и фамилию сотрудника');
+      return;
+    }
+    try {
+      const newUser = await addUser(newUserForm);
+      setForm({ ...form, userId: newUser.id });
+      setShowUserModal(false);
+      setNewUserForm({ firstName: '', lastName: '', middleName: '', email: '', subdivisionId: '', position: '' });
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const handleCreateSubdivision = async () => {
+    if (!newSubdivisionForm.name.trim()) {
+      alert('Введите название подразделения');
+      return;
+    }
+    try {
+      const newSubdivision = await addSubdivision(newSubdivisionForm);
+      setNewUserForm({ ...newUserForm, subdivisionId: newSubdivision.id });
+      setShowSubdivisionModal(false);
+      setNewSubdivisionForm({ name: '', description: '', parentId: '' });
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
   const groupedTypes = categories.map(cat => ({
     category: cat,
     types: equipmentTypes.filter(t => t.categoryId === cat.id)
@@ -178,10 +216,20 @@ export default function EquipmentForm() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Сотрудник</label>
-              <select value={form.userId} onChange={e => setForm({...form, userId: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">Не назначен</option>
-                {users.map(u => <option key={u.id} value={u.id}>{u.lastName} {u.firstName} {u.middleName || ''}</option>)}
-              </select>
+              <div className="flex gap-2">
+                <select value={form.userId} onChange={e => setForm({...form, userId: e.target.value})} className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="">Не назначен</option>
+                  {users.map(u => <option key={u.id} value={u.id}>{u.lastName} {u.firstName} {u.middleName || ''}</option>)}
+                </select>
+                <button 
+                  type="button"
+                  onClick={() => setShowUserModal(true)}
+                  className="px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+                  title="Создать нового сотрудника"
+                >
+                  +
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Помещение</label>
@@ -345,6 +393,140 @@ export default function EquipmentForm() {
             <div className="flex gap-3">
               <button onClick={handleCreateRoom} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">Создать</button>
               <button onClick={() => { setShowRoomModal(false); setNewRoomForm({ name: '', building: '', floor: 1, description: '' }); }} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Отмена</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно создания сотрудника */}
+      {showUserModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Новый сотрудник</h3>
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Фамилия *</label>
+                <input
+                  type="text"
+                  value={newUserForm.lastName}
+                  onChange={e => setNewUserForm({...newUserForm, lastName: e.target.value})}
+                  placeholder="Например: Иванов"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Имя *</label>
+                <input
+                  type="text"
+                  value={newUserForm.firstName}
+                  onChange={e => setNewUserForm({...newUserForm, firstName: e.target.value})}
+                  placeholder="Например: Иван"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Отчество</label>
+                <input
+                  type="text"
+                  value={newUserForm.middleName}
+                  onChange={e => setNewUserForm({...newUserForm, middleName: e.target.value})}
+                  placeholder="Например: Иванович"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={newUserForm.email}
+                  onChange={e => setNewUserForm({...newUserForm, email: e.target.value})}
+                  placeholder="Например: ivanov@company.ru"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Подразделение</label>
+                <div className="flex gap-2">
+                  <select 
+                    value={newUserForm.subdivisionId} 
+                    onChange={e => setNewUserForm({...newUserForm, subdivisionId: e.target.value})}
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Не указано</option>
+                    {subdivisions.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                  <button 
+                    type="button"
+                    onClick={() => setShowSubdivisionModal(true)}
+                    className="px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+                    title="Создать новое подразделение"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Должность</label>
+                <input
+                  type="text"
+                  value={newUserForm.position}
+                  onChange={e => setNewUserForm({...newUserForm, position: e.target.value})}
+                  placeholder="Например: Системный администратор"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={handleCreateUser} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">Создать</button>
+              <button onClick={() => { setShowUserModal(false); setNewUserForm({ firstName: '', lastName: '', middleName: '', email: '', subdivisionId: '', position: '' }); }} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Отмена</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно создания подразделения */}
+      {showSubdivisionModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Новое подразделение</h3>
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Название *</label>
+                <input
+                  type="text"
+                  value={newSubdivisionForm.name}
+                  onChange={e => setNewSubdivisionForm({...newSubdivisionForm, name: e.target.value})}
+                  placeholder="Например: IT отдел"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Родительское подразделение</label>
+                <select 
+                  value={newSubdivisionForm.parentId} 
+                  onChange={e => setNewSubdivisionForm({...newSubdivisionForm, parentId: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Нет (корневое)</option>
+                  {subdivisions.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Описание</label>
+                <textarea
+                  value={newSubdivisionForm.description}
+                  onChange={e => setNewSubdivisionForm({...newSubdivisionForm, description: e.target.value})}
+                  placeholder="Необязательно"
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={handleCreateSubdivision} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">Создать</button>
+              <button onClick={() => { setShowSubdivisionModal(false); setNewSubdivisionForm({ name: '', description: '', parentId: '' }); }} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Отмена</button>
             </div>
           </div>
         </div>

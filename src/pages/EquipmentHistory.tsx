@@ -109,12 +109,8 @@ export default function EquipmentHistory() {
     // Поля с датами
     const dateFields = ['purchase_date', 'warranty_end', 'last_maintenance_date', 'next_maintenance_date'];
     
-    console.log('formatFieldValue:', { field, value, isDateField: dateFields.includes(field) });
-    
     if (dateFields.includes(field) && value) {
-      const formatted = formatDateTime(value);
-      console.log('Formatted date:', { value, formatted });
-      return formatted;
+      return formatDateTime(value);
     }
     
     // Если значение пустое
@@ -312,9 +308,9 @@ export default function EquipmentHistory() {
                             {entry.details.changes.map((change: any, idx: number) => (
                               <div key={idx} className="text-sm">
                                 <span className="font-medium text-gray-700">{getFieldLabel(change.field)}:</span>{' '}
-                                <span className="line-through text-gray-400">{change.old_value || '—'}</span>
+                                <span className="line-through text-gray-400">{formatFieldValue(change.field, change.old_value)}</span>
                                 {' → '}
-                                <span className="text-gray-800">{change.new_value || '—'}</span>
+                                <span className="text-gray-800">{formatFieldValue(change.field, change.new_value)}</span>
                               </div>
                             ))}
                           </div>

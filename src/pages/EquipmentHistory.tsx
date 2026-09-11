@@ -104,6 +104,23 @@ export default function EquipmentHistory() {
     return labels[field] || field;
   };
 
+  // Функция для форматирования значений полей
+  const formatFieldValue = (field: string, value: any): string => {
+    // Поля с датами
+    const dateFields = ['purchase_date', 'warranty_end', 'last_maintenance_date', 'next_maintenance_date'];
+    
+    if (dateFields.includes(field) && value) {
+      return formatDateTime(value);
+    }
+    
+    // Если значение пустое
+    if (value === null || value === undefined || value === '') {
+      return '—';
+    }
+    
+    return String(value);
+  };
+
   // Функция для форматирования записи истории в читаемый вид
   const formatHistoryEntry = (entry: HistoryEntry) => {
     let details = '';
@@ -133,7 +150,7 @@ export default function EquipmentHistory() {
       details = `Пользователь: ${entry.details.changed_by_name || entry.details.changed_by || 'Неизвестно'}`;
       if (entry.details.changes) {
         const changes = entry.details.changes.map((c: any) => 
-          `${getFieldLabel(c.field)}: ${c.old_value || '—'} → ${c.new_value || '—'}`
+          `${getFieldLabel(c.field)}: ${formatFieldValue(c.field, c.old_value)} → ${formatFieldValue(c.field, c.new_value)}`
         ).join('; ');
         details += `, Изменения: ${changes}`;
       }

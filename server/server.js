@@ -23,8 +23,9 @@ app.use(apiLimiter); // Глобальный rate limiter
 
 // Раздача статических файлов (загруженные фотографии) с кэшированием
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
-  maxAge: '1d', // Кэшировать на 1 день
-  immutable: true // Файлы не изменяются
+  maxAge: '1h', // Кэшировать на 1 час (уменьшили для более быстрого обновления)
+  etag: true, // Включаем ETag для проверки изменений
+  lastModified: true // Включаем Last-Modified
 }));
 
 // Инициализация БД

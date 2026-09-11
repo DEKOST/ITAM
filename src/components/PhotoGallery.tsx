@@ -72,6 +72,13 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedPhoto, currentIndex]);
 
+  // Функция для очистки кэша миниатюр
+  const clearPhotosCache = () => {
+    localStorage.removeItem('primaryPhotos');
+    localStorage.removeItem('primaryPhotosTimestamp');
+    localStorage.removeItem('primaryPhotosVersion');
+  };
+
   const handleSetPrimary = async (photoId: string) => {
     try {
       const response = await fetch(`/api/equipment/${equipmentId}/photos/${photoId}/primary`, {
@@ -87,6 +94,8 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
         throw new Error(error.error || 'Ошибка');
       }
 
+      // Очищаем кэш при изменении основной фотографии
+      clearPhotosCache();
       onPhotosChange();
     } catch (err: any) {
       alert(err.message);
@@ -110,6 +119,8 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
         throw new Error(error.error || 'Ошибка');
       }
 
+      // Очищаем кэш при удалении фотографии
+      clearPhotosCache();
       onPhotosChange();
     } catch (err: any) {
       alert(err.message);
@@ -243,7 +254,7 @@ export default function PhotoGallery({ equipmentId, photos, onPhotosChange }: Ph
           <div className="p-4 bg-black/50">
             {/* Информация о файле */}
             <div className="text-center text-white mb-3">
-              <p className="font-medium text-sm sm:text-base">{selectedPhoto.original_name}</p>
+              <p className="font-medium text-sm sm:text-base">{selectedPhoto.filename}</p>
               <p className="text-xs text-gray-300">
                 {formatFileSize(selectedPhoto.file_size)}
                 {photos.length > 1 && ` • ${currentIndex + 1} из ${photos.length}`}

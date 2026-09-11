@@ -64,6 +64,7 @@ export default function EquipmentView() {
         // Очищаем кэш миниатюр при изменении фотографий
         localStorage.removeItem('primaryPhotos');
         localStorage.removeItem('primaryPhotosTimestamp');
+        localStorage.removeItem('primaryPhotosVersion');
       }
     } catch (error) {
       console.error('Ошибка загрузки фотографий:', error);

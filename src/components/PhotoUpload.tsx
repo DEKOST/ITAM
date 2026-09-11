@@ -52,6 +52,11 @@ export default function PhotoUpload({ equipmentId, onUploadComplete }: PhotoUplo
         }
       }
 
+      // Очищаем кэш миниатюр после загрузки новых фотографий
+      localStorage.removeItem('primaryPhotos');
+      localStorage.removeItem('primaryPhotosTimestamp');
+      localStorage.removeItem('primaryPhotosVersion');
+
       onUploadComplete();
       
       // Очищаем input

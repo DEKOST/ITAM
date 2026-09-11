@@ -20,15 +20,15 @@ export default function Equipment() {
 
   // Загрузка основных фотографий для всего оборудования одним запросом
   useEffect(() => {
-    const loadPrimaryPhotos = async () => {
+    const loadPrimaryPhotos = async (forceRefresh = false) => {
       try {
         // Проверяем кэш в localStorage
         const cachedPhotos = localStorage.getItem('primaryPhotos');
         const cacheTimestamp = localStorage.getItem('primaryPhotosTimestamp');
         const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : Infinity;
         
-        // Используем кэш если он не старше 1 часа
-        if (cachedPhotos && cacheAge < 3600000) {
+        // Используем кэш если он не старше 5 минут и не запрошено принудительное обновление
+        if (!forceRefresh && cachedPhotos && cacheAge < 300000) {
           setPrimaryPhotos(JSON.parse(cachedPhotos));
           return;
         }
@@ -36,15 +36,30 @@ export default function Equipment() {
         const photos = await getAllPrimaryPhotos();
         setPrimaryPhotos(photos);
         
-        // Сохраняем в кэш
+        // Сохраняем в кэш с версией
         localStorage.setItem('primaryPhotos', JSON.stringify(photos));
         localStorage.setItem('primaryPhotosTimestamp', Date.now().toString());
+        localStorage.setItem('primaryPhotosVersion', '1.0');
       } catch (error) {
         // Игнорируем ошибки
       }
     };
 
+    // Загружаем при монтировании
     loadPrimaryPhotos();
+
+    // Принудительно обновляем при возврате на вкладку
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadPrimaryPhotos(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [equipment]);
 
   const filtered = equipment.filter(eq => {

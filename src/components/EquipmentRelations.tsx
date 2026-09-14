@@ -66,10 +66,17 @@ export default function EquipmentRelations({ equipmentId }: EquipmentRelationsPr
       } else {
         await createEquipmentRelation(selectedEquipment, equipmentId, selectedRelationType);
       }
+      
+      // Перезагружаем связи
       await loadRelations();
+      
+      // Закрываем модальное окно и сбрасываем форму
       setShowAddModal(false);
       setSelectedEquipment('');
       setSelectedRelationType('component');
+      
+      // Показываем уведомление об успехе
+      alert('Связь успешно добавлена');
     } catch (error: any) {
       alert('Ошибка создания связи: ' + error.message);
     }

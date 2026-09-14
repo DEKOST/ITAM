@@ -9,6 +9,13 @@ interface ImportResult {
     error: string;
     data: any[];
   }>;
+  duplicates: Array<{
+    row: number;
+    reason: string;
+    existingId: string;
+    existingName: string;
+    data: any[];
+  }>;
   createdSubdivisions?: string[];
   createdUsers?: string[];
   createdEquipment?: string[];
@@ -204,16 +211,52 @@ export default function Import() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-lg font-semibold text-gray-700 mb-4">📊 Результаты импорта</h3>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <div className="text-3xl font-bold text-green-800">{result.success}</div>
               <div className="text-sm text-green-700">Успешно импортировано</div>
+            </div>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="text-3xl font-bold text-yellow-800">{result.duplicates.length}</div>
+              <div className="text-sm text-yellow-700">Пропущено дубликатов</div>
             </div>
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <div className="text-3xl font-bold text-red-800">{result.errors.length}</div>
               <div className="text-sm text-red-700">Ошибок</div>
             </div>
           </div>
+
+          {/* Дубликаты */}
+          {result.duplicates && result.duplicates.length > 0 && (
+            <div className="mb-6">
+              <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                ⚠️ Пропущенные дубликаты: {result.duplicates.length}
+              </h4>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 max-h-60 overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-yellow-200">
+                      <th className="text-left py-2 px-2 text-yellow-800">Строка</th>
+                      <th className="text-left py-2 px-2 text-yellow-800">Причина</th>
+                      <th className="text-left py-2 px-2 text-yellow-800">Существующая запись</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.duplicates.map((dup, idx) => (
+                      <tr key={idx} className="border-b border-yellow-100">
+                        <td className="py-2 px-2 text-yellow-700">{dup.row}</td>
+                        <td className="py-2 px-2 text-yellow-700">{dup.reason}</td>
+                        <td className="py-2 px-2 text-yellow-700 font-medium">{dup.existingName}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-xs text-yellow-700 mt-2">
+                💡 Эти записи уже существуют в системе и были пропущены для предотвращения дублирования.
+              </p>
+            </div>
+          )}
 
           {/* Созданные подразделения */}
           {result.createdSubdivisions && result.createdSubdivisions.length > 0 && (

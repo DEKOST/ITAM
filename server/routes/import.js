@@ -162,6 +162,7 @@ router.post('/users', upload.single('file'), (req, res) => {
     const results = {
       success: 0,
       errors: [],
+      duplicates: [],
       createdSubdivisions: [],
       createdUsers: []
     };
@@ -190,6 +191,52 @@ router.post('/users', upload.single('file'), (req, res) => {
               data: row
             });
             return;
+          }
+
+          // Проверка на дубликаты
+          const normalizedLastName = String(lastName).trim().toLowerCase();
+          const normalizedFirstName = String(firstName).trim().toLowerCase();
+          const normalizedMiddleName = middleName ? String(middleName).trim().toLowerCase() : '';
+          const normalizedEmail = email ? String(email).trim().toLowerCase() : '';
+
+          // Проверяем по ФИО
+          const duplicateByName = db.prepare(`
+            SELECT id, first_name, last_name, middle_name, email 
+            FROM users 
+            WHERE LOWER(last_name) = ? 
+              AND LOWER(first_name) = ? 
+              AND (LOWER(middle_name) = ? OR (LOWER(middle_name) = '' AND ? = ''))
+          `).get(normalizedLastName, normalizedFirstName, normalizedMiddleName, normalizedMiddleName);
+
+          if (duplicateByName) {
+            results.duplicates.push({
+              row: index + 2,
+              reason: 'Сотрудник с таким ФИО уже существует',
+              existingId: duplicateByName.id,
+              existingName: `${duplicateByName.last_name} ${duplicateByName.first_name} ${duplicateByName.middle_name || ''}`.trim(),
+              data: row
+            });
+            return;
+          }
+
+          // Проверяем по email (если указан)
+          if (normalizedEmail) {
+            const duplicateByEmail = db.prepare(`
+              SELECT id, first_name, last_name, middle_name, email 
+              FROM users 
+              WHERE LOWER(email) = ?
+            `).get(normalizedEmail);
+
+            if (duplicateByEmail) {
+              results.duplicates.push({
+                row: index + 2,
+                reason: 'Сотрудник с таким email уже существует',
+                existingId: duplicateByEmail.id,
+                existingName: `${duplicateByEmail.last_name} ${duplicateByEmail.first_name} ${duplicateByEmail.middle_name || ''}`.trim(),
+                data: row
+              });
+              return;
+            }
           }
 
           // Создаём или находим подразделение
@@ -241,7 +288,7 @@ router.post('/users', upload.single('file'), (req, res) => {
     })();
 
     res.json({
-      message: `Импорт завершён. Успешно: ${results.success}, Ошибок: ${results.errors.length}`,
+      message: `Импорт завершён. Успешно: ${results.success}, Дубликатов: ${results.duplicates.length}, Ошибок: ${results.errors.length}`,
       results
     });
 
@@ -273,6 +320,7 @@ router.post('/equipment', upload.single('file'), (req, res) => {
     const results = {
       success: 0,
       errors: [],
+      duplicates: [],
       createdEquipment: []
     };
 
@@ -380,6 +428,50 @@ router.post('/equipment', upload.single('file'), (req, res) => {
             return '';
           };
 
+          // Проверка на дубликаты
+          const normalizedSerialNumber = serialNumber ? String(serialNumber).trim() : '';
+          const normalizedInventoryNumber = inventoryNumber ? String(inventoryNumber).trim() : '';
+
+          // Проверяем по инвентарному номеру (если указан)
+          if (normalizedInventoryNumber) {
+            const duplicateByInventory = db.prepare(`
+              SELECT id, name, serial_number, inventory_number 
+              FROM equipment 
+              WHERE inventory_number = ?
+            `).get(normalizedInventoryNumber);
+
+            if (duplicateByInventory) {
+              results.duplicates.push({
+                row: index + 2,
+                reason: `Оборудование с инвентарным номером "${normalizedInventoryNumber}" уже существует`,
+                existingId: duplicateByInventory.id,
+                existingName: duplicateByInventory.name,
+                data: row
+              });
+              return;
+            }
+          }
+
+          // Проверяем по серийному номеру (если указан)
+          if (normalizedSerialNumber) {
+            const duplicateBySerial = db.prepare(`
+              SELECT id, name, serial_number, inventory_number 
+              FROM equipment 
+              WHERE serial_number = ? AND serial_number != ''
+            `).get(normalizedSerialNumber);
+
+            if (duplicateBySerial) {
+              results.duplicates.push({
+                row: index + 2,
+                reason: `Оборудование с серийным номером "${normalizedSerialNumber}" уже существует`,
+                existingId: duplicateBySerial.id,
+                existingName: duplicateBySerial.name,
+                data: row
+              });
+              return;
+            }
+          }
+
           // Создаём оборудование
           const equipmentId = uuidv4();
           db.prepare(`
@@ -422,7 +514,7 @@ router.post('/equipment', upload.single('file'), (req, res) => {
     })();
 
     res.json({
-      message: `Импорт завершён. Успешно: ${results.success}, Ошибок: ${results.errors.length}`,
+      message: `Импорт завершён. Успешно: ${results.success}, Дубликатов: ${results.duplicates.length}, Ошибок: ${results.errors.length}`,
       results
     });
 

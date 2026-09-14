@@ -21,6 +21,9 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(apiLimiter); // Глобальный rate limiter
 
+// Импорт данных из Excel
+app.use('/api/import', require('./routes/import'));
+
 // Раздача статических файлов (загруженные фотографии) с кэшированием
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
   maxAge: '1h', // Кэшировать на 1 час (уменьшили для более быстрого обновления)

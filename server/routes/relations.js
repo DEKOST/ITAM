@@ -56,7 +56,7 @@ router.get('/:id/relations', (req, res) => {
 });
 
 // Создать связь между оборудованием
-router.post('/relations', (req, res) => {
+router.post('/', (req, res) => {
   try {
     const { parent_id, child_id, relation_type } = req.body;
 
@@ -123,7 +123,7 @@ router.post('/relations', (req, res) => {
 });
 
 // Удалить связь по ID связи
-router.delete('/relations/:id', (req, res) => {
+router.delete('/:id', (req, res) => {
   try {
     const relationId = req.params.id;
 
@@ -141,7 +141,7 @@ router.delete('/relations/:id', (req, res) => {
 });
 
 // Удалить связь между двумя устройствами
-router.delete('/relations/between/:equipment1/:equipment2', (req, res) => {
+router.delete('/between/:equipment1/:equipment2', (req, res) => {
   try {
     const equipment1 = req.params.equipment1;
     const equipment2 = req.params.equipment2;
@@ -209,7 +209,7 @@ router.get('/available-equipment', (req, res) => {
 
     // Поиск по названию или сотруднику
     if (search) {
-      query += ' AND (e.name LIKE ? OR e.inventory_number LIKE ? OR (u.first_name || " " || u.last_name) LIKE ?)';
+      query += ' AND (e.name LIKE ? OR e.inventory_number LIKE ? OR (u.first_name || \' \' || u.last_name) LIKE ?)';
       const searchParam = `%${search}%`;
       params.push(searchParam, searchParam, searchParam);
     }

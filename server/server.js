@@ -8,6 +8,7 @@ const { authMiddleware } = require('./middleware/auth');
 const { apiLimiter } = require('./middleware/rateLimit');
 const { getActiveCertificate } = require('./routes/certificates');
 const backupService = require('./services/backup');
+const { cleanupAllBrokenRelations } = require('./routes/relations');
 
 const app = express();
 const HTTP_PORT = process.env.PORT || 3001;
@@ -34,6 +35,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
 // Инициализация БД
 initDatabase();
 seedDemoData();
+
+// Очистка "битых" связей при старте
+cleanupAllBrokenRelations();
 
 // Запуск автоматических бэкапов
 backupService.startScheduledBackups();

@@ -163,7 +163,6 @@ export const createEquipmentRelation = (parentId: string, childId: string, relat
 export const deleteEquipmentRelation = (relationId: string) => fetchAPI(`/relations/${relationId}`, { method: 'DELETE' });
 export const deleteEquipmentRelationBetween = (equipment1Id: string, equipment2Id: string) => 
   fetchAPI(`/relations/between/${equipment1Id}/${equipment2Id}`, { method: 'DELETE' });
-export const deleteBrokenRelations = (equipmentId: string) => fetchAPI(`/relations/${equipmentId}/broken`, { method: 'DELETE' });
 export const getRelationTypes = () => fetchAPI('/relation-types');
 export const getAvailableEquipment = (search?: string, excludeId?: string) => {
   const params = new URLSearchParams();

@@ -8,6 +8,23 @@ router.get('/:id/relations', (req, res) => {
   try {
     const equipmentId = req.params.id;
 
+    // Автоматически удаляем "битые" связи (где связанное оборудование было удалено)
+    const brokenRelations = db.prepare(`
+      SELECT er.id 
+      FROM equipment_relations er
+      LEFT JOIN equipment e1 ON er.child_equipment_id = e1.id
+      LEFT JOIN equipment e2 ON er.parent_equipment_id = e2.id
+      WHERE (er.parent_equipment_id = ? OR er.child_equipment_id = ?)
+        AND (e1.id IS NULL OR e2.id IS NULL)
+    `).all(equipmentId, equipmentId);
+
+    if (brokenRelations.length > 0) {
+      const ids = brokenRelations.map(r => r.id);
+      const placeholders = ids.map(() => '?').join(',');
+      db.prepare(`DELETE FROM equipment_relations WHERE id IN (${placeholders})`).run(...ids);
+      console.log(`Автоматически удалено ${brokenRelations.length} битых связей для оборудования ${equipmentId}`);
+    }
+
     // Получаем дочерние элементы (что привязано к этому оборудованию)
     const children = db.prepare(`
       SELECT 
@@ -42,29 +59,9 @@ router.get('/:id/relations', (req, res) => {
       ORDER BY er.relation_type, e.name
     `).all(equipmentId);
 
-    // Фильтруем связи, где связанное оборудование было удалено
-    const validChildren = children.filter(child => child.id !== null);
-    const validParents = parents.filter(parent => parent.id !== null);
-    
-    // Находим "битые" связи (где оборудование было удалено)
-    const brokenChildren = children.filter(child => child.id === null);
-    const brokenParents = parents.filter(parent => parent.id === null);
-
-    // Отладочная информация
-    console.log(`Загрузка связей для оборудования ${equipmentId}:`, {
-      children_count: validChildren.length,
-      parents_count: validParents.length,
-      broken_children: brokenChildren.length,
-      broken_parents: brokenParents.length
-    });
-
     res.json({ 
-      children: validChildren, 
-      parents: validParents,
-      broken: {
-        children: brokenChildren.length,
-        parents: brokenParents.length
-      }
+      children: children, 
+      parents: parents
     });
   } catch (error) {
     console.error('Ошибка загрузки связей:', error);
@@ -276,4 +273,33 @@ router.delete('/:id/broken', (req, res) => {
   }
 });
 
+// Функция для очистки всех "битых" связей в базе данных
+function cleanupAllBrokenRelations() {
+  try {
+    const brokenRelations = db.prepare(`
+      SELECT er.id 
+      FROM equipment_relations er
+      LEFT JOIN equipment e1 ON er.child_equipment_id = e1.id
+      LEFT JOIN equipment e2 ON er.parent_equipment_id = e2.id
+      WHERE e1.id IS NULL OR e2.id IS NULL
+    `).all();
+
+    if (brokenRelations.length === 0) {
+      console.log('Битых связей не найдено');
+      return 0;
+    }
+
+    const ids = brokenRelations.map(r => r.id);
+    const placeholders = ids.map(() => '?').join(',');
+    db.prepare(`DELETE FROM equipment_relations WHERE id IN (${placeholders})`).run(...ids);
+
+    console.log(`Автоматически удалено ${brokenRelations.length} битых связей из базы данных`);
+    return brokenRelations.length;
+  } catch (error) {
+    console.error('Ошибка очистки битых связей:', error);
+    return 0;
+  }
+}
+
 module.exports = router;
+module.exports.cleanupAllBrokenRelations = cleanupAllBrokenRelations;

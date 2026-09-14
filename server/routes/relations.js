@@ -301,5 +301,7 @@ function cleanupAllBrokenRelations() {
   }
 }
 
-module.exports = router;
-module.exports.cleanupAllBrokenRelations = cleanupAllBrokenRelations;
+module.exports = {
+  router,
+  cleanupAllBrokenRelations
+};

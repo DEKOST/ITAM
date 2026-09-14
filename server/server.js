@@ -9,6 +9,7 @@ const { apiLimiter } = require('./middleware/rateLimit');
 const { getActiveCertificate } = require('./routes/certificates');
 const backupService = require('./services/backup');
 const { cleanupAllBrokenRelations } = require('./routes/relations');
+const relationsRouter = require('./routes/relations').router;
 
 const app = express();
 const HTTP_PORT = process.env.PORT || 3001;
@@ -95,7 +96,7 @@ app.use('/api/certificates', authMiddleware, require('./routes/certificates'));
 app.use('/api/backups', authMiddleware, require('./routes/backups'));
 app.use('/api', authMiddleware, require('./routes/history'));
 app.use('/api', authMiddleware, require('./routes/photos'));
-app.use('/api/relations', authMiddleware, require('./routes/relations'));
+app.use('/api/relations', authMiddleware, relationsRouter);
 app.use('/api/accessories', authMiddleware, require('./routes/accessories'));
 
 // Статистика

@@ -128,9 +128,12 @@ router.delete('/relations/:id', (req, res) => {
 // Получить все доступные типы связей
 router.get('/relation-types', (req, res) => {
   const types = [
-    { value: 'component', label: 'Компонент', description: 'Дочернее оборудование является компонентом родительского' },
-    { value: 'peripheral', label: 'Периферия', description: 'Периферийное устройство (монитор, клавиатура, мышь)' },
-    { value: 'accessory', label: 'Аксессуар', description: 'Дополнительный аксессуар' },
+    { value: 'component', label: 'Компонент', description: 'Внутренний компонент (HDD, RAM, видеокарта)' },
+    { value: 'monitor', label: 'Монитор', description: 'Подключённый монитор' },
+    { value: 'ups', label: 'ИБП', description: 'Источник бесперебойного питания' },
+    { value: 'dock', label: 'Док-станция', description: 'Док-станция или хаб' },
+    { value: 'printer', label: 'Принтер/МФУ', description: 'Подключённый принтер или МФУ' },
+    { value: 'accessory', label: 'Аксессуар', description: 'Дополнительный аксессуар (веб-камера, колонки)' },
     { value: 'backup', label: 'Резервное', description: 'Резервное оборудование' },
     { value: 'related', label: 'Связанное', description: 'Просто связанное оборудование' }
   ];

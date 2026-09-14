@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { EquipmentStatus, STATUS_LABELS } from '../types';
+import RoomSelector from '../components/RoomSelector';
+import UserSelector from '../components/UserSelector';
 import AutocompleteInput from '../components/AutocompleteInput';
 
 // Генерация уникального инвентарного номера в формате INV-XXXXXXXX
@@ -215,37 +217,37 @@ export default function EquipmentForm() {
           <h3 className="text-md font-semibold text-gray-700 mb-3">Привязка</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Сотрудник</label>
               <div className="flex gap-2">
-                <select value={form.userId} onChange={e => setForm({...form, userId: e.target.value})} className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">Не назначен</option>
-                  {users.map(u => <option key={u.id} value={u.id}>{u.lastName} {u.firstName} {u.middleName || ''}</option>)}
-                </select>
-                <button 
-                  type="button"
-                  onClick={() => setShowUserModal(true)}
-                  className="px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
-                  title="Создать нового сотрудника"
-                >
-                  +
-                </button>
+                <div className="flex-1">
+                  <UserSelector value={form.userId} onChange={(userId) => setForm({...form, userId})} />
+                </div>
+                <div className="flex items-end">
+                  <button 
+                    type="button"
+                    onClick={() => setShowUserModal(true)}
+                    className="px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+                    title="Создать нового сотрудника"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Помещение</label>
               <div className="flex gap-2">
-                <select value={form.roomId} onChange={e => setForm({...form, roomId: e.target.value})} className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">Не указано</option>
-                  {rooms.map(r => <option key={r.id} value={r.id}>{r.name} ({r.building})</option>)}
-                </select>
-                <button 
-                  type="button"
-                  onClick={() => setShowRoomModal(true)}
-                  className="px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
-                  title="Создать новое помещение"
-                >
-                  +
-                </button>
+                <div className="flex-1">
+                  <RoomSelector value={form.roomId} onChange={(roomId) => setForm({...form, roomId})} />
+                </div>
+                <div className="flex items-end">
+                  <button 
+                    type="button"
+                    onClick={() => setShowRoomModal(true)}
+                    className="px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+                    title="Создать новое помещение"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
             </div>
           </div>

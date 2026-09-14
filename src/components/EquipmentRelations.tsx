@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
-import { getEquipmentRelations, createEquipmentRelation, deleteEquipmentRelation, deleteEquipmentRelationBetween, getRelationTypes } from '../api';
+import { getEquipmentRelations, createEquipmentRelation, deleteEquipmentRelation, deleteEquipmentRelationBetween, getRelationTypes, getAvailableEquipment } from '../api';
 import { Link } from 'react-router-dom';
 
 interface EquipmentRelation {
@@ -27,6 +27,9 @@ export default function EquipmentRelations({ equipmentId }: EquipmentRelationsPr
   const [addMode, setAddMode] = useState<'child' | 'parent'>('child');
   const [selectedEquipment, setSelectedEquipment] = useState('');
   const [selectedRelationType, setSelectedRelationType] = useState('component');
+  const [availableEquipment, setAvailableEquipment] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     loadRelations();
@@ -106,11 +109,38 @@ export default function EquipmentRelations({ equipmentId }: EquipmentRelationsPr
     return found ? found.label : type;
   };
 
-  // Фильтруем оборудование для выбора (исключаем текущее)
-  const availableEquipment = equipment.filter(eq => eq.id !== equipmentId);
+  // Загрузка доступного оборудования с поиском
+  const loadAvailableEquipment = async (search?: string) => {
+    setSearching(true);
+    try {
+      const data = await getAvailableEquipment(search, equipmentId);
+      setAvailableEquipment(data);
+    } catch (error) {
+      console.error('Ошибка загрузки оборудования:', error);
+    } finally {
+      setSearching(false);
+    }
+  };
 
-  if (loading) {
-    return <div className="text-center py-4 text-gray-500">Загрузка связей...</div>;
+  // Загружаем оборудование при открытии модального окна
+  useEffect(() => {
+    if (showAddModal) {
+      loadAvailableEquipment();
+    }
+  }, [showAddModal]);
+
+  // Обработчик поиска с debounce
+  useEffect(() => {
+    if (!showAddModal) return;
+    
+    const timer = setTimeout(() => {
+      loadAvailableEquipment(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, showAddModal]);
+  
+  if (loading) {    return <div className="text-center py-4 text-gray-500">Загрузка связей...</div>;
   }
 
   return (
@@ -256,18 +286,41 @@ export default function EquipmentRelations({ equipmentId }: EquipmentRelationsPr
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Оборудование *</label>
-                <select
-                  value={selectedEquipment}
-                  onChange={e => setSelectedEquipment(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Выберите оборудование</option>
-                  {availableEquipment.map(eq => (
-                    <option key={eq.id} value={eq.id}>
-                      {eq.name} ({eq.inventoryNumber})
-                    </option>
-                  ))}
-                </select>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Поиск по названию или сотруднику..."
+                  className="w-full px-3 py-2 mb-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-lg">
+                  {searching ? (
+                    <div className="p-3 text-center text-gray-500 text-sm">Поиск...</div>
+                  ) : availableEquipment.length === 0 ? (
+                    <div className="p-3 text-center text-gray-500 text-sm">Оборудование не найдено</div>
+                  ) : (
+                    availableEquipment.map(eq => (
+                      <button
+                        key={eq.id}
+                        onClick={() => setSelectedEquipment(eq.id)}
+                        className={`w-full px-3 py-2 text-left hover:bg-blue-50 border-b border-gray-100 last:border-b-0 ${
+                          selectedEquipment === eq.id ? 'bg-blue-50' : ''
+                        }`}
+                      >
+                        <div className="font-medium text-sm text-gray-800">{eq.name}</div>
+                        <div className="text-xs text-gray-500">
+                          {eq.type_name} • {eq.inventory_number}
+                          {eq.user_name && ` • 👤 ${eq.user_name}`}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+                {selectedEquipment && (
+                  <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
+                    ✓ Выбрано: {availableEquipment.find(eq => eq.id === selectedEquipment)?.name}
+                  </div>
+                )}
               </div>
             </div>
 

@@ -180,4 +180,47 @@ router.get('/relation-types', (req, res) => {
   res.json(types);
 });
 
+// Получить оборудование для выбора связей (с поиском)
+router.get('/available-equipment', (req, res) => {
+  try {
+    const { search, exclude_id } = req.query;
+
+    let query = `
+      SELECT 
+        e.id,
+        e.name,
+        e.serial_number,
+        e.inventory_number,
+        et.name as type_name,
+        u.first_name || ' ' || u.last_name as user_name
+      FROM equipment e
+      LEFT JOIN equipment_types et ON e.type_id = et.id
+      LEFT JOIN users u ON e.user_id = u.id
+      WHERE 1=1
+    `;
+
+    const params = [];
+
+    // Исключаем текущее оборудование
+    if (exclude_id) {
+      query += ' AND e.id != ?';
+      params.push(exclude_id);
+    }
+
+    // Поиск по названию или сотруднику
+    if (search) {
+      query += ' AND (e.name LIKE ? OR e.inventory_number LIKE ? OR (u.first_name || " " || u.last_name) LIKE ?)';
+      const searchParam = `%${search}%`;
+      params.push(searchParam, searchParam, searchParam);
+    }
+
+    query += ' ORDER BY e.name LIMIT 50';
+
+    const equipment = db.prepare(query).all(...params);
+    res.json(equipment);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

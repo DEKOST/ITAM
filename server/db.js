@@ -277,6 +277,28 @@ function initDatabase() {
       UNIQUE(parent_equipment_id, child_equipment_id)
     );
 
+    -- Типы аксессуаров (мышь, клавиатура и т.д.)
+    CREATE TABLE IF NOT EXISTS accessory_types (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      icon TEXT DEFAULT '🔌',
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Связь оборудования с аксессуарами
+    CREATE TABLE IF NOT EXISTS equipment_accessories (
+      id TEXT PRIMARY KEY,
+      equipment_id TEXT NOT NULL,
+      accessory_type_id TEXT NOT NULL,
+      quantity INTEGER DEFAULT 1,
+      notes TEXT DEFAULT '',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (equipment_id) REFERENCES equipment(id) ON DELETE CASCADE,
+      FOREIGN KEY (accessory_type_id) REFERENCES accessory_types(id) ON DELETE CASCADE,
+      UNIQUE(equipment_id, accessory_type_id)
+    );
+
     -- Индексы для быстрого поиска
     CREATE INDEX IF NOT EXISTS idx_equipment_type ON equipment(type_id);
     CREATE INDEX IF NOT EXISTS idx_equipment_user ON equipment(user_id);
@@ -452,6 +474,62 @@ function initDatabase() {
           FOREIGN KEY (parent_equipment_id) REFERENCES equipment(id) ON DELETE CASCADE,
           FOREIGN KEY (child_equipment_id) REFERENCES equipment(id) ON DELETE CASCADE,
           UNIQUE(parent_equipment_id, child_equipment_id)
+        )
+      `);
+    }
+  } catch (e) {
+    // Игнорируем ошибки миграции
+  }
+
+  // Миграция: создаём таблицу accessory_types если её нет
+  try {
+    const tableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='accessory_types'").get();
+    if (!tableExists) {
+      db.exec(`
+        CREATE TABLE accessory_types (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          icon TEXT DEFAULT '🔌',
+          is_active INTEGER DEFAULT 1,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      
+      // Добавляем стандартные типы аксессуаров
+      const { v4: uuidv4 } = require('uuid');
+      const defaultAccessories = [
+        { name: 'Мышь', icon: '🖱️' },
+        { name: 'Клавиатура', icon: '⌨️' },
+        { name: 'Веб-камера', icon: '📷' },
+        { name: 'Гарнитура', icon: '🎧' },
+        { name: 'Колонки', icon: '🔊' },
+        { name: 'USB-хаб', icon: '🔌' }
+      ];
+      
+      const insertAccessory = db.prepare('INSERT INTO accessory_types (id, name, icon) VALUES (?, ?, ?)');
+      for (const acc of defaultAccessories) {
+        insertAccessory.run(uuidv4(), acc.name, acc.icon);
+      }
+    }
+  } catch (e) {
+    // Игнорируем ошибки миграции
+  }
+
+  // Миграция: создаём таблицу equipment_accessories если её нет
+  try {
+    const tableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='equipment_accessories'").get();
+    if (!tableExists) {
+      db.exec(`
+        CREATE TABLE equipment_accessories (
+          id TEXT PRIMARY KEY,
+          equipment_id TEXT NOT NULL,
+          accessory_type_id TEXT NOT NULL,
+          quantity INTEGER DEFAULT 1,
+          notes TEXT DEFAULT '',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (equipment_id) REFERENCES equipment(id) ON DELETE CASCADE,
+          FOREIGN KEY (accessory_type_id) REFERENCES accessory_types(id) ON DELETE CASCADE,
+          UNIQUE(equipment_id, accessory_type_id)
         )
       `);
     }

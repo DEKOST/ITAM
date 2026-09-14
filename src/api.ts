@@ -164,3 +164,22 @@ export const deleteEquipmentRelation = (relationId: string) => fetchAPI(`/relati
 export const deleteEquipmentRelationBetween = (equipment1Id: string, equipment2Id: string) => 
   fetchAPI(`/relations/between/${equipment1Id}/${equipment2Id}`, { method: 'DELETE' });
 export const getRelationTypes = () => fetchAPI('/relation-types');
+export const getAvailableEquipment = (search?: string, excludeId?: string) => {
+  const params = new URLSearchParams();
+  if (search) params.append('search', search);
+  if (excludeId) params.append('exclude_id', excludeId);
+  return fetchAPI(`/relations/available-equipment?${params.toString()}`);
+};
+
+// Accessories
+export const getAccessoryTypes = () => fetchAPI('/accessories/types');
+export const createAccessoryType = (name: string, icon?: string) => 
+  fetchAPI('/accessories/types', { method: 'POST', body: JSON.stringify({ name, icon }) });
+export const updateAccessoryType = (id: string, name: string, icon?: string) => 
+  fetchAPI(`/accessories/types/${id}`, { method: 'PUT', body: JSON.stringify({ name, icon }) });
+export const deleteAccessoryType = (id: string) => fetchAPI(`/accessories/types/${id}`, { method: 'DELETE' });
+export const getEquipmentAccessories = (equipmentId: string) => fetchAPI(`/accessories/${equipmentId}/accessories`);
+export const addEquipmentAccessory = (equipmentId: string, accessoryTypeId: string, quantity?: number, notes?: string) => 
+  fetchAPI(`/accessories/${equipmentId}/accessories`, { method: 'POST', body: JSON.stringify({ accessory_type_id: accessoryTypeId, quantity, notes }) });
+export const removeEquipmentAccessory = (equipmentId: string, accessoryId: string) => 
+  fetchAPI(`/accessories/${equipmentId}/accessories/${accessoryId}`, { method: 'DELETE' });

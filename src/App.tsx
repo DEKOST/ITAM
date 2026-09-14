@@ -25,6 +25,7 @@ import Backups from './pages/Backups';
 import EquipmentTemplates from './pages/EquipmentTemplates';
 import Settings from './pages/Settings';
 import Import from './pages/Import';
+import AccessoryTypes from './pages/AccessoryTypes';
 
 function ProtectedRoute({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
   const { isAuthenticated, isAdmin, loading } = useAuth();
@@ -103,6 +104,7 @@ function AppRoutes() {
       <Route path="/auth-users" element={<ProtectedRoute adminOnly><AuthUsers /></ProtectedRoute>} />
       <Route path="/backups" element={<ProtectedRoute adminOnly><Backups /></ProtectedRoute>} />
       <Route path="/equipment-templates" element={<ProtectedRoute><EquipmentTemplates /></ProtectedRoute>} />
+      <Route path="/accessory-types" element={<ProtectedRoute adminOnly><AccessoryTypes /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
       <Route path="/import" element={<ProtectedRoute adminOnly><Import /></ProtectedRoute>} />
 

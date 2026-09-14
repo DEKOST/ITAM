@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
-import { getEquipmentRelations, createEquipmentRelation, deleteEquipmentRelation, deleteEquipmentRelationBetween, getRelationTypes, getAvailableEquipment } from '../api';
+import { getEquipmentRelations, createEquipmentRelation, deleteEquipmentRelation, deleteEquipmentRelationBetween, deleteBrokenRelations, getRelationTypes, getAvailableEquipment } from '../api';
 import { Link } from 'react-router-dom';
 
 interface EquipmentRelation {
@@ -21,6 +21,7 @@ export default function EquipmentRelations({ equipmentId }: EquipmentRelationsPr
   const { equipment } = useData();
   const [children, setChildren] = useState<EquipmentRelation[]>([]);
   const [parents, setParents] = useState<EquipmentRelation[]>([]);
+  const [brokenInfo, setBrokenInfo] = useState<{ children: number; parents: number }>({ children: 0, parents: 0 });
   const [relationTypes, setRelationTypes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -43,10 +44,28 @@ export default function EquipmentRelations({ equipmentId }: EquipmentRelationsPr
       console.log('Получены связи:', data);
       setChildren(data.children || []);
       setParents(data.parents || []);
+      if (data.broken) {
+        setBrokenInfo(data.broken);
+      }
     } catch (error) {
       console.error('Ошибка загрузки связей:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteBroken = async () => {
+    if (!confirm('Удалить все битые связи? Это удалит связи с оборудованием, которое было удалено из системы.')) {
+      return;
+    }
+    
+    try {
+      const result = await deleteBrokenRelations(equipmentId);
+      alert(result.message || 'Битые связи удалены');
+      await loadRelations();
+    } catch (error) {
+      console.error('Ошибка удаления битых связей:', error);
+      alert('Ошибка удаления битых связей');
     }
   };
 
@@ -147,12 +166,23 @@ export default function EquipmentRelations({ equipmentId }: EquipmentRelationsPr
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-700">🔗 Связи оборудования</h3>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
-        >
-          + Добавить связь
-        </button>
+        <div className="flex gap-2">
+          {(brokenInfo.children > 0 || brokenInfo.parents > 0) && (
+            <button
+              onClick={handleDeleteBroken}
+              className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700"
+              title="Удалить связи с удалённым оборудованием"
+            >
+              🗑️ Очистить битые связи ({brokenInfo.children + brokenInfo.parents})
+            </button>
+          )}
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+          >
+            + Добавить связь
+          </button>
+        </div>
       </div>
 
       {/* Родительские элементы */}

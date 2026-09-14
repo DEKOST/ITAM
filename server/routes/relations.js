@@ -19,7 +19,7 @@ router.get('/:id/relations', (req, res) => {
         e.inventory_number,
         et.name as type_name
       FROM equipment_relations er
-      JOIN equipment e ON er.child_equipment_id = e.id
+      LEFT JOIN equipment e ON er.child_equipment_id = e.id
       LEFT JOIN equipment_types et ON e.type_id = et.id
       WHERE er.parent_equipment_id = ?
       ORDER BY er.relation_type, e.name
@@ -36,19 +36,36 @@ router.get('/:id/relations', (req, res) => {
         e.inventory_number,
         et.name as type_name
       FROM equipment_relations er
-      JOIN equipment e ON er.parent_equipment_id = e.id
+      LEFT JOIN equipment e ON er.parent_equipment_id = e.id
       LEFT JOIN equipment_types et ON e.type_id = et.id
       WHERE er.child_equipment_id = ?
       ORDER BY er.relation_type, e.name
     `).all(equipmentId);
 
+    // Фильтруем связи, где связанное оборудование было удалено
+    const validChildren = children.filter(child => child.id !== null);
+    const validParents = parents.filter(parent => parent.id !== null);
+    
+    // Находим "битые" связи (где оборудование было удалено)
+    const brokenChildren = children.filter(child => child.id === null);
+    const brokenParents = parents.filter(parent => parent.id === null);
+
     // Отладочная информация
     console.log(`Загрузка связей для оборудования ${equipmentId}:`, {
-      children_count: children.length,
-      parents_count: parents.length
+      children_count: validChildren.length,
+      parents_count: validParents.length,
+      broken_children: brokenChildren.length,
+      broken_parents: brokenParents.length
     });
 
-    res.json({ children, parents });
+    res.json({ 
+      children: validChildren, 
+      parents: validParents,
+      broken: {
+        children: brokenChildren.length,
+        parents: brokenParents.length
+      }
+    });
   } catch (error) {
     console.error('Ошибка загрузки связей:', error);
     res.status(500).json({ error: error.message });
@@ -218,6 +235,42 @@ router.get('/available-equipment', (req, res) => {
 
     const equipment = db.prepare(query).all(...params);
     res.json(equipment);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Удалить все "битые" связи для оборудования
+router.delete('/:id/broken', (req, res) => {
+  try {
+    const equipmentId = req.params.id;
+
+    // Находим все связи, где связанное оборудование было удалено
+    const brokenRelations = db.prepare(`
+      SELECT er.id 
+      FROM equipment_relations er
+      LEFT JOIN equipment e1 ON er.child_equipment_id = e1.id
+      LEFT JOIN equipment e2 ON er.parent_equipment_id = e2.id
+      WHERE (er.parent_equipment_id = ? OR er.child_equipment_id = ?)
+        AND (e1.id IS NULL OR e2.id IS NULL)
+    `).all(equipmentId, equipmentId);
+
+    if (brokenRelations.length === 0) {
+      return res.json({ success: true, message: 'Битых связей не найдено', deleted: 0 });
+    }
+
+    // Удаляем все битые связи
+    const ids = brokenRelations.map(r => r.id);
+    const placeholders = ids.map(() => '?').join(',');
+    db.prepare(`DELETE FROM equipment_relations WHERE id IN (${placeholders})`).run(...ids);
+
+    console.log(`Удалено ${brokenRelations.length} битых связей для оборудования ${equipmentId}`);
+
+    res.json({ 
+      success: true, 
+      message: `Удалено ${brokenRelations.length} битых связей`,
+      deleted: brokenRelations.length
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

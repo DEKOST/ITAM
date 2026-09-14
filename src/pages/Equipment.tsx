@@ -433,25 +433,29 @@ export default function Equipment() {
                     />
                   </td>
                   <td className="px-4 py-3">
-                    {primaryPhotos[eq.id] ? (
-                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
-                        <img 
-                          src={primaryPhotos[eq.id]} 
-                          alt={eq.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
-                        <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                    )}
+                    <Link to={`/equipment/${eq.id}`} className="block">
+                      {primaryPhotos[eq.id] ? (
+                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 hover:opacity-80 transition-opacity">
+                          <img 
+                            src={primaryPhotos[eq.id]} 
+                            alt={eq.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center hover:opacity-80 transition-opacity">
+                          <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      )}
+                    </Link>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="font-medium text-gray-800">{eq.name}</div>
-                    <div className="text-xs text-gray-500">{eq.serialNumber}</div>
+                    <Link to={`/equipment/${eq.id}`} className="block hover:text-blue-600 transition-colors">
+                      <div className="font-medium text-gray-800 hover:text-blue-600">{eq.name}</div>
+                      <div className="text-xs text-gray-500">{eq.serialNumber}</div>
+                    </Link>
                   </td>
                   <td className="px-4 py-3">
                     <div className="text-gray-800">{getTypeName(eq.typeId)}</div>

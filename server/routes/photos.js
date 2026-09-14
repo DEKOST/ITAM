@@ -20,8 +20,9 @@ const storage = multer.diskStorage({
     cb(null, UPLOAD_DIR);
   },
   filename: (req, file, cb) => {
-    const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
+    // Временное имя - будет переименовано после обработки
+    const tempName = `temp_${uuidv4()}${path.extname(file.originalname)}`;
+    cb(null, tempName);
   }
 });
 
@@ -87,6 +88,54 @@ router.get('/equipment/:id/photos', (req, res) => {
   }
 });
 
+// Функция для транслитерации и создания безопасного имени файла
+function sanitizeFilename(name) {
+  // Транслитерация русских букв в латинские
+  const translitMap = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
+    'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+    'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+    'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
+    'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+    'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo',
+    'Ж': 'Zh', 'З': 'Z', 'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M',
+    'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U',
+    'Ф': 'F', 'Х': 'H', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh', 'Щ': 'Sch',
+    'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya'
+  };
+  
+  let result = '';
+  for (let char of name) {
+    if (translitMap[char] !== undefined) {
+      result += translitMap[char];
+    } else if (/[a-zA-Z0-9]/.test(char)) {
+      result += char.toLowerCase();
+    } else if (/\s/.test(char)) {
+      result += '_';
+    }
+  }
+  
+  // Удаляем множественные подчеркивания
+  result = result.replace(/_+/g, '_');
+  // Удаляем подчеркивания в начале и конце
+  result = result.replace(/^_+|_+$/g, '');
+  
+  return result || 'photo';
+}
+
+// Функция для генерации уникального имени файла
+function generateUniqueFilename(baseName, extension, directory) {
+  let filename = `${baseName}${extension}`;
+  let counter = 1;
+  
+  while (fs.existsSync(path.join(directory, filename))) {
+    filename = `${baseName}_${String(counter).padStart(2, '0')}${extension}`;
+    counter++;
+  }
+  
+  return filename;
+}
+
 // Загрузить фотографию
 router.post('/equipment/:id/photos', upload.single('photo'), async (req, res) => {
   try {
@@ -102,12 +151,12 @@ router.post('/equipment/:id/photos', upload.single('photo'), async (req, res) =>
       return res.status(404).json({ error: 'Оборудование не найдено' });
     }
 
-    // Обрабатываем изображение (сжатие + создание миниатюры + транслитерация имени)
-    const processed = await processImage(req.file.path, equipment.name);
-    
     // Проверяем, есть ли уже фотографии
     const photoCount = db.prepare('SELECT COUNT(*) as count FROM equipment_photos WHERE equipment_id = ?').get(req.params.id);
     const isPrimary = photoCount.count === 0 ? 1 : 0; // Первая фотография становится основной
+    
+    // Обрабатываем изображение (сжатие + создание миниатюры + транслитерация имени)
+    const processed = await processImage(req.file.path, equipment.name, photoCount.count);
 
     const photoId = uuidv4();
     const relativePath = `/uploads/equipment/${path.basename(processed.originalPath)}`;

@@ -100,31 +100,53 @@ async function compressImage(inputPath, outputPath) {
 }
 
 // Обработка загруженного изображения
-async function processImage(originalPath, equipmentName) {
+async function processImage(originalPath, equipmentName, photoCount = 0) {
   const dir = path.dirname(originalPath);
   const ext = path.extname(originalPath);
-  const baseName = path.basename(originalPath, ext);
   
-  // Создаем имя файла на основе названия оборудования
-  let newName = createFileName(equipmentName, ext);
+  // Создаем базовое имя файла на основе названия оборудования
+  const baseName = createFileName(equipmentName);
+  
+  // Создаем имя файла с номером если это не первая фотография
+  let newName;
+  if (photoCount === 0) {
+    // Первая фотография - просто название оборудования
+    newName = `${baseName}${ext}`;
+  } else {
+    // Последующие фотографии - название с номером
+    const number = String(photoCount + 1).padStart(2, '0');
+    newName = `${baseName}_${number}${ext}`;
+  }
+  
   let newPath = path.join(dir, newName);
   
-  // Если файл с таким именем уже существует, добавляем UUID
-  if (fs.existsSync(newPath)) {
-    const uniqueName = `${baseName}_${Date.now()}${ext}`;
-    newName = uniqueName;
+  // Если файл с таким именем уже существует, добавляем номер
+  let counter = photoCount + 1;
+  while (fs.existsSync(newPath)) {
+    const number = String(counter + 1).padStart(2, '0');
+    newName = `${baseName}_${number}${ext}`;
     newPath = path.join(dir, newName);
+    counter++;
   }
   
   // Создаем миниатюру
-  let thumbnailName = createFileName(equipmentName, '.jpg');
+  let thumbnailName;
+  if (photoCount === 0) {
+    thumbnailName = `${baseName}.jpg`;
+  } else {
+    const number = String(photoCount + 1).padStart(2, '0');
+    thumbnailName = `${baseName}_${number}.jpg`;
+  }
+  
   let thumbnailPath = path.join(dir, 'thumb_' + thumbnailName);
   
-  // Если миниатюра с таким именем уже существует, добавляем UUID
-  if (fs.existsSync(thumbnailPath)) {
-    const uniqueThumbName = `thumb_${baseName}_${Date.now()}.jpg`;
-    thumbnailName = uniqueThumbName;
-    thumbnailPath = path.join(dir, thumbnailName);
+  // Если миниатюра с таким именем уже существует, добавляем номер
+  let thumbCounter = photoCount + 1;
+  while (fs.existsSync(thumbnailPath)) {
+    const number = String(thumbCounter + 1).padStart(2, '0');
+    thumbnailName = `${baseName}_${number}.jpg`;
+    thumbnailPath = path.join(dir, 'thumb_' + thumbnailName);
+    thumbCounter++;
   }
   
   try {
@@ -143,7 +165,7 @@ async function processImage(originalPath, equipmentName) {
       originalPath: newPath,
       thumbnailPath: thumbnailPath,
       originalName: newName,
-      thumbnailName: thumbnailName
+      thumbnailName: 'thumb_' + thumbnailName
     };
   } catch (error) {
     console.error('Ошибка обработки изображения:', error);

@@ -380,7 +380,13 @@ export default function Equipment() {
                 <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mt-3 pt-3 border-t border-gray-100">
                   <div>
                     <span className="text-gray-400">Сотрудник:</span>
-                    <p className="font-medium truncate">{getUserName(eq.userId)}</p>
+                    {eq.userId ? (
+                      <Link to={`/users/${eq.userId}`} className="font-medium truncate text-blue-600 hover:text-blue-800 hover:underline">
+                        {getUserName(eq.userId)}
+                      </Link>
+                    ) : (
+                      <p className="font-medium truncate">{getUserName(eq.userId)}</p>
+                    )}
                   </div>
                   <div>
                     <span className="text-gray-400">Помещение:</span>
@@ -466,7 +472,15 @@ export default function Equipment() {
                       {STATUS_LABELS[eq.status]}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-700">{getUserName(eq.userId)}</td>
+                  <td className="px-4 py-3 text-gray-700">
+                    {eq.userId ? (
+                      <Link to={`/users/${eq.userId}`} className="text-blue-600 hover:text-blue-800 hover:underline">
+                        {getUserName(eq.userId)}
+                      </Link>
+                    ) : (
+                      <span>{getUserName(eq.userId)}</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-gray-700">{getRoomName(eq.roomId)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">

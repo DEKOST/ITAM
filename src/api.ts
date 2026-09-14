@@ -164,7 +164,7 @@ export const deleteEquipmentRelation = (relationId: string) => fetchAPI(`/relati
 export const deleteEquipmentRelationBetween = (equipment1Id: string, equipment2Id: string) => 
   fetchAPI(`/relations/between/${equipment1Id}/${equipment2Id}`, { method: 'DELETE' });
 export const deleteAllRelations = () => fetchAPI('/relations/all', { method: 'DELETE' });
-export const getRelationTypes = () => fetchAPI('/relation-types');
+export const getRelationTypes = () => fetchAPI('/relations/relation-types');
 export const getAvailableEquipment = (search?: string, excludeId?: string) => {
   const params = new URLSearchParams();
   if (search) params.append('search', search);

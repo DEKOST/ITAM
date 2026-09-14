@@ -62,6 +62,29 @@ router.get('/available-equipment', (req, res) => {
   }
 });
 
+// Удалить ВСЕ связи (должен быть ПЕРЕД /:id)
+router.delete('/all', (req, res) => {
+  try {
+    const count = db.prepare('SELECT COUNT(*) as count FROM equipment_relations').get();
+    
+    if (count.count === 0) {
+      return res.json({ success: true, message: 'Связей не найдено', deleted: 0 });
+    }
+    
+    db.prepare('DELETE FROM equipment_relations').run();
+    
+    console.log(`Удалено все связи: ${count.count}`);
+    
+    res.json({ 
+      success: true, 
+      message: `Все связи удалены`,
+      deleted: count.count
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Создать связь между оборудованием
 router.post('/', (req, res) => {
   try {
@@ -166,29 +189,6 @@ router.delete('/between/:equipment1/:equipment2', (req, res) => {
     db.prepare('DELETE FROM equipment_relations WHERE id = ?').run(relation.id);
 
     res.json({ success: true, message: 'Связь удалена' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Удалить ВСЕ связи
-router.delete('/all', (req, res) => {
-  try {
-    const count = db.prepare('SELECT COUNT(*) as count FROM equipment_relations').get();
-    
-    if (count.count === 0) {
-      return res.json({ success: true, message: 'Связей не найдено', deleted: 0 });
-    }
-    
-    db.prepare('DELETE FROM equipment_relations').run();
-    
-    console.log(`Удалено все связи: ${count.count}`);
-    
-    res.json({ 
-      success: true, 
-      message: `Все связи удалены`,
-      deleted: count.count
-    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

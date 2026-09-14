@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
-import { getEquipmentRelations, createEquipmentRelation, deleteEquipmentRelation, getRelationTypes } from '../api';
+import { getEquipmentRelations, createEquipmentRelation, deleteEquipmentRelation, deleteEquipmentRelationBetween, getRelationTypes } from '../api';
 import { Link } from 'react-router-dom';
 
 interface EquipmentRelation {
@@ -35,7 +35,9 @@ export default function EquipmentRelations({ equipmentId }: EquipmentRelationsPr
 
   const loadRelations = async () => {
     try {
+      console.log(`Загрузка связей для оборудования: ${equipmentId}`);
       const data = await getEquipmentRelations(equipmentId);
+      console.log('Получены связи:', data);
       setChildren(data.children || []);
       setParents(data.parents || []);
     } catch (error) {
@@ -82,11 +84,17 @@ export default function EquipmentRelations({ equipmentId }: EquipmentRelationsPr
     }
   };
 
-  const handleDeleteRelation = async (relationId: string) => {
+  const handleDeleteRelation = async (relationId: string, otherEquipmentId?: string) => {
     if (!confirm('Удалить эту связь?')) return;
 
     try {
-      await deleteEquipmentRelation(relationId);
+      if (otherEquipmentId) {
+        // Используем новый API для удаления связи между двумя устройствами
+        await deleteEquipmentRelationBetween(equipmentId, otherEquipmentId);
+      } else {
+        // Используем старый API для удаления связи по ID
+        await deleteEquipmentRelation(relationId);
+      }
       await loadRelations();
     } catch (error: any) {
       alert('Ошибка удаления связи: ' + error.message);
@@ -139,7 +147,7 @@ export default function EquipmentRelations({ equipmentId }: EquipmentRelationsPr
                   </div>
                 </div>
                 <button
-                  onClick={() => handleDeleteRelation(parent.relation_id)}
+                  onClick={() => handleDeleteRelation(parent.relation_id, parent.id)}
                   className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
                   title="Удалить связь"
                 >
@@ -173,7 +181,7 @@ export default function EquipmentRelations({ equipmentId }: EquipmentRelationsPr
                   </div>
                 </div>
                 <button
-                  onClick={() => handleDeleteRelation(child.relation_id)}
+                  onClick={() => handleDeleteRelation(child.relation_id, child.id)}
                   className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
                   title="Удалить связь"
                 >

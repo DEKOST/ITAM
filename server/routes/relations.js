@@ -42,8 +42,15 @@ router.get('/:id/relations', (req, res) => {
       ORDER BY er.relation_type, e.name
     `).all(equipmentId);
 
+    // Отладочная информация
+    console.log(`Загрузка связей для оборудования ${equipmentId}:`, {
+      children_count: children.length,
+      parents_count: parents.length
+    });
+
     res.json({ children, parents });
   } catch (error) {
+    console.error('Ошибка загрузки связей:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -69,14 +76,22 @@ router.post('/relations', (req, res) => {
       return res.status(404).json({ error: 'Оборудование не найдено' });
     }
 
-    // Проверяем, не существует ли уже такая связь
+    // Проверяем, не существует ли уже такая связь (в любом направлении)
     const existingRelation = db.prepare(`
-      SELECT id FROM equipment_relations 
-      WHERE parent_equipment_id = ? AND child_equipment_id = ?
-    `).get(parent_id, child_id);
+      SELECT id, parent_equipment_id, child_equipment_id FROM equipment_relations 
+      WHERE (parent_equipment_id = ? AND child_equipment_id = ?)
+         OR (parent_equipment_id = ? AND child_equipment_id = ?)
+    `).get(parent_id, child_id, child_id, parent_id);
 
     if (existingRelation) {
-      return res.status(400).json({ error: 'Такая связь уже существует' });
+      return res.status(400).json({ 
+        error: 'Связь между этим оборудованием уже существует',
+        existing: {
+          id: existingRelation.id,
+          parent_id: existingRelation.parent_equipment_id,
+          child_id: existingRelation.child_equipment_id
+        }
+      });
     }
 
     const id = uuidv4();
@@ -107,7 +122,7 @@ router.post('/relations', (req, res) => {
   }
 });
 
-// Удалить связь
+// Удалить связь по ID связи
 router.delete('/relations/:id', (req, res) => {
   try {
     const relationId = req.params.id;
@@ -118,6 +133,30 @@ router.delete('/relations/:id', (req, res) => {
     }
 
     db.prepare('DELETE FROM equipment_relations WHERE id = ?').run(relationId);
+
+    res.json({ success: true, message: 'Связь удалена' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Удалить связь между двумя устройствами
+router.delete('/relations/between/:equipment1/:equipment2', (req, res) => {
+  try {
+    const equipment1 = req.params.equipment1;
+    const equipment2 = req.params.equipment2;
+
+    const relation = db.prepare(`
+      SELECT id FROM equipment_relations 
+      WHERE (parent_equipment_id = ? AND child_equipment_id = ?)
+         OR (parent_equipment_id = ? AND child_equipment_id = ?)
+    `).get(equipment1, equipment2, equipment2, equipment1);
+
+    if (!relation) {
+      return res.status(404).json({ error: 'Связь не найдена' });
+    }
+
+    db.prepare('DELETE FROM equipment_relations WHERE id = ?').run(relation.id);
 
     res.json({ success: true, message: 'Связь удалена' });
   } catch (error) {

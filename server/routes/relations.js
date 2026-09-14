@@ -3,6 +3,65 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const { db } = require('../db');
 
+// Получить все доступные типы связей (должен быть ДО /:id/relations)
+router.get('/relation-types', (req, res) => {
+  const types = [
+    { value: 'component', label: 'Компонент', description: 'Внутренний компонент (HDD, RAM, видеокарта)' },
+    { value: 'monitor', label: 'Монитор', description: 'Подключённый монитор' },
+    { value: 'ups', label: 'ИБП', description: 'Источник бесперебойного питания' },
+    { value: 'dock', label: 'Док-станция', description: 'Док-станция или хаб' },
+    { value: 'printer', label: 'Принтер/МФУ', description: 'Подключённый принтер или МФУ' },
+    { value: 'accessory', label: 'Аксессуар', description: 'Дополнительный аксессуар (веб-камера, колонки)' },
+    { value: 'backup', label: 'Резервное', description: 'Резервное оборудование' },
+    { value: 'related', label: 'Связанное', description: 'Просто связанное оборудование' }
+  ];
+
+  res.json(types);
+});
+
+// Получить оборудование для выбора связей (с поиском) (должен быть ДО /:id/relations)
+router.get('/available-equipment', (req, res) => {
+  try {
+    const { search, exclude_id } = req.query;
+
+    let query = `
+      SELECT 
+        e.id,
+        e.name,
+        e.serial_number,
+        e.inventory_number,
+        et.name as type_name,
+        u.first_name || ' ' || u.last_name as user_name
+      FROM equipment e
+      LEFT JOIN equipment_types et ON e.type_id = et.id
+      LEFT JOIN users u ON e.user_id = u.id
+      WHERE 1=1
+    `;
+
+    const params = [];
+
+    // Исключаем текущее оборудование
+    if (exclude_id) {
+      query += ' AND e.id != ?';
+      params.push(exclude_id);
+    }
+
+    // Поиск по названию или сотруднику
+    if (search) {
+      query += ' AND (e.name LIKE ? OR e.inventory_number LIKE ? OR (u.first_name || \' \' || u.last_name) LIKE ?)';
+      const searchParam = `%${search}%`;
+      params.push(searchParam, searchParam, searchParam);
+    }
+
+    query += ' ORDER BY e.name LIMIT 50';
+
+    const equipment = db.prepare(query).all(...params);
+    res.json(equipment);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Получить связи для оборудования (родительские и дочерние)
 router.get('/:id/relations', (req, res) => {
   try {
@@ -173,65 +232,6 @@ router.delete('/between/:equipment1/:equipment2', (req, res) => {
     db.prepare('DELETE FROM equipment_relations WHERE id = ?').run(relation.id);
 
     res.json({ success: true, message: 'Связь удалена' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Получить все доступные типы связей
-router.get('/relation-types', (req, res) => {
-  const types = [
-    { value: 'component', label: 'Компонент', description: 'Внутренний компонент (HDD, RAM, видеокарта)' },
-    { value: 'monitor', label: 'Монитор', description: 'Подключённый монитор' },
-    { value: 'ups', label: 'ИБП', description: 'Источник бесперебойного питания' },
-    { value: 'dock', label: 'Док-станция', description: 'Док-станция или хаб' },
-    { value: 'printer', label: 'Принтер/МФУ', description: 'Подключённый принтер или МФУ' },
-    { value: 'accessory', label: 'Аксессуар', description: 'Дополнительный аксессуар (веб-камера, колонки)' },
-    { value: 'backup', label: 'Резервное', description: 'Резервное оборудование' },
-    { value: 'related', label: 'Связанное', description: 'Просто связанное оборудование' }
-  ];
-
-  res.json(types);
-});
-
-// Получить оборудование для выбора связей (с поиском)
-router.get('/available-equipment', (req, res) => {
-  try {
-    const { search, exclude_id } = req.query;
-
-    let query = `
-      SELECT 
-        e.id,
-        e.name,
-        e.serial_number,
-        e.inventory_number,
-        et.name as type_name,
-        u.first_name || ' ' || u.last_name as user_name
-      FROM equipment e
-      LEFT JOIN equipment_types et ON e.type_id = et.id
-      LEFT JOIN users u ON e.user_id = u.id
-      WHERE 1=1
-    `;
-
-    const params = [];
-
-    // Исключаем текущее оборудование
-    if (exclude_id) {
-      query += ' AND e.id != ?';
-      params.push(exclude_id);
-    }
-
-    // Поиск по названию или сотруднику
-    if (search) {
-      query += ' AND (e.name LIKE ? OR e.inventory_number LIKE ? OR (u.first_name || \' \' || u.last_name) LIKE ?)';
-      const searchParam = `%${search}%`;
-      params.push(searchParam, searchParam, searchParam);
-    }
-
-    query += ' ORDER BY e.name LIMIT 50';
-
-    const equipment = db.prepare(query).all(...params);
-    res.json(equipment);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

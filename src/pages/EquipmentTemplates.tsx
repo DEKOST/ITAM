@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { useNavigate } from 'react-router-dom';
 import * as api from '../api';
+import { SortConfig, sortData } from '../components/SortableHeader';
 
 interface EquipmentTemplate {
   id: string;
@@ -20,6 +21,7 @@ export default function EquipmentTemplates() {
   const [templates, setTemplates] = useState<EquipmentTemplate[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>({ column: 'name', direction: 'asc' });
   const [form, setForm] = useState({
     name: '',
     typeId: '',
@@ -28,6 +30,28 @@ export default function EquipmentTemplates() {
     storageType: '' as 'SSD' | 'HDD' | 'M2' | '',
     storageSize: 0,
     notes: ''
+  });
+
+  const handleSort = (column: string) => {
+    setSortConfig(prev => {
+      if (prev?.column === column) {
+        if (prev.direction === 'asc') return { column, direction: 'desc' };
+        if (prev.direction === 'desc') return null;
+      }
+      return { column, direction: 'asc' };
+    });
+  };
+
+  // Сортировка шаблонов
+  const sortedTemplates = sortData(templates, sortConfig, (template, column) => {
+    switch (column) {
+      case 'name':
+        return template.name;
+      case 'type':
+        return equipmentTypes.find(t => t.id === template.typeId)?.name || '';
+      default:
+        return '';
+    }
   });
 
   useEffect(() => {
@@ -134,12 +158,33 @@ export default function EquipmentTemplates() {
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Шаблоны оборудования</h2>
-        <button
-          onClick={() => { setShowForm(!showForm); setEditing(null); setForm({ name: '', typeId: '', cpu: '', ram: 0, storageType: '', storageSize: 0, notes: '' }); }}
-          className="px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
-        >
-          {showForm ? 'Скрыть форму' : '+ Добавить шаблон'}
-        </button>
+        <div className="flex gap-2">
+          <select 
+            value={sortConfig?.column || ''} 
+            onChange={e => handleSort(e.target.value)}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="name">По названию</option>
+            <option value="type">По типу</option>
+          </select>
+          <button 
+            onClick={() => {
+              if (sortConfig) {
+                setSortConfig(prev => prev ? { ...prev, direction: prev.direction === 'asc' ? 'desc' : 'asc' } : null);
+              }
+            }}
+            className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200"
+            title={sortConfig?.direction === 'asc' ? 'По убыванию' : 'По возрастанию'}
+          >
+            {sortConfig?.direction === 'asc' ? '↑' : '↓'}
+          </button>
+          <button
+            onClick={() => { setShowForm(!showForm); setEditing(null); setForm({ name: '', typeId: '', cpu: '', ram: 0, storageType: '', storageSize: 0, notes: '' }); }}
+            className="px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+          >
+            {showForm ? 'Скрыть форму' : '+ Добавить шаблон'}
+          </button>
+        </div>
       </div>
 
       {showForm && (
@@ -236,7 +281,7 @@ export default function EquipmentTemplates() {
         </form>
       )}
 
-      {templates.length === 0 ? (
+      {sortedTemplates.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
           <p className="text-4xl mb-3">📋</p>
           <p className="text-gray-500">Нет шаблонов оборудования</p>
@@ -244,7 +289,7 @@ export default function EquipmentTemplates() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {templates.map(template => (
+          {sortedTemplates.map(template => (
             <div key={template.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 min-w-0">

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { User } from '../types';
+import SortableHeader, { SortConfig, sortData } from '../components/SortableHeader';
 
 export default function Users() {
   const { users, subdivisions, addUser, updateUser, deleteUser, addSubdivision } = useData();
@@ -12,6 +13,18 @@ export default function Users() {
   const [filterSubdivision, setFilterSubdivision] = useState('');
   const [showSubdivisionModal, setShowSubdivisionModal] = useState(false);
   const [newSubdivisionName, setNewSubdivisionName] = useState('');
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
+
+  const handleSort = (column: string) => {
+    setSortConfig(prev => {
+      if (prev?.column === column) {
+        // Переключаем направление: asc -> desc -> null
+        if (prev.direction === 'asc') return { column, direction: 'desc' };
+        if (prev.direction === 'desc') return null;
+      }
+      return { column, direction: 'asc' };
+    });
+  };
 
   const filtered = users.filter(user => {
     const fullName = `${user.lastName} ${user.firstName} ${user.middleName || ''}`.toLowerCase();
@@ -20,6 +33,22 @@ export default function Users() {
                        user.position.toLowerCase().includes(search.toLowerCase());
     const matchSubdivision = !filterSubdivision || user.subdivisionId === filterSubdivision;
     return matchSearch && matchSubdivision;
+  });
+
+  // Сортировка данных
+  const sorted = sortData(filtered, sortConfig, (user, column) => {
+    switch (column) {
+      case 'fullName':
+        return `${user.lastName} ${user.firstName} ${user.middleName || ''}`;
+      case 'email':
+        return user.email;
+      case 'subdivision':
+        return getSubdivisionName(user.subdivisionId);
+      case 'position':
+        return user.position;
+      default:
+        return '';
+    }
   });
 
   const getSubdivisionName = (subdivisionId: string | null) => {
@@ -181,17 +210,17 @@ export default function Users() {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">ФИО</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Email</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Подразделение</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Должность</th>
+              <SortableHeader column="fullName" label="ФИО" currentSort={sortConfig} onSort={handleSort} />
+              <SortableHeader column="email" label="Email" currentSort={sortConfig} onSort={handleSort} />
+              <SortableHeader column="subdivision" label="Подразделение" currentSort={sortConfig} onSort={handleSort} />
+              <SortableHeader column="position" label="Должность" currentSort={sortConfig} onSort={handleSort} />
               <th className="text-left px-4 py-3 font-medium text-gray-600">Действия</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {filtered.length === 0 ? (
+            {sorted.length === 0 ? (
               <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500">Сотрудники не найдены</td></tr>
-            ) : filtered.map(user => (
+            ) : sorted.map(user => (
               <tr key={user.id} className="hover:bg-gray-50">
                 <td className="px-4 py-3 font-medium text-gray-800">
                   <Link to={`/users/${user.id}`} className="text-blue-600 hover:text-blue-800 hover:underline">
@@ -213,7 +242,7 @@ export default function Users() {
           </tbody>
         </table>
       </div>
-      <p className="text-sm text-gray-500 mt-3">Найдено: {filtered.length} из {users.length}</p>
+      <p className="text-sm text-gray-500 mt-3">Найдено: {sorted.length} из {users.length}</p>
 
       {/* Модальное окно создания подразделения */}
       {showSubdivisionModal && (

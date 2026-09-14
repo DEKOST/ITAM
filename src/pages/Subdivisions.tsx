@@ -1,12 +1,36 @@
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { Subdivision } from '../types';
+import { SortConfig, sortData } from '../components/SortableHeader';
 
 export default function Subdivisions() {
   const { subdivisions, addSubdivision, updateSubdivision, deleteSubdivision } = useData();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', description: '', parentId: '' });
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>({ column: 'name', direction: 'asc' });
+
+  const handleSort = (column: string) => {
+    setSortConfig(prev => {
+      if (prev?.column === column) {
+        if (prev.direction === 'asc') return { column, direction: 'desc' };
+        if (prev.direction === 'desc') return null;
+      }
+      return { column, direction: 'asc' };
+    });
+  };
+
+  // Сортировка подразделений
+  const sortedSubdivisions = sortData(subdivisions, sortConfig, (subdivision, column) => {
+    switch (column) {
+      case 'name':
+        return subdivision.name;
+      case 'parent':
+        return getParentName(subdivision.parentId);
+      default:
+        return '';
+    }
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,11 +62,32 @@ export default function Subdivisions() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
         <h2 className="text-2xl font-bold text-gray-800">Подразделения</h2>
-        <button onClick={() => { setShowForm(!showForm); setEditing(null); setForm({ name: '', description: '', parentId: '' }); }} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
-          {showForm ? 'Скрыть форму' : '+ Добавить'}
-        </button>
+        <div className="flex gap-2">
+          <select 
+            value={sortConfig?.column || ''} 
+            onChange={e => handleSort(e.target.value)}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="name">По названию</option>
+            <option value="parent">По родительскому подразделению</option>
+          </select>
+          <button 
+            onClick={() => {
+              if (sortConfig) {
+                setSortConfig(prev => prev ? { ...prev, direction: prev.direction === 'asc' ? 'desc' : 'asc' } : null);
+              }
+            }}
+            className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200"
+            title={sortConfig?.direction === 'asc' ? 'По убыванию' : 'По возрастанию'}
+          >
+            {sortConfig?.direction === 'asc' ? '↑' : '↓'}
+          </button>
+          <button onClick={() => { setShowForm(!showForm); setEditing(null); setForm({ name: '', description: '', parentId: '' }); }} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+            {showForm ? 'Скрыть форму' : '+ Добавить'}
+          </button>
+        </div>
       </div>
 
       {showForm && (
@@ -75,9 +120,9 @@ export default function Subdivisions() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {subdivisions.length === 0 ? (
+        {sortedSubdivisions.length === 0 ? (
           <div className="col-span-full bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center text-gray-500">Нет подразделений</div>
-        ) : subdivisions.map(subdivision => (
+        ) : sortedSubdivisions.map(subdivision => (
           <div key={subdivision.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
             <div className="flex items-start justify-between">
               <div className="flex-1">

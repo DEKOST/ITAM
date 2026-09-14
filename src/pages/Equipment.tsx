@@ -4,6 +4,7 @@ import { STATUS_LABELS, STATUS_COLORS, EquipmentStatus } from '../types';
 import { Link } from 'react-router-dom';
 import { exportToCSV, exportToExcel, printReport } from '../utils/export';
 import { getAllPrimaryPhotos } from '../api';
+import SortableHeader, { SortConfig, sortData } from '../components/SortableHeader';
 
 export default function Equipment() {
   const { equipment, equipmentTypes, categories, users, rooms, deleteEquipment, updateEquipment } = useData();
@@ -17,6 +18,17 @@ export default function Equipment() {
   const [bulkUserId, setBulkUserId] = useState('');
   const [bulkRoomId, setBulkRoomId] = useState('');
   const [primaryPhotos, setPrimaryPhotos] = useState<Record<string, string>>({});
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
+
+  const handleSort = (column: string) => {
+    setSortConfig(prev => {
+      if (prev?.column === column) {
+        if (prev.direction === 'asc') return { column, direction: 'desc' };
+        if (prev.direction === 'desc') return null;
+      }
+      return { column, direction: 'asc' };
+    });
+  };
 
   // Загрузка основных фотографий для всего оборудования одним запросом
   useEffect(() => {
@@ -69,6 +81,30 @@ export default function Equipment() {
     const matchStatus = !filterStatus || eq.status === filterStatus;
     const matchType = !filterType || eq.typeId === filterType;
     return matchSearch && matchStatus && matchType;
+  });
+
+  // Сортировка данных
+  const sorted = sortData(filtered, sortConfig, (eq, column) => {
+    switch (column) {
+      case 'name':
+        return eq.name;
+      case 'type':
+        return equipmentTypes.find(t => t.id === eq.typeId)?.name || '';
+      case 'status':
+        return STATUS_LABELS[eq.status];
+      case 'user':
+        const user = users.find(u => u.id === eq.userId);
+        return user ? `${user.lastName} ${user.firstName}` : '';
+      case 'room':
+        const room = rooms.find(r => r.id === eq.roomId);
+        return room ? room.name : '';
+      case 'serial':
+        return eq.serialNumber;
+      case 'inventory':
+        return eq.inventoryNumber;
+      default:
+        return '';
+    }
   });
 
   // Функции для работы с выбором
@@ -369,24 +405,24 @@ export default function Equipment() {
                 <th className="text-left px-4 py-3 w-12">
                   <input
                     type="checkbox"
-                    checked={filtered.length > 0 && selectedIds.length === filtered.length}
+                    checked={sorted.length > 0 && selectedIds.length === sorted.length}
                     onChange={toggleSelectAll}
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                 </th>
                 <th className="text-left px-4 py-3 w-16 font-medium text-gray-600">Фото</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Название</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Тип</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Статус</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Сотрудник</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Помещение</th>
+                <SortableHeader column="name" label="Название" currentSort={sortConfig} onSort={handleSort} />
+                <SortableHeader column="type" label="Тип" currentSort={sortConfig} onSort={handleSort} />
+                <SortableHeader column="status" label="Статус" currentSort={sortConfig} onSort={handleSort} />
+                <SortableHeader column="user" label="Сотрудник" currentSort={sortConfig} onSort={handleSort} />
+                <SortableHeader column="room" label="Помещение" currentSort={sortConfig} onSort={handleSort} />
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Действия</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filtered.length === 0 ? (
+              {sorted.length === 0 ? (
                 <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-500">Оборудование не найдено</td></tr>
-              ) : filtered.map(eq => (
+              ) : sorted.map(eq => (
                 <tr key={eq.id} className={`hover:bg-gray-50 ${selectedIds.includes(eq.id) ? 'bg-blue-50' : ''}`}>
                   <td className="px-4 py-3">
                     <input

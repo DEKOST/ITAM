@@ -8,6 +8,7 @@ import { evaluateCPU, getCPUBadgeColor, getCPUBadgeText } from '../utils/cpuData
 import { formatDateTime } from '../utils/dateFormat';
 import PhotoUpload from '../components/PhotoUpload';
 import PhotoGallery from '../components/PhotoGallery';
+import EquipmentRelations from '../components/EquipmentRelations';
 
 interface NextMaintenance {
   maintenance_type_id: string;
@@ -287,6 +288,9 @@ export default function EquipmentView() {
             </div>
             <PhotoGallery equipmentId={eq.id} photos={photos} onPhotosChange={loadPhotos} />
           </div>
+
+          {/* Связи оборудования */}
+          <EquipmentRelations equipmentId={eq.id} />
         </div>
 
         {/* QR Code */}

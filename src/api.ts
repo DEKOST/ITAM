@@ -155,3 +155,10 @@ export const uploadEquipmentPhoto = (equipmentId: string, formData: FormData) =>
 };
 export const deleteEquipmentPhoto = (equipmentId: string, photoId: string) => fetchAPI(`/equipment/${equipmentId}/photos/${photoId}`, { method: 'DELETE' });
 export const setPrimaryPhoto = (equipmentId: string, photoId: string) => fetchAPI(`/equipment/${equipmentId}/photos/${photoId}/primary`, { method: 'PATCH' });
+
+// Relations
+export const getEquipmentRelations = (equipmentId: string) => fetchAPI(`/equipment/${equipmentId}/relations`);
+export const createEquipmentRelation = (parentId: string, childId: string, relationType: string = 'component') => 
+  fetchAPI('/relations', { method: 'POST', body: JSON.stringify({ parent_id: parentId, child_id: childId, relation_type: relationType }) });
+export const deleteEquipmentRelation = (relationId: string) => fetchAPI(`/relations/${relationId}`, { method: 'DELETE' });
+export const getRelationTypes = () => fetchAPI('/relation-types');

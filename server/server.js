@@ -91,6 +91,7 @@ app.use('/api/certificates', authMiddleware, require('./routes/certificates'));
 app.use('/api/backups', authMiddleware, require('./routes/backups'));
 app.use('/api', authMiddleware, require('./routes/history'));
 app.use('/api', authMiddleware, require('./routes/photos'));
+app.use('/api', authMiddleware, require('./routes/relations'));
 
 // Статистика
 app.get('/api/stats', authMiddleware, (req, res) => {

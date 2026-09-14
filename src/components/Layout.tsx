@@ -55,6 +55,7 @@ const navGroups: NavGroup[] = [
     roles: ['admin'],
     items: [
       { path: '/import', label: 'Импорт данных', icon: '📥', roles: ['admin'] },
+      { path: '/export', label: 'Экспорт отчётов', icon: '📄', roles: ['admin'] },
       { path: '/certificates', label: 'SSL Сертификаты', icon: '🔒', roles: ['admin'] },
       { path: '/auth-users', label: 'Пользователи системы', icon: '🛡️', roles: ['admin'] },
       { path: '/backups', label: 'Резервные копии', icon: '💾', roles: ['admin'] },

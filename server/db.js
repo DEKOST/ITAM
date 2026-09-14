@@ -265,6 +265,18 @@ function initDatabase() {
       FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
     );
 
+    -- Связи между оборудованием
+    CREATE TABLE IF NOT EXISTS equipment_relations (
+      id TEXT PRIMARY KEY,
+      parent_equipment_id TEXT NOT NULL,
+      child_equipment_id TEXT NOT NULL,
+      relation_type TEXT NOT NULL DEFAULT 'component',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (parent_equipment_id) REFERENCES equipment(id) ON DELETE CASCADE,
+      FOREIGN KEY (child_equipment_id) REFERENCES equipment(id) ON DELETE CASCADE,
+      UNIQUE(parent_equipment_id, child_equipment_id)
+    );
+
     -- Индексы для быстрого поиска
     CREATE INDEX IF NOT EXISTS idx_equipment_type ON equipment(type_id);
     CREATE INDEX IF NOT EXISTS idx_equipment_user ON equipment(user_id);
@@ -421,6 +433,27 @@ function initDatabase() {
       if (!columns.some(col => col.name === 'thumbnail_path')) {
         db.exec('ALTER TABLE equipment_photos ADD COLUMN thumbnail_path TEXT');
       }
+    }
+  } catch (e) {
+    // Игнорируем ошибки миграции
+  }
+
+  // Миграция: создаём таблицу equipment_relations если её нет
+  try {
+    const tableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='equipment_relations'").get();
+    if (!tableExists) {
+      db.exec(`
+        CREATE TABLE equipment_relations (
+          id TEXT PRIMARY KEY,
+          parent_equipment_id TEXT NOT NULL,
+          child_equipment_id TEXT NOT NULL,
+          relation_type TEXT NOT NULL DEFAULT 'component',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (parent_equipment_id) REFERENCES equipment(id) ON DELETE CASCADE,
+          FOREIGN KEY (child_equipment_id) REFERENCES equipment(id) ON DELETE CASCADE,
+          UNIQUE(parent_equipment_id, child_equipment_id)
+        )
+      `);
     }
   } catch (e) {
     // Игнорируем ошибки миграции
